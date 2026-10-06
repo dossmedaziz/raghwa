@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, TextInput, View } from 'react-native'
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import { useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from '@/theme'
 import { Box, Button, Dialog, Field, FieldError, Icon, Input, PasswordInput, PhoneInput, Plate, Text, Toggle } from '@/components/ui'
 import { Body, Footer, Screen } from '@/components/screen'
-import { useSheetModal } from '@/components/sheet'
 import { LangOptions } from '@/screens/onboarding'
 import { useForm, validate } from '@/screens/auth'
 import { digits, fmtPhone, iso } from '@/lib/format'
@@ -47,7 +45,6 @@ export function ProfileScreen() {
   const cars = useStore((s) => s.cars), phone = useStore((s) => s.phone), logout = useStore((s) => s.logout)
   const appearance = useStore((s) => s.appearance)
   const [logoutOpen, setLogoutOpen] = useState(false)
-  const [themeOpen, setThemeOpen] = useState(false)
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 24 }} showsVerticalScrollIndicator={false}>
@@ -67,7 +64,7 @@ export function ProfileScreen() {
         </Section>
         <Section title={t.settings}>
           <MenuRow icon="translate" label={t.language} value={t.lang_name} onPress={() => nav.navigate('Language')} />
-          <MenuRow icon="dark_mode" label={t.appearance} value={t[`theme_${appearance}`]} onPress={() => setThemeOpen(true)} />
+          <MenuRow icon="dark_mode" label={t.appearance} value={t[`theme_${appearance}`]} onPress={() => nav.navigate('Appearance')} />
           <MenuRow icon="notifications" label={t.notifications} onPress={() => nav.navigate('Notif')} />
         </Section>
         <Section title={t.support}>
@@ -77,8 +74,6 @@ export function ProfileScreen() {
         </Section>
         <Text fontSize={12} color="grey450" align="center">Raghwa · v1.0</Text>
       </ScrollView>
-
-      <AppearanceSheet visible={themeOpen} onClose={() => setThemeOpen(false)} />
 
       <Dialog visible={logoutOpen} onClose={() => setLogoutOpen(false)}>
         <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.negativeTint, alignItems: 'center', justifyContent: 'center' }}>
@@ -97,42 +92,6 @@ export function ProfileScreen() {
 }
 
 const THEMES: [Appearance, string][] = [['system', 'brightness_auto'], ['light', 'light_mode'], ['dark', 'dark_mode']]
-
-/** System / light / dark picker (gorhom modal sheet sized to its content). */
-function AppearanceSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { t } = useT()
-  const insets = useSafeAreaInsets()
-  const appearance = useStore((s) => s.appearance), setAppearance = useStore((s) => s.setAppearance)
-  const { ref, props } = useSheetModal(visible, onClose)
-  return (
-    <BottomSheetModal ref={ref} {...props} enableDynamicSizing>
-      <BottomSheetView style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 16) + 8, gap: 12 }}>
-        <Text w={800} fontSize={22} style={{ marginBottom: 4 }}>{t.appearance}</Text>
-        {THEMES.map(([k, icon]) => {
-          const sel = appearance === k
-          return (
-            <Pressable key={k} accessibilityRole="radio" accessibilityState={{ checked: sel }}
-              // Picking a theme remounts the app in the new palette, which also closes this sheet.
-              onPress={() => { onClose(); setAppearance(k) }}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 68, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16, borderWidth: 2,
-                borderColor: sel ? colors.primary : colors.grey200, backgroundColor: sel ? colors.primaryTint : colors.bg }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.grey100, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={icon} size={22} />
-              </View>
-              <Box flex={1} gap="xxs">
-                <Text w={700} fontSize={16}>{t[`theme_${k}`]}</Text>
-                {k === 'system' ? <Text fontSize={13} color="grey600">{t.theme_system_s}</Text> : null}
-              </Box>
-              <View style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: sel ? colors.primary : colors.grey400, alignItems: 'center', justifyContent: 'center' }}>
-                <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: sel ? colors.primary : 'transparent' }} />
-              </View>
-            </Pressable>
-          )
-        })}
-      </BottomSheetView>
-    </BottomSheetModal>
-  )
-}
 
 export function CarsScreen({ navigation }: ScreenProps<'Cars'>) {
   const { t } = useT()
@@ -228,6 +187,40 @@ export function LanguageScreen() {
       <Box gap="sm" style={{ paddingHorizontal: 16, paddingTop: 8 }}>
         <Text w={800} fontSize={30} style={{ marginBottom: 8 }}>{t.language}</Text>
         <LangOptions onPick={() => toast('lang_saved')} />
+      </Box>
+    </Screen>
+  )
+}
+
+/** System / light / dark picker, laid out like the language screen. */
+export function AppearanceScreen() {
+  const { t } = useT()
+  const appearance = useStore((s) => s.appearance), setAppearance = useStore((s) => s.setAppearance)
+  return (
+    <Screen back>
+      <Box gap="sm" style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+        <Text w={800} fontSize={30} style={{ marginBottom: 8 }}>{t.appearance}</Text>
+        {THEMES.map(([k, icon]) => {
+          const sel = appearance === k
+          return (
+            <Pressable key={k} accessibilityRole="radio" accessibilityState={{ checked: sel }}
+              // Applying a theme remounts the app in the new palette; navigation state keeps us on this screen.
+              onPress={() => { if (sel) return; setAppearance(k); toast('theme_saved') }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 76, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 16, borderWidth: 2,
+                borderColor: sel ? colors.primary : colors.grey200, backgroundColor: sel ? colors.primaryTint : colors.bg }}>
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.grey200, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={icon} size={22} />
+              </View>
+              <Box flex={1} gap="xxs">
+                <Text w={700} fontSize={18}>{t[`theme_${k}`]}</Text>
+                {k === 'system' ? <Text fontSize={13} color="grey600">{t.theme_system_s}</Text> : null}
+              </Box>
+              <View style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: sel ? colors.primary : colors.grey400, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: sel ? colors.primary : 'transparent' }} />
+              </View>
+            </Pressable>
+          )
+        })}
       </Box>
     </Screen>
   )

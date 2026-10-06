@@ -27,7 +27,7 @@ import { GarageScreen } from '@/screens/garage'
 import { Book1Screen, Book2Screen, Book3Screen, Resched2Screen, SuccessScreen } from '@/screens/booking'
 import { ResDetailScreen, ReservationsScreen } from '@/screens/reservations'
 import {
-  CarFormScreen, CarsScreen, ChangePhoneScreen, ChangePwScreen, HelpScreen, LanguageScreen, NotifScreen, ProfileScreen, TermsScreen,
+  CarFormScreen, CarsScreen, ChangePhoneScreen, ChangePwScreen, AppearanceScreen, HelpScreen, LanguageScreen, NotifScreen, ProfileScreen, TermsScreen,
 } from '@/screens/profile'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
@@ -100,6 +100,7 @@ function Root({ scheme }: { scheme: Scheme }) {
             <Stack.Screen name="Cars" component={CarsScreen} />
             <Stack.Screen name="CarForm" component={CarFormScreen} />
             <Stack.Screen name="Language" component={LanguageScreen} />
+            <Stack.Screen name="Appearance" component={AppearanceScreen} />
             <Stack.Screen name="Notif" component={NotifScreen} />
             <Stack.Screen name="ChangePw" component={ChangePwScreen} />
             <Stack.Screen name="ChangePhone" component={ChangePhoneScreen} />

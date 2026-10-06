@@ -306,15 +306,31 @@ export function Drop({ size, color = colors.aqua, style }: { size: number; color
   return <View style={[{ width: size, height: size, backgroundColor: color, borderTopLeftRadius: 0, borderTopRightRadius: r, borderBottomLeftRadius: r, borderBottomRightRadius: r, transform: [{ rotate: '45deg' }] }, style]} />
 }
 
-/** App icon tile (navy square + aqua drop). */
-export function LogoTile({ size = 64 }: { size?: number }) {
-  const k = size / 64
+/** The three-bubble Raghwa mark, drawn from garage-web/public/favicon.svg (64-unit grid: cx, cy, r, colour). */
+const MARK: [number, number, number, string][] = [[26, 38, 14, '#22C3D6'], [42, 22, 8.5, '#FFFFFF'], [27, 18, 4.5, '#9FDCEA']]
+/** Navy of the favicon tile (a shade darker than the UI brand navy). */
+const MARK_TILE = '#0A2A66'
+
+/**
+ * Raghwa logo, identical to the web favicon. `tile` draws the rounded navy square behind the bubbles;
+ * without it the bubbles are centred on their own bounds (for use on a navy background, e.g. the splash).
+ */
+export function LogoMark({ size = 64, tile }: { size?: number; tile?: boolean }) {
+  // Bubble bounds on the 64 grid: x 12–50.5, y 13.5–52 (38.5 square, centre 31.25 / 32.75).
+  const k = tile ? size / 64 : size / 38.5
+  const ox = tile ? 0 : 12, oy = tile ? 0 : 13.5
   return (
-    <View style={{ width: size, height: size, borderRadius: 18 * k, backgroundColor: colors.brand }}>
-      <Drop size={32 * k} style={{ position: 'absolute', left: 16 * k, top: 18 * k }} />
-      <View style={{ position: 'absolute', left: 25 * k, top: 32 * k, width: 10 * k, height: 10 * k, borderRadius: 5 * k, backgroundColor: 'rgba(255,255,255,.9)' }} />
+    <View style={{ width: size, height: size, borderRadius: tile ? 16 * k : 0, backgroundColor: tile ? MARK_TILE : 'transparent' }}>
+      {MARK.map(([cx, cy, r, c]) => (
+        <View key={c} style={{ position: 'absolute', left: (cx - r - ox) * k, top: (cy - r - oy) * k, width: 2 * r * k, height: 2 * r * k, borderRadius: r * k, backgroundColor: c }} />
+      ))}
     </View>
   )
+}
+
+/** App icon tile (same as the launcher icon / web favicon). */
+export function LogoTile({ size = 64 }: { size?: number }) {
+  return <LogoMark size={size} tile />
 }
 
 /** Row of icon + label + value (summary tables). */

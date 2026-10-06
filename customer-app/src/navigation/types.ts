@@ -28,6 +28,7 @@ export type RootParams = {
   Cars: undefined
   CarForm: { id?: string } | undefined
   Language: undefined
+  Appearance: undefined
   Notif: undefined
   ChangePw: undefined
   ChangePhone: undefined

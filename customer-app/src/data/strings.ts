@@ -72,7 +72,7 @@ export const S = {
   terms_h3: ['المعطيات الشخصية', 'Données personnelles'], terms_4: ['نستعملو النومرو والموقع متاعك كان باش نقدّمولك الخدمة. ما نبيعو حتى معطيات.', 'Votre numéro et votre position servent uniquement au service. Aucune donnée n’est revendue.'],
   updated: ['آخر تحديث: سبتمبر 2026', 'Dernière mise à jour : septembre 2026'],
   appearance: ['المظهر', 'Apparence'], theme_system: ['كيف التليفون', 'Système'], theme_system_s: ['يتبدّل وحدو كيف إعدادات التليفون', 'Suit le réglage du téléphone'],
-  theme_light: ['فاتح', 'Clair'], theme_dark: ['غامق', 'Sombre'],
+  theme_light: ['فاتح', 'Clair'], theme_dark: ['غامق', 'Sombre'], theme_saved: ['تبدّل المظهر', 'Apparence modifiée'],
 } satisfies Record<string, readonly [string, string]>
 
 export type SKey = keyof typeof S
