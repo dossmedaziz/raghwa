@@ -1,0 +1,196 @@
+(function () {
+var T = {
+ar: {
+  appName: 'رغوة', brandHeadline: 'الحرفاء يحجزو من التليفون، وانت تغسل على راحتك.', brandSub: 'تصرّف في المواعيد، الخدمات والأسوام متاع الغاراج متاعك، الكل في بلاصة وحدة.', brandFoot: 'رغوة · منصّة حجز غسيل الكراهب في تونس',
+  loginTitle: 'مرحبا بيك من جديد', loginSub: 'ادخل باش تتصرّف في الغاراج متاعك', phone: 'نومرو التليفون', password: 'كلمة السر', forgot: 'نسيت كلمة السر؟', loginBtn: 'ادخل', noAccount: 'ما عندكش حساب؟', signupLink: 'اعمل حساب', showPw: 'وري كلمة السر',
+  signupTitle: 'اعمل حساب للغاراج متاعك', signupSub: 'دقيقتين برك وتبدا تقبل الحجوزات', fullName: 'الاسم واللقب', namePh: 'مثلا: كريم المنصوري', confirmPw: 'عاود كلمة السر', pwHint: '8 حروف على الأقل', signupBtn: 'كمّل', haveAccount: 'عندك حساب؟', loginLink: 'ادخل',
+  otpTitle: 'أكّد النومرو متاعك', otpSent: 'بعثنالك كود فيه 4 أرقام على', verify: 'أكّد', resendIn: 'تنجم تعاود تبعث الكود بعد', resend: 'عاود ابعث الكود', otpDemo: 'ديمو: أي كود فيه 4 أرقام يمشي', back: 'ارجع',
+  forgotTitle: 'نسيت كلمة السر', forgotSub: 'اكتب النومرو متاعك ونبعثولك كود باش تبدّل كلمة السر', sendCode: 'ابعث الكود', backToLogin: 'ارجع للدخول', newPwTitle: 'اختار كلمة سر جديدة', newPwSub: 'اختار كلمة سر قويّة وما تعطيهاش لحتى حد', newPw: 'كلمة السر الجديدة', savePw: 'سجّل كلمة السر', stepOf: 'خطوة {a} من {b}',
+  errPhone: 'نومرو التليفون لازم يكون 8 أرقام', errPassword: 'اكتب كلمة السر', errPwShort: 'كلمة السر لازمها 8 حروف على الأقل', errPwMatch: 'كلمتين السر موش كيف كيف', errName: 'اكتب اسمك الكامل', errRequired: 'الخانة هاذي لازمة', errOtp: 'اكتب الكود الكامل (4 أرقام)', errPrice: 'اكتب سوم صحيح', errDur: 'المدة لازم تكون بين 10 و 240 دقيقة',
+  obTitle: 'كمّل البروفيل متاعك', obSub: '6 خطوات صغار وتولّي الغاراج متاعك ظاهرة للحرفاء',
+  obSteps: ['معلومات الغاراج', 'البلاصة', 'أوقات الخدمة', 'المواعيد والطاقة', 'الخدمات والأسوام', 'المراجعة'],
+  obSubs: ['هاذي أول حاجة يشوفوها الحرفاء على الغاراج متاعك.', 'وين موجودة الغاراج؟ جرّ الإبرة للبلاصة الصحيحة.', 'وقتاش تحلّ ووقتاش تسكّر كل نهار.', 'قدّاش يدوم الموعد وقدّاش من كرهبة تغسل في نفس الوقت.', 'الخدمات اللي تعرضها والسوم متاع كل وحدة.', 'ثبّت في كل شي قبل ما تنشر الغاراج.'],
+  next: 'التالي', prev: 'اللي قبلو', publish: 'انشر الغاراج متاعي', edit: 'بدّل',
+  garageName: 'اسم الغاراج', contactPhone: 'نومرو الاتصال', description: 'وصف قصير', descPh: 'مثلا: غسيل باليد ومنتوجات بيو، قريب من البحر', logo: 'اللوغو', photos: 'التصاور', addImage: 'زيد تصويرة', uploadHint: 'PNG ولا JPG، 5 ميغا أقصى حد', remove: 'نحّي',
+  address: 'العنوان', city: 'الولاية', area: 'المنطقة', mapNote: 'هوني وين باش يشوفو الحرفاء الغاراج متاعك على الخريطة في الأبليكاسيون. جرّ الإبرة ولا انقر على البلاصة الصحيحة.', coords: 'الإحداثيات',
+  open: 'محلول', closed: 'مسكّر', closedAllDay: 'مسكّر النهار الكل', break: 'استراحة', addBreak: 'زيد استراحة', copyAll: 'انسخ الأوقات على الأيام الكل',
+  slotDuration: 'مدة الموعد', custom: 'مدة أخرى', minutes: 'دق', capacity: 'قدّاش من كرهبة في نفس الوقت', capacityHint: 'عدد البلايص اللي تنجم تغسل فيهم في نفس الوقت', preview: 'معاينة', previewFor: 'المواعيد متاع نهار {d}', carsPerSlot: '{n} كراهب في كل موعد', slotsPerDay: '{n} موعد في النهار', placesPerDay: '{n} بلاصة في النهار', customPh: 'مثلا 40',
+  addService: 'زيد خدمة', nameAr: 'الاسم بالعربي', nameFr: 'الاسم بالفرنسي', price: 'السوم', descAr: 'الوصف بالعربي', descFr: 'الوصف بالفرنسي', active: 'مفعّلة', inactive: 'موقوفة', del: 'فسخ', save: 'سجّل', cancel: 'بطّل', newService: 'خدمة جديدة', editService: 'بدّل الخدمة', svcCount: '{n} خدمات مفعّلة من {m}',
+  delSvcTitle: 'تفسخ الخدمة هاذي؟', delSvcBody: 'الحرفاء ما عادش باش يشوفوها في الأبليكاسيون. الحجوزات القديمة ما تتبدّلش.', confirmDelete: 'إيه، افسخها', keep: 'لا، خلّيها',
+  reviewGarage: 'الغاراج', reviewLocation: 'البلاصة', reviewHours: 'الأوقات', reviewSlots: 'المواعيد', reviewServices: 'الخدمات', durationVal: '{n} دقيقة', capVal: '{n} كراهب في نفس الوقت', publishNote: 'كي تنشر، الغاراج متاعك تولّي ظاهرة للحرفاء وينجمو يبداو يحجزو.',
+  navDashboard: 'الرئيسية', navReservations: 'الحجوزات', navSchedule: 'المواعيد', navServices: 'الخدمات والأسوام', navProfile: 'بروفيل الغاراج', navSettings: 'الإعدادات', logout: 'اخرج',
+  visible: 'ظاهرة للحرفاء', notifications: 'التنبيهات', markAllRead: 'علّم الكل مقروء', owner: 'صاحب الغاراج',
+  hello: 'صباح الخير، {name}', resSub: 'الحجوزات الكل اللي جاوك من الأبليكاسيون. التأكيد أوتوماتيكي.', schedSub: 'شوف قدّاش معمّرة المواعيد، وبلوكي نهار ولا موعد كي تحب.', svcSub: 'الخدمات اللي يشوفوها الحرفاء كي يحجزو.', profileSub: 'المعلومات والتصاور والبلاصة متاع الغاراج.', settingsSub: 'الحساب، اللغة والتنبيهات.',
+  kpiToday: 'حجوزات اليوم', kpiTodaySub: '{n} مازالو جايين', kpiWeek: 'الجايين هالجمعة', kpiWeekSub: 'من توّا حتى للأحد', kpiMonth: 'تكمّلو هالشهر', kpiRevenue: 'المدخول المتوقّع هالشهر', kpiRevenueSub: 'الخلاص كاش في الغاراج',
+  todaySlots: 'مواعيد اليوم', todaySum: '{n} من {m} بلاصة محجوزة', full: 'مليان', now: 'توّا', lgFree: 'فارغ', lgPartial: 'فيه بلايص', lgFull: 'مليان', lgBlocked: 'مبلوكي', lgClosed: 'مسكّر',
+  nextRes: 'الحجوزات الجاية', seeAll: 'شوف الكل', chartTitle: 'الحجوزات في 7 أيام اللي فاتو', chartSum: '{n} حجز في الجملة', closedShort: 'مسكّر', noUpcoming: 'ما فما حتى حجز جاي للتوّا',
+  today: 'اليوم', tomorrow: 'غدوة', yesterday: 'البارح',
+  tabAll: 'الكل', tabUpcoming: 'الجايّة', tabDone: 'اللي تكمّلت', tabCancelled: 'اللي تبطّلت',
+  search: 'لوّج بالاسم، النومرو ولا المرجع', allServices: 'الخدمات الكل', dateFrom: 'من', dateTo: 'حتى ل', clearFilters: 'نحّي الفلاتر', results: '{n} حجز',
+  colRef: 'المرجع', colCustomer: 'الحريف', colPhone: 'التليفون', colDate: 'النهار', colSlot: 'الموعد', colServices: 'الخدمات', colTotal: 'المجموع', colPayment: 'الخلاص', colStatus: 'الحالة', colActions: '',
+  cash: 'كاش', stUpcoming: 'جاي', stDone: 'تكمّل', stCancelled: 'تبطّل',
+  viewDetails: 'شوف التفاصيل', markDone: 'كمّلت', cancelRes: 'بطّل الحجز',
+  cancelTitle: 'تبطّل الحجز هذا؟', cancelBody: 'باش نبعثو ميساج للحريف {name}. ما تنجمش ترجع فيها.', keepRes: 'لا، خلّيه', confirmCancel: 'إيه، بطّلو',
+  empty_all: 'ما فما حتى حجز للتوّا', emptyHint_all: 'كي يحجز حريف من الأبليكاسيون، يظهر هوني.', empty_upcoming: 'ما فما حتى حجز جاي', emptyHint_upcoming: 'الحجوزات الجديدة تظهر هوني أوتوماتيكيا.', empty_done: 'ما تكمّل حتى حجز للتوّا', emptyHint_done: 'علّم الحجز "كمّلت" كي توفى الغسلة.', empty_cancelled: 'ما تبطّل حتى حجز، برافو!', emptyHint_cancelled: 'الحجوزات اللي تتبطّل تظهر هوني.', emptyFiltered: 'ما لقينا حتى نتيجة', emptyFilteredHint: 'جرّب كلمة أخرى ولا بدّل الفلاتر.',
+  resDetail: 'تفاصيل الحجز', customer: 'الحريف', car: 'الكرهبة', plate: 'الماتريكول', noCar: 'الحريف ما حطّش معلومات الكرهبة', dateSlot: 'النهار والموعد', breakdown: 'الخدمات', total: 'المجموع', payMethod: 'طريقة الخلاص', payCash: 'كاش في الغاراج', history: 'تاريخ الحجز', call: 'كلّم',
+  hBooked: 'تحجز من الأبليكاسيون', hResched: 'الحريف بدّل الموعد', hReschedFrom: 'كان على {t}', hDone: 'تكمّل', hCancelled: 'تبطّل', byCustomer: 'من الحريف', byGarage: 'من الغاراج',
+  thisWeek: 'هالجمعة', editHours: 'الأوقات والطاقة', blockDay: 'بلوكي النهار', unblockDay: 'حلّ النهار', blockSlot: 'بلوكي الموعد', unblockSlot: 'حلّ الموعد', blockedShort: 'مبلوكي', reason: 'السبب', rHoliday: 'عطلة', rMaintenance: 'صيانة', rOther: 'سبب آخر',
+  blockDayTitle: 'تبلوكي نهار {d}؟', blockDayBody: 'الحرفاء ما ينجموش يحجزو في النهار هذا.', blockDayWarn: 'عندك {n} حجوزات في النهار هذا، ما تنساش تكلّمهم.', slotBookings: 'الحجوزات في الموعد هذا', noBookingsSlot: 'ما فما حتى حجز في الموعد هذا', moreBookings: '+ {n} حجوزات أخرى', hoursTitle: 'الأوقات، المواعيد والطاقة', close: 'سكّر', booked: 'محجوز',
+  profileInfo: 'معلومات الغاراج', saveChanges: 'سجّل التبديلات', customerPreview: 'كيفاش يشوفوك الحرفاء', previewHint: 'هكّا تظهر الغاراج متاعك في أبليكاسيون رغوة.', reviews: 'تقييم', km: 'كم', from: 'يبدا من', openNow: 'محلول توّا', closesAt: 'يسكّر على {t}', book: 'احجز', nearby: 'غاراجات قريبة منك',
+  secPassword: 'بدّل كلمة السر', currentPw: 'كلمة السر الحالية', secPhone: 'بدّل نومرو التليفون', currentPhone: 'النومرو الحالي', newPhone: 'النومرو الجديد', otpNeeded: 'باش نبعثولك كود تأكيد على التليفون.', sendOtp: 'ابعث كود التأكيد', secLang: 'اللغة', langHint: 'لغة اللوحة متاعك. الحرفاء يختارو لغتهم في الأبليكاسيون.', secNotif: 'التنبيهات',
+  n1: 'حجز جديد', n1d: 'ميساج كل ما حريف يحجز', n2: 'حجز تبطّل', n2d: 'كي حريف يبطّل الموعد متاعو', n3: 'تبديل موعد', n3d: 'كي حريف يبدّل النهار ولا الوقت', n4: 'ملخّص النهار', n4d: 'كل صباح على 07:30، حجوزات اليوم الكل',
+  otpModalTitle: 'اكتب الكود اللي وصلك',
+  toastDone: 'الحجز تعلّم "كمّل"', toastCancelled: 'الحجز تبطّل والحريف وصلو ميساج', toastSvcSaved: 'الخدمة تسجّلت', toastSvcDeleted: 'الخدمة تفسخت', toastCopied: 'الأوقات تنسخت على الأيام الكل', toastSaved: 'التبديلات تسجّلت', toastPublished: 'مبروك! الغاراج متاعك ولّات ظاهرة للحرفاء', toastPwReset: 'كلمة السر تبدّلت، ادخل توّا', toastVerified: 'النومرو تأكّد', toastCodeSent: 'بعثنالك كود جديد', toastBlocked: 'تبلوكى', toastUnblocked: 'تحلّ', toastPwChanged: 'كلمة السر تبدّلت', toastPhoneChanged: 'النومرو تبدّل', toastRead: 'التنبيهات الكل مقروءة'
+},
+fr: {
+  appName: 'Raghwa', brandHeadline: 'Vos clients réservent depuis leur téléphone. Vous, vous lavez.', brandSub: 'Créneaux, services et prix de votre station de lavage, réunis au même endroit.', brandFoot: 'Raghwa · Réservation de lavage auto en Tunisie',
+  loginTitle: 'Bon retour parmi nous', loginSub: 'Connectez-vous pour gérer votre garage', phone: 'Numéro de téléphone', password: 'Mot de passe', forgot: 'Mot de passe oublié ?', loginBtn: 'Se connecter', noAccount: 'Pas encore de compte ?', signupLink: 'Créer un compte', showPw: 'Afficher le mot de passe',
+  signupTitle: 'Créez le compte de votre garage', signupSub: 'Deux minutes pour commencer à recevoir des réservations', fullName: 'Nom et prénom', namePh: 'Ex. : Karim Mansouri', confirmPw: 'Confirmer le mot de passe', pwHint: '8 caractères minimum', signupBtn: 'Continuer', haveAccount: 'Déjà un compte ?', loginLink: 'Se connecter',
+  otpTitle: 'Vérifiez votre numéro', otpSent: 'Nous avons envoyé un code à 4 chiffres au', verify: 'Vérifier', resendIn: 'Renvoyer le code dans', resend: 'Renvoyer le code', otpDemo: 'Démo : n’importe quel code à 4 chiffres fonctionne', back: 'Retour',
+  forgotTitle: 'Mot de passe oublié', forgotSub: 'Saisissez votre numéro, nous vous enverrons un code pour le réinitialiser', sendCode: 'Envoyer le code', backToLogin: 'Retour à la connexion', newPwTitle: 'Choisissez un nouveau mot de passe', newPwSub: 'Choisissez un mot de passe solide et gardez-le pour vous', newPw: 'Nouveau mot de passe', savePw: 'Enregistrer le mot de passe', stepOf: 'Étape {a} sur {b}',
+  errPhone: 'Le numéro doit contenir 8 chiffres', errPassword: 'Saisissez votre mot de passe', errPwShort: 'Le mot de passe doit contenir au moins 8 caractères', errPwMatch: 'Les mots de passe ne correspondent pas', errName: 'Saisissez votre nom complet', errRequired: 'Ce champ est obligatoire', errOtp: 'Saisissez le code complet (4 chiffres)', errPrice: 'Saisissez un prix valide', errDur: 'La durée doit être comprise entre 10 et 240 minutes',
+  obTitle: 'Complétez votre profil', obSub: '6 petites étapes et votre garage sera visible par les clients',
+  obSteps: ['Infos du garage', 'Emplacement', 'Horaires', 'Créneaux & capacité', 'Services & prix', 'Vérification'],
+  obSubs: ['C’est la première chose que les clients verront de votre garage.', 'Où se trouve votre garage ? Placez l’épingle au bon endroit.', 'Vos heures d’ouverture et de fermeture, jour par jour.', 'La durée d’un créneau et le nombre de voitures lavées en même temps.', 'Les services proposés et leur prix.', 'Vérifiez tout avant de publier votre garage.'],
+  next: 'Suivant', prev: 'Précédent', publish: 'Publier mon garage', edit: 'Modifier',
+  garageName: 'Nom du garage', contactPhone: 'Téléphone de contact', description: 'Courte description', descPh: 'Ex. : lavage à la main, produits écologiques, à deux pas de la plage', logo: 'Logo', photos: 'Photos', addImage: 'Ajouter une image', uploadHint: 'PNG ou JPG, 5 Mo max', remove: 'Retirer',
+  address: 'Adresse', city: 'Gouvernorat', area: 'Ville / quartier', mapNote: 'C’est ici que les clients verront votre garage sur la carte de l’application. Faites glisser l’épingle ou cliquez au bon endroit.', coords: 'Coordonnées',
+  open: 'Ouvert', closed: 'Fermé', closedAllDay: 'Fermé toute la journée', break: 'Pause', addBreak: 'Ajouter une pause', copyAll: 'Copier sur tous les jours',
+  slotDuration: 'Durée d’un créneau', custom: 'Personnalisée', minutes: 'min', capacity: 'Voitures lavées en même temps', capacityHint: 'Nombre de postes de lavage disponibles simultanément', preview: 'Aperçu', previewFor: 'Créneaux du {d}', carsPerSlot: '{n} voitures par créneau', slotsPerDay: '{n} créneaux par jour', placesPerDay: '{n} places par jour', customPh: 'Ex. 40',
+  addService: 'Ajouter un service', nameAr: 'Nom (arabe)', nameFr: 'Nom (français)', price: 'Prix', descAr: 'Description (arabe)', descFr: 'Description (français)', active: 'Actif', inactive: 'Inactif', del: 'Supprimer', save: 'Enregistrer', cancel: 'Annuler', newService: 'Nouveau service', editService: 'Modifier le service', svcCount: '{n} services actifs sur {m}',
+  delSvcTitle: 'Supprimer ce service ?', delSvcBody: 'Les clients ne le verront plus dans l’application. Les réservations existantes ne sont pas modifiées.', confirmDelete: 'Oui, supprimer', keep: 'Non, garder',
+  reviewGarage: 'Garage', reviewLocation: 'Emplacement', reviewHours: 'Horaires', reviewSlots: 'Créneaux', reviewServices: 'Services', durationVal: '{n} minutes', capVal: '{n} voitures en même temps', publishNote: 'Une fois publié, votre garage devient visible et les clients peuvent réserver.',
+  navDashboard: 'Tableau de bord', navReservations: 'Réservations', navSchedule: 'Planning', navServices: 'Services & prix', navProfile: 'Profil du garage', navSettings: 'Paramètres', logout: 'Déconnexion',
+  visible: 'Visible par les clients', notifications: 'Notifications', markAllRead: 'Tout marquer comme lu', owner: 'Gérant',
+  hello: 'Bonjour, {name}', resSub: 'Toutes les réservations reçues via l’application. La confirmation est automatique.', schedSub: 'Visualisez le remplissage des créneaux et bloquez un jour ou un créneau.', svcSub: 'Les services que les clients voient au moment de réserver.', profileSub: 'Informations, photos et emplacement du garage.', settingsSub: 'Compte, langue et notifications.',
+  kpiToday: 'Réservations du jour', kpiTodaySub: 'dont {n} encore à venir', kpiWeek: 'À venir cette semaine', kpiWeekSub: 'D’ici dimanche', kpiMonth: 'Terminées ce mois', kpiRevenue: 'Revenu estimé ce mois', kpiRevenueSub: 'Paiement en espèces au garage',
+  todaySlots: 'Créneaux du jour', todaySum: '{n} places réservées sur {m}', full: 'Complet', now: 'Maintenant', lgFree: 'Libre', lgPartial: 'Partiel', lgFull: 'Complet', lgBlocked: 'Bloqué', lgClosed: 'Fermé',
+  nextRes: 'Prochaines réservations', seeAll: 'Tout voir', chartTitle: 'Réservations des 7 derniers jours', chartSum: '{n} réservations au total', closedShort: 'Fermé', noUpcoming: 'Aucune réservation à venir pour le moment',
+  today: 'Aujourd’hui', tomorrow: 'Demain', yesterday: 'Hier',
+  tabAll: 'Toutes', tabUpcoming: 'À venir', tabDone: 'Terminées', tabCancelled: 'Annulées',
+  search: 'Rechercher par nom, téléphone ou réf.', allServices: 'Tous les services', dateFrom: 'Du', dateTo: 'au', clearFilters: 'Effacer les filtres', results: '{n} réservations',
+  colRef: 'Réf.', colCustomer: 'Client', colPhone: 'Téléphone', colDate: 'Date', colSlot: 'Créneau', colServices: 'Services', colTotal: 'Total', colPayment: 'Paiement', colStatus: 'Statut', colActions: '',
+  cash: 'Espèces', stUpcoming: 'À venir', stDone: 'Terminée', stCancelled: 'Annulée',
+  viewDetails: 'Voir les détails', markDone: 'Marquer terminée', cancelRes: 'Annuler la réservation',
+  cancelTitle: 'Annuler cette réservation ?', cancelBody: '{name} sera prévenu(e) par SMS. Cette action est irréversible.', keepRes: 'Non, garder', confirmCancel: 'Oui, annuler',
+  empty_all: 'Aucune réservation pour le moment', emptyHint_all: 'Dès qu’un client réserve depuis l’application, elle apparaît ici.', empty_upcoming: 'Aucune réservation à venir', emptyHint_upcoming: 'Les nouvelles réservations s’afficheront ici automatiquement.', empty_done: 'Aucune réservation terminée', emptyHint_done: 'Marquez une réservation comme terminée une fois le lavage fini.', empty_cancelled: 'Aucune annulation, bravo !', emptyHint_cancelled: 'Les réservations annulées apparaîtront ici.', emptyFiltered: 'Aucun résultat', emptyFilteredHint: 'Essayez un autre mot-clé ou modifiez les filtres.',
+  resDetail: 'Détails de la réservation', customer: 'Client', car: 'Véhicule', plate: 'Immatriculation', noCar: 'Le client n’a pas renseigné son véhicule', dateSlot: 'Date et créneau', breakdown: 'Services', total: 'Total', payMethod: 'Mode de paiement', payCash: 'Espèces au garage', history: 'Historique', call: 'Appeler',
+  hBooked: 'Réservée via l’application', hResched: 'Reportée par le client', hReschedFrom: 'initialement à {t}', hDone: 'Terminée', hCancelled: 'Annulée', byCustomer: 'par le client', byGarage: 'par le garage',
+  thisWeek: 'Cette semaine', editHours: 'Horaires & capacité', blockDay: 'Bloquer la journée', unblockDay: 'Débloquer la journée', blockSlot: 'Bloquer le créneau', unblockSlot: 'Débloquer le créneau', blockedShort: 'Bloqué', reason: 'Motif', rHoliday: 'Congé', rMaintenance: 'Maintenance', rOther: 'Autre',
+  blockDayTitle: 'Bloquer le {d} ?', blockDayBody: 'Les clients ne pourront pas réserver ce jour-là.', blockDayWarn: 'Vous avez {n} réservation(s) ce jour-là, pensez à prévenir les clients.', slotBookings: 'Réservations sur ce créneau', noBookingsSlot: 'Aucune réservation sur ce créneau', moreBookings: '+ {n} autres réservations', hoursTitle: 'Horaires, créneaux et capacité', close: 'Fermer', booked: 'réservé',
+  profileInfo: 'Informations du garage', saveChanges: 'Enregistrer les modifications', customerPreview: 'Ce que voient vos clients', previewHint: 'Voici comment votre garage apparaît dans l’application Raghwa.', reviews: 'avis', km: 'km', from: 'À partir de', openNow: 'Ouvert', closesAt: 'ferme à {t}', book: 'Réserver', nearby: 'Stations près de vous',
+  secPassword: 'Changer le mot de passe', currentPw: 'Mot de passe actuel', secPhone: 'Changer de numéro', currentPhone: 'Numéro actuel', newPhone: 'Nouveau numéro', otpNeeded: 'Un code de vérification vous sera envoyé par SMS.', sendOtp: 'Envoyer le code', secLang: 'Langue', langHint: 'Langue de votre tableau de bord. Les clients choisissent la leur dans l’application.', secNotif: 'Notifications',
+  n1: 'Nouvelle réservation', n1d: 'Un SMS à chaque réservation', n2: 'Annulation', n2d: 'Quand un client annule son créneau', n3: 'Report', n3d: 'Quand un client change de jour ou d’heure', n4: 'Résumé quotidien', n4d: 'Chaque matin à 07:30, les réservations du jour',
+  otpModalTitle: 'Saisissez le code reçu',
+  toastDone: 'Réservation marquée comme terminée', toastCancelled: 'Réservation annulée, le client a été prévenu', toastSvcSaved: 'Service enregistré', toastSvcDeleted: 'Service supprimé', toastCopied: 'Horaires copiés sur tous les jours', toastSaved: 'Modifications enregistrées', toastPublished: 'Félicitations ! Votre garage est en ligne', toastPwReset: 'Mot de passe modifié, connectez-vous', toastVerified: 'Numéro vérifié', toastCodeSent: 'Un nouveau code vous a été envoyé', toastBlocked: 'Bloqué', toastUnblocked: 'Débloqué', toastPwChanged: 'Mot de passe modifié', toastPhoneChanged: 'Numéro modifié', toastRead: 'Toutes les notifications sont lues'
+}};
+var DAYS = { ar: ['الاثنين', 'الثلاثاء', 'الإربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'], fr: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] };
+var DAYS_S = { ar: ['اثنين', 'ثلاثاء', 'إربعاء', 'خميس', 'جمعة', 'سبت', 'أحد'], fr: ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.'] };
+var MONTHS = { ar: ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'], fr: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'] };
+var MONTHS_L = { ar: MONTHS.ar, fr: ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] };
+function tm(s) { var p = String(s || '0:0').split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
+function mt(m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+function parse(d) { var p = d.split('-').map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2])); }
+function addDays(d, n) { var x = parse(d); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); }
+function dow(d) { return (parse(d).getUTCDay() + 6) % 7; }
+function fmtDate(d, L, style) {
+  var x = parse(d), day = x.getUTCDate(), mo = x.getUTCMonth(), w = dow(d);
+  var dn = L === 'fr' ? DAYS.fr[w].toLowerCase() : DAYS.ar[w];
+  if (style === 'dm') return day + ' ' + MONTHS[L][mo];
+  if (style === 'day') return L === 'fr' ? DAYS.fr[w] : DAYS.ar[w];
+  if (style === 'dshort') return DAYS_S[L][w] + ' ' + day;
+  if (style === 'long') return (L === 'fr' ? DAYS.fr[w] : dn) + ' ' + day + ' ' + MONTHS_L[L][mo] + ' ' + x.getUTCFullYear();
+  return dn + ' ' + day + ' ' + MONTHS_L[L][mo];
+}
+function money(n, L) { var s = Math.round(n).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' '); return L === 'ar' ? s + ' د.ت' : s + ' TND'; }
+function phoneLocal(d) { d = String(d || '').replace(/\D/g, '').slice(0, 8); var o = d.slice(0, 2); if (d.length > 2) o += ' ' + d.slice(2, 5); if (d.length > 5) o += ' ' + d.slice(5); return o; }
+function phone(d) { return '+216 ' + phoneLocal(d); }
+function genSlots(h, dur) {
+  var out = []; if (!h || !h.open || !dur) return out;
+  var a = tm(h.from), b = tm(h.to), bf = tm(h.bFrom), bt = tm(h.bTo);
+  for (var m = a; m + dur <= b; m += dur) { if (h.brk && m < bt && m + dur > bf) continue; out.push(mt(m)); }
+  return out;
+}
+function hash(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 10000) / 10000; }
+
+var SERVICES = [
+  { id: 'ext', nameAr: 'غسيل من برّا', nameFr: 'Lavage extérieur', price: 10, descAr: 'شامبوان، تشليل وتنشيف باليد', descFr: 'Shampoing, rinçage et séchage à la main', active: true },
+  { id: 'int', nameAr: 'غسيل من داخل', nameFr: 'Lavage intérieur', price: 12, descAr: 'أسبيراتور، التابلو والبلّار', descFr: 'Aspiration, tableau de bord et vitres', active: true },
+  { id: 'full', nameAr: 'غسيل كامل', nameFr: 'Lavage complet', price: 20, descAr: 'برّا وداخل، والجنط زادة', descFr: 'Extérieur + intérieur, jantes incluses', active: true },
+  { id: 'polish', nameAr: 'تلميع', nameFr: 'Lustrage', price: 35, descAr: 'تلميع بالماكينة وحماية للدهن', descFr: 'Polissage machine et protection de la peinture', active: true },
+  { id: 'engine', nameAr: 'تنظيف الموتور', nameFr: 'Nettoyage moteur', price: 15, descAr: 'تنظيف الموتور بالبخار', descFr: 'Nettoyage vapeur du compartiment moteur', active: true },
+  { id: 'seats', nameAr: 'تنظيف الكراسي', nameFr: 'Nettoyage sièges', price: 40, descAr: 'شامبوان للكراسي بالعمق ونشفان', descFr: 'Shampoing en profondeur et séchage des sièges', active: false }
+];
+var PRICE = {}; SERVICES.forEach(function (s) { PRICE[s.id] = s.price; });
+
+// [nameAr, nameFr, phone, date, time, services, status, car, extra]
+var R = [
+  ['أحمد بن صالح', 'Ahmed Ben Salah', '22345671', '2026-10-21', '08:00', ['full'], 'done', ['Volkswagen', 'Polo', 225, 6431]],
+  ['إيناس الحمامي', 'Ines Hammami', '55102938', '2026-10-21', '08:30', ['ext'], 'done', ['Kia', 'Picanto', 241, 1187]],
+  ['محمد علي الغربي', 'Mohamed Ali Gharbi', '98765432', '2026-10-21', '09:00', ['full', 'polish'], 'done', ['Mercedes', 'Classe C', 198, 7420]],
+  ['سارة الجلاصي', 'Sarra Jlassi', '24681357', '2026-10-21', '09:00', ['int'], 'done', null],
+  ['حمزة الشعباني', 'Hamza Chaabani', '50223344', '2026-10-21', '09:00', ['ext'], 'done', ['Renault', 'Clio', 233, 9015]],
+  ['نور العياري', 'Nour Ayari', '93456120', '2026-10-21', '10:00', ['full'], 'done', ['Peugeot', '208', 247, 3302]],
+  ['فارس المجري', 'Fares Mejri', '29871234', '2026-10-21', '10:00', ['ext'], 'cancelled', null, { by: 'customer' }],
+  ['ياسمين الطرابلسي', 'Yasmine Trabelsi', '52789014', '2026-10-21', '11:00', ['full', 'engine'], 'upcoming', ['Hyundai', 'i20', 238, 5560]],
+  ['وسيم البوعزيزي', 'Wassim Bouazizi', '97112233', '2026-10-21', '11:30', ['ext'], 'upcoming', ['Seat', 'Ibiza', 219, 8841]],
+  ['رانية بن عمر', 'Rania Ben Amor', '21445566', '2026-10-21', '11:30', ['polish'], 'upcoming', ['Toyota', 'Yaris', 244, 1290], { resched: '15:00' }],
+  ['أسامة الخليفي', 'Oussama Khelifi', '58990011', '2026-10-21', '11:30', ['full'], 'upcoming', null],
+  ['أميرة الزواري', 'Amira Zouari', '26778899', '2026-10-21', '14:00', ['int', 'engine'], 'upcoming', ['Citroën', 'C3', 236, 4417]],
+  ['سكندر بلحاج', 'Skander Belhadj', '99334455', '2026-10-21', '14:00', ['full'], 'upcoming', ['Volkswagen', 'Golf 8', 246, 2003]],
+  ['مريم الدريدي', 'Mariem Dridi', '53221100', '2026-10-21', '16:30', ['ext'], 'upcoming', null],
+  ['خليل السعيدي', 'Khalil Saidi', '20667788', '2026-10-21', '18:00', ['full'], 'upcoming', ['Dacia', 'Logan', 214, 6678]],
+  ['عزيز منصور', 'Aziz Mansour', '94556677', '2026-10-22', '09:30', ['ext', 'int'], 'upcoming', ['Fiat', 'Tipo', 229, 3141]],
+  ['هالة كراي', 'Hela Karray', '25889900', '2026-10-22', '10:00', ['polish'], 'upcoming', ['Audi', 'A3', 242, 7788], { resched: '16:00' }],
+  ['بلال الجبالي', 'Bilel Jebali', '51123987', '2026-10-22', '15:00', ['full'], 'upcoming', null],
+  ['سلمى الغرسلي', 'Salma Gharsalli', '92001122', '2026-10-23', '08:30', ['seats'], 'upcoming', ['Suzuki', 'Swift', 231, 5023]],
+  ['مهدي الفرشيشي', 'Mehdi Ferchichi', '27443322', '2026-10-23', '17:00', ['full'], 'upcoming', ['Peugeot', '3008', 245, 9910]],
+  ['يسرى بن يوسف', 'Yosra Ben Youssef', '56334411', '2026-10-24', '09:00', ['ext'], 'upcoming', null],
+  ['أشرف الحامدي', 'Achref Hamdi', '98221144', '2026-10-24', '10:30', ['full', 'polish'], 'upcoming', ['BMW', 'Série 1', 240, 1456]],
+  ['أنس المصمودي', 'Ons Masmoudi', '23119988', '2026-10-26', '11:00', ['int'], 'upcoming', ['Kia', 'Rio', 248, 2219]],
+  ['أحمد بن صالح', 'Ahmed Ben Salah', '22345671', '2026-10-20', '10:00', ['full'], 'done', ['Volkswagen', 'Polo', 225, 6431]],
+  ['سارة الجلاصي', 'Sarra Jlassi', '24681357', '2026-10-20', '15:30', ['ext'], 'cancelled', null, { by: 'garage' }],
+  ['وسيم البوعزيزي', 'Wassim Bouazizi', '97112233', '2026-10-19', '09:00', ['engine', 'ext'], 'done', ['Seat', 'Ibiza', 219, 8841]],
+  ['إيناس الحمامي', 'Ines Hammami', '55102938', '2026-10-19', '17:30', ['full'], 'done', ['Kia', 'Picanto', 241, 1187]],
+  ['محمد علي الغربي', 'Mohamed Ali Gharbi', '98765432', '2026-10-17', '11:00', ['polish'], 'done', ['Mercedes', 'Classe C', 198, 7420]],
+  ['نور العياري', 'Nour Ayari', '93456120', '2026-10-17', '12:00', ['int'], 'cancelled', null, { by: 'customer' }],
+  ['ياسمين الطرابلسي', 'Yasmine Trabelsi', '52789014', '2026-10-16', '16:00', ['full'], 'done', ['Hyundai', 'i20', 238, 5560], { resched: '10:30' }]
+];
+var BT = ['19:42', '21:05', '08:17', '13:36', '22:48', '17:10', '10:24'];
+var RES = R.map(function (r, i) {
+  var x = r[8] || {}, date = r[3], time = r[4];
+  var hist = [{ type: 'booked', date: addDays(date, -(1 + (i % 3))), time: BT[i % BT.length] }];
+  if (x.resched) hist.push({ type: 'resched', date: addDays(date, -1), time: '09:12', from: x.resched });
+  if (r[6] === 'done') hist.push({ type: 'done', date: date, time: mt(tm(time) + 40) });
+  if (r[6] === 'cancelled') hist.push({ type: 'cancelled', by: x.by, date: x.by === 'garage' ? date : addDays(date, -1), time: x.by === 'garage' ? '09:30' : '18:55' });
+  return {
+    id: 'r' + i, ref: 'RGW-' + (1187 - i * 3 + (i % 2)), nameAr: r[0], nameFr: r[1], phone: r[2], date: date, time: time,
+    lines: r[5].map(function (id) { return { id: id, price: PRICE[id] }; }), status: r[6],
+    car: r[7] ? { brand: r[7][0], model: r[7][1], s: r[7][2], n: r[7][3] } : null, history: hist
+  };
+});
+
+var HOURS = [0, 1, 2, 3, 4, 5, 6].map(function (i) {
+  return { open: i < 6, from: '08:00', to: '19:00', brk: i < 5, bFrom: '13:00', bTo: '14:00' };
+});
+
+var NOTIFS = [
+  { ar: 'حجز جديد من أشرف الحامدي · السبت 10:30', fr: 'Nouvelle réservation : Achref Hamdi · sam. 10:30', tAr: 'قبل 5 دقايق', tFr: 'il y a 5 min', unread: true, icon: 'event_available' },
+  { ar: 'هالة كراي بدّلت الموعد لغدوة 10:00', fr: 'Hela Karray a reporté à demain 10:00', tAr: 'قبل 40 دقيقة', tFr: 'il y a 40 min', unread: true, icon: 'update' },
+  { ar: 'فارس المجري بطّل الحجز متاع اليوم 10:00', fr: 'Fares Mejri a annulé sa réservation de 10:00', tAr: 'البارح 18:55', tFr: 'hier, 18:55', unread: false, icon: 'event_busy' },
+  { ar: 'ملخّص النهار: عندك 14 حجز اليوم', fr: 'Résumé du jour : 14 réservations aujourd’hui', tAr: 'اليوم 07:30', tFr: 'aujourd’hui, 07:30', unread: false, icon: 'summarize' }
+];
+
+window.RAGHWA = {
+  T: T, DAYS: DAYS, DAYS_S: DAYS_S, MONTHS: MONTHS, MONTHS_L: MONTHS_L,
+  tm: tm, mt: mt, addDays: addDays, dow: dow, fmtDate: fmtDate, money: money, phone: phone, phoneLocal: phoneLocal, genSlots: genSlots, hash: hash,
+  SERVICES: SERVICES, RES: RES, HOURS: HOURS, NOTIFS: NOTIFS,
+  TODAY: '2026-10-21', NOW: '11:15',
+  CHART: [['2026-10-15', 14], ['2026-10-16', 19], ['2026-10-17', 24], ['2026-10-18', 0], ['2026-10-19', 13], ['2026-10-20', 17], ['2026-10-21', null]],
+  KPI: { doneBase: 151, revBase: 2890 },
+  GARAGE: { name: 'Raghwa Wash La Marsa', desc: 'غسيل باليد بمنتوجات ما تضرّش الدهن، قدّام شط المرسى. باركينغ للحرفاء وقهوة وانت تستنّى.', phone: '71 774 512', address: 'Avenue Habib Bourguiba', area: 'La Marsa', city: 'Tunis', lat: 36.8782, lng: 10.3247 },
+  OWNER: { ar: 'كريم المنصوري', fr: 'Karim Mansouri', firstAr: 'كريم', firstFr: 'Karim', phone: '98123456' },
+  BLOCKS: { '2026-10-27': 'holiday' },
+  SLOT_BLOCKS: { '2026-10-23|17:30': 'maintenance', '2026-10-23|18:00': 'maintenance', '2026-10-23|18:30': 'maintenance' }
+};
+})();

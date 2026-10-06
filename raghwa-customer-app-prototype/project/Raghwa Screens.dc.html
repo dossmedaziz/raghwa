@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#ECECEC;font-family:Inter,sans-serif;color:#141414}a{color:#0B3B8F}a:hover{color:#082C6B}*{box-sizing:border-box}</style>
+</helmet>
+<section style="padding:64px;display:flex;flex-direction:column;gap:40px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:900px">
+    <div style="font-size:48px;font-weight:800">Raghwa · key screens</div>
+    <div style="font-size:20px;color:#5E5E5E">Arabic (Derja, RTL) on top, French (LTR) below. Every frame is the live app — interactive. <a href="Raghwa Prototype.dc.html">Open prototype</a> · <a href="Raghwa Style Guide.dc.html">Style guide</a></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div style="font-size:28px;font-weight:800">Main flow</div>
+    <div style="display:flex;gap:32px">
+      <sc-for list="{{ keys }}" as="k">
+        <div style="display:flex;flex-direction:column;gap:16px;flex:none">
+          <div style="font-size:18px;font-weight:700">{{ k.label }}</div>
+          <dc-import name="RaghwaApp" lang="ar" start="{{ k.id }}" still="{{ true }}" hint-size="390px,844px"></dc-import>
+          <dc-import name="RaghwaApp" lang="fr" start="{{ k.id }}" still="{{ true }}" hint-size="390px,844px"></dc-import>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div style="font-size:28px;font-weight:800">States</div>
+    <div style="display:flex;gap:32px">
+      <sc-for list="{{ states }}" as="k">
+        <div style="display:flex;flex-direction:column;gap:16px;flex:none">
+          <div style="font-size:18px;font-weight:700">{{ k.label }}</div>
+          <dc-import name="RaghwaApp" lang="{{ k.lang }}" start="{{ k.id }}" still="{{ true }}" hint-size="390px,844px"></dc-import>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const m = a => a.map(([id, label, lang]) => ({ id, label, lang: lang || 'ar' }));
+    return {
+      keys: m([['login', 'Login'], ['map:pin', 'Map · preview card'], ['map:half', 'Map · nearest list'], ['garage', 'Garage details'], ['book1:sel', '1 · Date & slot'], ['book2', '2 · Services'], ['book3', '3 · Confirm'], ['success', 'Success'], ['res', 'My reservations'], ['resd:up', 'Reservation detail'], ['resched2', 'Reschedule · confirm'], ['profile', 'Profile'], ['cars', 'My cars']]),
+      states: m([['login:err', 'Validation · AR'], ['signup:err', 'Validation · FR', 'fr'], ['otp:err', 'OTP error'], ['map:loading', 'Map loading'], ['map:denied', 'Location denied'], ['map:offline', 'No internet', 'fr'], ['map:filters', 'Filters'], ['book1:loading', 'Slots loading'], ['book2:err', 'No service picked', 'fr'], ['resd:locked', '< 2 h locked'], ['cancel', 'Cancel sheet'], ['rate', 'Rating sheet', 'fr'], ['res:loading', 'Reservations loading'], ['res:empty', 'Empty state'], ['carform:err', 'Car form errors'], ['logout', 'Logout dialog', 'fr']])
+    };
+  }
+}
+</script>
+</body>
+</html>

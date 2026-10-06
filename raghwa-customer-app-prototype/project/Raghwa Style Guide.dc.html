@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet">
+<style>body{margin:0;background:#fff;font-family:Inter,sans-serif;color:#141414}a{color:#0B3B8F}a:hover{color:#082C6B}*{box-sizing:border-box}@keyframes rgspin{to{transform:rotate(360deg)}}</style>
+</helmet>
+<div style="max-width:1200px;margin:0 auto;padding:56px 32px 96px;display:flex;flex-direction:column;gap:64px">
+  <header style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="position:relative;width:72px;height:72px;border-radius:20px;background:#0B3B8F;flex:none"><div style="position:absolute;left:18px;top:20px;width:36px;height:36px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></div><div style="position:absolute;left:28px;top:36px;width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.9)"></div></div>
+    <div style="flex:1;min-width:260px"><div style="font-size:44px;font-weight:800;line-height:1.1">Raghwa style guide <span style="font-family:Cairo,sans-serif">· رغوة</span></div><div style="font-size:17px;color:#5E5E5E;margin-top:6px">Base-inspired foundations with the Raghwa deep-blue + aqua theme. Shared with the garage dashboard. <a href="Raghwa Prototype.dc.html">Prototype</a> · <a href="Raghwa Screens.dc.html">Key screens</a></div></div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:28px;font-weight:800">Color tokens</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">
+      <sc-for list="{{ colors }}" as="c"><div style="display:flex;flex-direction:column;gap:8px"><div style="height:88px;border-radius:16px;background:{{ c.hex }};box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)"></div><div style="font-size:14px;font-weight:700">{{ c.name }}</div><div style="font-size:12px;color:#5E5E5E;font-family:ui-monospace,Menlo,monospace">{{ c.hex }} · {{ c.use }}</div></div></sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:28px;font-weight:800">Type scale</div>
+    <div style="font-size:15px;color:#5E5E5E">Inter for French / Latin, Cairo for Arabic. Same sizes; Cairo uses +10% line-height.</div>
+    <div style="display:flex;flex-direction:column;border-top:1px solid #EEEEEE">
+      <sc-for list="{{ type }}" as="ty"><div style="display:grid;grid-template-columns:200px minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:baseline;padding:16px 0;border-bottom:1px solid #EEEEEE"><div><div style="font-size:14px;font-weight:700">{{ ty.name }}</div><div style="font-size:12px;color:#5E5E5E;font-family:ui-monospace,Menlo,monospace">{{ ty.spec }}</div></div><div style="font-size:{{ ty.size }}px;font-weight:{{ ty.w }};line-height:1.25">{{ ty.fr }}</div><div dir="rtl" style="font-family:Cairo,sans-serif;font-size:{{ ty.size }}px;font-weight:{{ ty.w }};line-height:1.4">{{ ty.ar }}</div></div></sc-for>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:40px">
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Spacing · 4/8 grid</div>
+      <sc-for list="{{ space }}" as="sp"><div style="display:flex;align-items:center;gap:16px"><span style="width:40px;font-size:13px;font-family:ui-monospace,Menlo,monospace;color:#5E5E5E">{{ sp }}</span><div style="height:16px;width:{{ sp }}px;background:#22C4D6;border-radius:3px"></div></div></sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Radius</div>
+      <div style="display:flex;flex-wrap:wrap;gap:16px"><sc-for list="{{ radii }}" as="r"><div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:72px;height:72px;background:#EDF2FC;border:2px solid #0B3B8F;border-radius:{{ r.v }}px"></div><span style="font-size:12px;color:#5E5E5E">{{ r.n }}</span></div></sc-for></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Elevation</div>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;padding:12px;background:#F6F6F6;border-radius:16px"><sc-for list="{{ elev }}" as="e"><div style="width:96px;height:72px;border-radius:14px;background:#fff;box-shadow:{{ e.v }};display:flex;align-items:flex-end;padding:8px;font-size:11px;color:#5E5E5E">{{ e.n }}</div></sc-for></div>
+      <div style="font-size:13px;color:#5E5E5E">Flat surfaces by default; shadow only on floating elements over the map.</div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="font-size:28px;font-weight:800">Buttons · states</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700">Réserver</button><span style="font-size:12px;color:#5E5E5E">Primary · default</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:#082C6B;color:#fff;font-size:17px;font-weight:700;transform:scale(.98)">Réserver</button><span style="font-size:12px;color:#5E5E5E">Pressed</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;box-shadow:0 0 0 3px #fff,0 0 0 5px #22C4D6">Réserver</button><span style="font-size:12px;color:#5E5E5E">Focused</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:#E2E2E2;color:#8A8A8A;font-size:17px;font-weight:700">Réserver</button><span style="font-size:12px;color:#5E5E5E">Disabled</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:#3D5E9E;color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px">{{ spin }}Confirmation…</button><span style="font-size:12px;color:#5E5E5E">Loading</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:#F3F3F3;font-size:17px;font-weight:700">Secondary</button><span style="font-size:12px;color:#5E5E5E">Secondary</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:#D92D20;color:#fff;font-size:17px;font-weight:700">Oui, annuler</button><span style="font-size:12px;color:#5E5E5E">Destructive</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button style="height:56px;border:none;border-radius:999px;background:none;color:#0B3B8F;font-size:17px;font-weight:700">Tertiary</button><span style="font-size:12px;color:#5E5E5E">Tertiary / link</span></div>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:40px">
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Inputs</div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">Nom et prénom</div><div style="height:56px;border-radius:12px;background:#F3F3F3;border:2px solid transparent;display:flex;align-items:center;padding:0 16px;font-size:16px;color:#8A8A8A">ex. Ahmed Ben Salah</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">Focused</div><div style="height:56px;border-radius:12px;background:#fff;border:2px solid #0B3B8F;display:flex;align-items:center;padding:0 16px;font-size:16px">Ahmed Ben Sal<span style="width:2px;height:22px;background:#0B3B8F"></span></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">Phone · error</div>
+        <div style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid #D92D20;padding:0 14px;gap:10px"><div style="position:relative;width:26px;height:18px;border-radius:3px;background:#E70013;overflow:hidden;flex:none"><div style="position:absolute;left:8px;top:4px;width:10px;height:10px;border-radius:50%;background:#fff"></div><div style="position:absolute;left:9.5px;top:5.5px;width:7px;height:7px;border-radius:50%;background:#E70013"></div><div style="position:absolute;left:11.5px;top:6px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div><span style="font-size:16px;font-weight:600">+216</span><div style="width:1px;height:24px;background:#D0D0D0"></div><span style="font-size:16px">22 34</span></div>
+        <div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>Le numéro doit contenir 8 chiffres</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">OTP</div><div style="display:flex;gap:12px"><sc-for list="{{ otp }}" as="o"><div style="width:64px;height:72px;border-radius:12px;background:#F3F3F3;border:2px solid {{ o.bd }};display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700">{{ o.d }}</div></sc-for></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">Tunisian plate</div><div dir="rtl" style="align-self:flex-start;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px;border-radius:6px;background:#141414;color:#fff;font-size:18px;font-weight:800;font-family:Cairo,Inter,sans-serif;box-shadow:inset 0 0 0 2px #fff,0 0 0 1px #141414"><span>215</span><span style="font-size:15px">تونس</span><span>4521</span></div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Chips · segmented · toggle</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px"><span style="height:40px;padding:0 16px;border-radius:999px;background:#0B3B8F;color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center">Selected</span><span style="height:40px;padding:0 16px;border-radius:999px;background:#F3F3F3;font-size:14px;font-weight:600;display:flex;align-items:center">Default</span><span style="height:40px;padding:0 16px;border-radius:999px;background:#F6F6F6;color:#AFAFAF;font-size:14px;font-weight:600;display:flex;align-items:center">Disabled</span></div>
+      <div style="display:flex;padding:4px;border-radius:999px;background:#F3F3F3;gap:4px"><span style="flex:1;height:40px;border-radius:999px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center">À venir</span><span style="flex:1;height:40px;font-size:14px;color:#5E5E5E;display:flex;align-items:center;justify-content:center">Passées</span><span style="flex:1;height:40px;font-size:14px;color:#5E5E5E;display:flex;align-items:center;justify-content:center">Annulées</span></div>
+      <div style="font-size:14px;font-weight:600">Slot chips</div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px"><sc-for list="{{ slots }}" as="sl"><div style="height:60px;border-radius:12px;border:1.5px solid {{ sl.bd }};background:{{ sl.bg }};color:{{ sl.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-size:16px;font-weight:700;text-decoration:{{ sl.dec }}">{{ sl.t }}</span><span style="font-size:12px;font-weight:600;color:{{ sl.sfg }}">{{ sl.s }}</span></div></sc-for></div>
+      <div style="display:flex;gap:16px;align-items:center"><span style="position:relative;width:52px;height:32px;border-radius:16px;background:#0B3B8F"><span style="position:absolute;top:2px;left:22px;width:28px;height:28px;border-radius:50%;background:#fff"></span></span><span style="position:relative;width:52px;height:32px;border-radius:16px;background:#D6D6D6"><span style="position:absolute;top:2px;left:2px;width:28px;height:28px;border-radius:50%;background:#fff"></span></span><span style="font-size:13px;color:#5E5E5E">Toggle on / off</span></div>
+      <div style="font-size:14px;font-weight:600">Status badges</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px"><span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#E6F4EC;color:#05713C">Confirmée</span><span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#FFF4DE;color:#8A5A00">1 place</span><span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#FDECEA;color:#B3261E">Annulée</span><span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#E4F8FA;color:#006B78">Par défaut</span><span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#EEEEEE;color:#333">Bientôt</span></div>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:40px">
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">List item · card</div>
+      <div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #F0F0F0"><div style="width:64px;height:64px;border-radius:12px;background:repeating-linear-gradient(135deg,#E3EAF3 0 6px,#EEF3F8 6px 12px);display:flex;align-items:center;justify-content:center;color:#7F93AE"><span style="font-family:'Material Symbols Rounded';font-size:26px;line-height:1">local_car_wash</span></div><div style="flex:1;display:flex;flex-direction:column;gap:4px"><div style="font-size:16px;font-weight:700">Raghwa Wash La Marsa</div><div style="font-size:13px;color:#5E5E5E">★ <b style="color:#141414">4,7</b> · 1,2 km · La Marsa</div><div><span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#E6F4EC;color:#05713C">Ouvert</span> <span style="font-size:13px;color:#5E5E5E">ferme à 19:00</span></div></div><div style="font-size:14px;font-weight:700">dès 10 TND</div></div>
+      <div style="display:flex;align-items:center;gap:14px;height:60px;border-bottom:1px solid #F3F3F3"><span style="width:40px;height:40px;border-radius:50%;background:#F3F3F3;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">directions_car</span></span><span style="flex:1;font-size:16px;font-weight:600">Mes voitures</span><span style="font-size:14px;color:#5E5E5E">2 voitures</span><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#AFAFAF">chevron_right</span></div>
+      <div dir="rtl" style="display:flex;align-items:center;gap:14px;height:60px;border-bottom:1px solid #F3F3F3;font-family:Cairo,sans-serif"><span style="width:40px;height:40px;border-radius:50%;background:#F3F3F3;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">directions_car</span></span><span style="flex:1;font-size:16px;font-weight:600">كراهبي</span><span style="font-size:14px;color:#5E5E5E">2 كراهب</span><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#AFAFAF;display:inline-block;transform:scaleX(-1)">chevron_right</span></div>
+      <div style="font-size:13px;color:#5E5E5E">RTL: rows mirror automatically; directional icons (arrows, chevrons) flip with scaleX(-1).</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Map pin · toast · tab bar</div>
+      <div style="position:relative;height:120px;border-radius:16px;background:#EEF0F2;display:flex;align-items:center;justify-content:center;gap:24px">
+        <div style="display:flex;flex-direction:column;align-items:center"><div style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border-radius:999px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:13px;font-weight:700"><span style="width:11px;height:11px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></span>dès 10 TND</div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #fff"></div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;transform:scale(1.18)"><div style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border-radius:999px;background:#0B3B8F;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:13px;font-weight:700"><span style="width:11px;height:11px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></span>dès 10 TND</div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #0B3B8F"></div></div>
+        <div style="display:flex;flex-direction:column;align-items:center"><div style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border-radius:999px;background:#F3F3F3;color:#6B6B6B;box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:13px;font-weight:700"><span style="width:11px;height:11px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#AFAFAF"></span>Fermé</div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #F3F3F3"></div></div>
+        <div style="width:56px;height:56px;border-radius:50%;background:rgba(11,59,143,.14);display:flex;align-items:center;justify-content:center"><div style="width:20px;height:20px;border-radius:50%;background:#0B3B8F;border:3px solid #fff"></div></div>
+      </div>
+      <div style="align-self:flex-start;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:14px;background:#141414;color:#fff;font-size:15px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#22C4D6;font-variation-settings:'FILL' 1">check_circle</span>Réservation annulée</div>
+      <div style="display:flex;border:1px solid #EEEEEE;border-radius:16px;height:64px;align-items:center"><sc-for list="{{ tabs }}" as="tb"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ tb.c }}"><span style="font-family:'Material Symbols Rounded';font-size:26px;line-height:1;font-variation-settings:'FILL' {{ tb.f }}">{{ tb.i }}</span><span style="font-size:12px;font-weight:{{ tb.w }}">{{ tb.l }}</span></div></sc-for></div>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:40px">
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Bottom sheet</div>
+      <div style="height:300px;border-radius:20px;background:rgba(0,0,0,.42);position:relative;overflow:hidden"><div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:10px 20px 20px;display:flex;flex-direction:column;gap:14px"><div style="align-self:center;width:40px;height:5px;border-radius:3px;background:#D6D6D6"></div><div style="font-size:22px;font-weight:800">Annuler la réservation ?</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="height:36px;padding:0 14px;border-radius:999px;background:#0B3B8F;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center">Changement de programme</span><span style="height:36px;padding:0 14px;border-radius:999px;background:#F3F3F3;font-size:13px;font-weight:600;display:flex;align-items:center">Autre raison</span></div><div style="height:52px;border-radius:999px;background:#D92D20;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center">Oui, annuler</div></div></div>
+      <div style="font-size:13px;color:#5E5E5E">Map sheet snaps: collapsed 176 · half 440 · expanded 700 px. Drag or tap the handle.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px"><div style="font-size:22px;font-weight:800">Dialog</div>
+      <div style="height:300px;border-radius:20px;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;padding:24px"><div style="background:#fff;border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:10px;max-width:320px"><div style="width:48px;height:48px;border-radius:50%;background:#FDECEA;color:#B3261E;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1">logout</span></div><div style="font-size:20px;font-weight:800">Se déconnecter ?</div><div style="font-size:14px;color:#5E5E5E;line-height:1.5">Vous devrez vous reconnecter avec votre numéro.</div><div style="display:flex;gap:8px;margin-top:6px"><span style="flex:1;height:48px;border-radius:999px;background:#F3F3F3;font-weight:700;display:flex;align-items:center;justify-content:center">Annuler</span><span style="flex:1;height:48px;border-radius:999px;background:#D92D20;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center">Déconnexion</span></div></div></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      colors: [['Primary', '#0B3B8F', 'buttons, selected'], ['Primary pressed', '#082C6B', 'pressed'], ['Primary tint', '#EDF2FC', 'selected bg'], ['Accent aqua', '#22C4D6', 'pins, highlights'], ['Accent tint', '#E4F8FA', 'info, foam'], ['Accent ink', '#006B78', 'text on tint'], ['Ink', '#141414', 'text primary'], ['Grey 600', '#5E5E5E', 'text secondary'], ['Grey 400', '#AFAFAF', 'disabled, icons'], ['Grey 200', '#E2E2E2', 'borders'], ['Grey 100', '#F3F3F3', 'fills, inputs'], ['Grey 50', '#F6F6F6', 'surfaces'], ['Positive', '#0E8345', 'confirmed, done'], ['Warning', '#F5A623', 'few places'], ['Negative', '#D92D20', 'cancel, errors'], ['Map base', '#EEF0F2', 'map fallback']].map(([name, hex, use]) => ({ name, hex, use })),
+      type: [['Display', '44 / 800', 44, 800, 'Réservation confirmée', 'تأكّد الحجز'], ['Heading L', '32 / 800', 32, 800, 'Bon retour !', 'مرحبا بيك'], ['Heading M', '24 / 800', 24, 800, 'Quels services ?', 'شنوّة تحب نعملولك؟'], ['Heading S', '20 / 800', 20, 800, 'Stations à proximité', 'أقرب الڨراجات'], ['Label L', '17 / 700', 17, 700, 'Confirmer la réservation', 'أكّد الحجز'], ['Label M', '14 / 600', 14, 600, 'Numéro de téléphone', 'نومرو التليفون'], ['Paragraph L', '16 / 400', 16, 400, 'Annulation gratuite jusqu’à 2 h avant.', 'الإلغاء بلاش حتى لقبل بساعتين.'], ['Paragraph S', '13 / 400', 13, 400, 'Triées par distance', 'مرتّبين حسب المسافة']].map(([name, spec, size, w, fr, ar]) => ({ name, spec, size, w, fr, ar })),
+      space: [4, 8, 12, 16, 24, 32, 48, 64],
+      radii: [['6 · plate', 6], ['12 · input', 12], ['16 · card', 16], ['24 · sheet', 24], ['pill', 999]].map(([n, v]) => ({ n, v })),
+      elev: [['0 · flat', 'none'], ['1 · pin', '0 2px 10px rgba(0,0,0,.2)'], ['2 · float', '0 4px 16px rgba(0,0,0,.14)'], ['3 · sheet', '0 8px 32px rgba(0,0,0,.2)']].map(([n, v]) => ({ n, v })),
+      otp: [['1', '#F3F3F3'], ['2', '#F3F3F3'], ['', '#0B3B8F'], ['', 'transparent']].map(([d, bd]) => ({ d, bd })),
+      slots: [['10:30', '1 place', '#fff', '#141414', '#8A5A00', '#E2E2E2', 'none'], ['11:00', '2 places', '#0B3B8F', '#fff', '#DCE7FF', '#0B3B8F', 'none'], ['11:30', 'Complet', '#F6F6F6', '#AFAFAF', '#9A9A9A', '#F6F6F6', 'none'], ['09:00', 'Passé', '#F6F6F6', '#AFAFAF', '#9A9A9A', '#F6F6F6', 'line-through']].map(([t, s, bg, fg, sfg, bd, dec]) => ({ t, s, bg, fg, sfg, bd, dec })),
+      tabs: [['map', 'Carte', 1], ['event_note', 'Réservations', 0], ['person', 'Profil', 0]].map(([i, l, on]) => ({ i, l, f: on, c: on ? '#0B3B8F' : '#6B6B6B', w: on ? 700 : 500 })),
+      spin: React.createElement('span', { style: { width: 20, height: 20, borderRadius: '50%', border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: '#fff', display: 'inline-block', animation: 'rgspin .8s linear infinite' } })
+    };
+  }
+}
+</script>
+</body>
+</html>

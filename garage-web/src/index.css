@@ -1,0 +1,159 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "leaflet/dist/leaflet.css";
+
+/* Light-only app: `dark:` utilities only apply under a .dark class, which is never set. */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "IBM Plex Sans Arabic", Inter, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-latin: Inter, "IBM Plex Sans Arabic", sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", sans-serif;
+  --font-mono: ui-monospace, Menlo, monospace;
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  /* Raghwa brand palette (from the design) */
+  --color-navy: #0A2A66;
+  --color-brand-hover: #0A2E70;
+  --color-aqua: #22C3D6;
+  --color-aqua-soft: #9FDCEA;
+  --color-teal: #0A7F93;
+  --color-teal-soft: #E3F6FA;
+  --color-teal-ink: #0B4F5C;
+  --color-cyan-wash: #DDF3F8;
+  --color-switch: #0E8FA5;
+  --color-ink-2: #33415C;
+  --color-subtle: #8A97AD;
+  --color-line: #EEF2F8;
+  --color-line-soft: #F1F4F9;
+  --color-sky: #EEF4FB;
+  --color-sky-ink: #1D3E78;
+  --color-blue-wash: #E4EDFF;
+  --color-field: #F3F6FA;
+  --color-success: #0B6B4A;
+  --color-success-dot: #16A36F;
+  --color-success-soft: #E1F5EC;
+  --color-danger-soft: #FDECEC;
+  --color-danger-ink: #AE2A31;
+  --color-amber: #E8A317;
+  --color-amber-soft: #FFF2DE;
+  --color-amber-ink: #9A5A05;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.2);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 1.8);
+  --radius-4xl: calc(var(--radius) * 2.4);
+
+  --shadow-card: 0 1px 2px rgba(11, 27, 58, 0.04), 0 6px 20px rgba(11, 27, 58, 0.04);
+  --shadow-pop: 0 18px 40px rgba(11, 27, 58, 0.16);
+  --shadow-modal: 0 30px 60px rgba(11, 27, 58, 0.25);
+
+  --animate-rg-in: rg-in 0.25s ease;
+  --animate-rg-pulse: rg-pulse 1.3s ease-in-out infinite;
+  @keyframes rg-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes rg-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+}
+
+/* Light-only product: the design defines a single light palette. */
+:root {
+  --background: #F4F7FB;
+  --foreground: #0B1B3A;
+  --card: #ffffff;
+  --card-foreground: #0B1B3A;
+  --popover: #ffffff;
+  --popover-foreground: #0B1B3A;
+  --primary: #0E3B8C;
+  --primary-foreground: #ffffff;
+  --secondary: #EEF2F8;
+  --secondary-foreground: #0B1B3A;
+  --muted: #F4F7FB;
+  --muted-foreground: #5B6B85;
+  --accent: #EEF4FB;
+  --accent-foreground: #0E3B8C;
+  --destructive: #C2323B;
+  --border: #E3E9F2;
+  --input: #D5DEEA;
+  --ring: #22C3D6;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+  html[lang="fr"] {
+    font-family: var(--font-latin);
+  }
+  body {
+    @apply bg-background text-foreground text-sm leading-[1.45];
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-aqua);
+    outline-offset: 2px;
+  }
+}
+
+/* Material Symbols Rounded icon font (the design's icon set) */
+.ms {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  width: 1em;
+  overflow: hidden;
+  display: inline-block;
+  flex-shrink: 0;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  user-select: none;
+}
+
+.leaflet-container {
+  font-family: inherit;
+}
+
+.bg-stripes {
+  background: repeating-linear-gradient(45deg, #E9EDF3 0 6px, #D3DAE5 6px 12px);
+}
+.bg-photo {
+  background: repeating-linear-gradient(135deg, #EEF3FA 0 8px, #E2EAF5 8px 16px);
+}

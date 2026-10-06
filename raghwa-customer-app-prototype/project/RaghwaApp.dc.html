@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F6F6}
+a{color:#0B3B8F}a:hover{color:#082C6B}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+input,button,textarea{font-family:inherit;color:inherit}
+input::placeholder,textarea::placeholder{color:#8A8A8A}
+::-webkit-scrollbar{display:none}
+@keyframes rgspin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div dir="{{ dir }}" lang="{{ lang }}" style="position:relative;width:390px;height:844px;overflow:hidden;background:#fff;color:#141414;font-family:{{ font }};border-radius:44px;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 24px 64px rgba(0,0,0,.14);isolation:isolate">
+
+<div dir="ltr" style="position:absolute;top:0;left:0;right:0;height:47px;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 40px;z-index:80;color:{{ sbFg }};pointer-events:none;font-family:Inter,sans-serif">
+  <span style="font-size:16px;font-weight:600">10:15</span>
+  <div style="position:absolute;left:135px;top:10px;width:120px;height:34px;border-radius:20px;background:#000"></div>
+  <div style="display:flex;gap:5px;align-items:center">
+    <span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1;font-variation-settings:'FILL' 1">signal_cellular_alt</span>
+    <span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1;font-variation-settings:'FILL' 1">wifi</span>
+    <div style="width:25px;height:12px;border-radius:3.5px;border:1.5px solid {{ sbFg }};padding:1.5px;opacity:.9"><div style="width:70%;height:100%;border-radius:1.5px;background:{{ sbFg }}"></div></div>
+  </div>
+</div>
+
+<sc-if value="{{ s.splash }}" hint-placeholder-val="{{ true }}">
+<div onClick="{{ toLang }}" style="position:absolute;inset:0;background:#0B3B8F;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;cursor:pointer">
+  <sc-for list="{{ foam }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:rgba(255,255,255,{{ b.o }});border:1.5px solid rgba(255,255,255,{{ b.bo }})"></div></sc-for>
+  <div style="position:relative;width:112px;height:112px;margin-bottom:20px">
+    <div style="position:absolute;left:18px;top:22px;width:76px;height:76px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></div>
+    <div style="position:absolute;left:40px;top:56px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.9)"></div>
+    <div style="position:absolute;left:66px;top:46px;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.65)"></div>
+  </div>
+  <div style="font-family:Cairo,sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1.1">رغوة</div>
+  <div style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;letter-spacing:.45em;color:#9FE7EF;margin-top:8px;padding-left:.45em">RAGHWA</div>
+  <div style="position:absolute;bottom:64px;font-size:14px;color:rgba(255,255,255,.75)">{{ t.tagline }}</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.lang }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="flex:1;display:flex;flex-direction:column;padding:48px 24px 0;gap:32px">
+    <div style="position:relative;width:64px;height:64px;border-radius:18px;background:#0B3B8F">
+      <div style="position:absolute;left:16px;top:18px;width:32px;height:32px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></div>
+      <div style="position:absolute;left:25px;top:32px;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.9)"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <div style="font-family:Cairo,sans-serif;font-size:30px;font-weight:800;line-height:1.35">اختار اللغة</div>
+      <div style="font-family:Inter,sans-serif;font-size:22px;font-weight:700;color:#5E5E5E">Choisissez votre langue</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ langOpts }}" as="o">
+        <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:16px;height:76px;padding:0 20px;border-radius:16px;border:2px solid {{ o.bd }};background:{{ o.bg }};cursor:pointer;text-align:start">
+          <div style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E2E2E2;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;font-family:{{ o.font }}">{{ o.code }}</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:700;font-family:{{ o.font }}">{{ o.label }}</span><span style="font-size:13px;color:#5E5E5E;font-family:{{ o.font }}">{{ o.sub }}</span></div>
+          <div style="width:24px;height:24px;border-radius:50%;border:2px solid {{ o.rbd }};display:flex;align-items:center;justify-content:center"><div style="width:12px;height:12px;border-radius:50%;background:{{ o.dot }}"></div></div>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:16px 24px"><button onClick="{{ langNext }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.continue }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.intro }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;justify-content:flex-end;align-items:center;height:56px;padding:0 16px"><button onClick="{{ introSkip }}" style="height:40px;padding:0 18px;border-radius:999px;border:none;background:#F3F3F3;font-size:15px;font-weight:600;cursor:pointer">{{ t.skip }}</button></div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:8px 24px 0;gap:32px">
+    <div style="position:relative;height:330px;border-radius:28px;background:#EEF5FB;overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <sc-for list="{{ introBub }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for>
+      <div style="width:168px;height:168px;border-radius:50%;background:#fff;box-shadow:0 12px 32px rgba(11,59,143,.12);display:flex;align-items:center;justify-content:center;color:#0B3B8F"><span style="font-family:'Material Symbols Rounded';font-size:84px;line-height:1;font-variation-settings:'FILL' 1">{{ intro.icon }}</span></div>
+      <div style="position:absolute;top:48px;inset-inline-end:28px;height:36px;padding:0 14px;border-radius:999px;background:#0B3B8F;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 6px 16px rgba(11,59,143,.25)"><span style="width:10px;height:10px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></span>{{ intro.chip }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:28px;font-weight:800;line-height:1.3;text-wrap:pretty">{{ intro.title }}</div>
+      <div style="font-size:16px;line-height:1.6;color:#5E5E5E;text-wrap:pretty">{{ intro.body }}</div>
+    </div>
+  </div>
+  <div style="padding:16px 24px;display:flex;flex-direction:column;gap:24px;align-items:center">
+    <div style="display:flex;gap:8px"><sc-for list="{{ intro.dots }}" as="d"><div onClick="{{ d.go }}" style="height:8px;width:{{ d.w }}px;border-radius:4px;background:{{ d.c }};transition:width .2s;cursor:pointer"></div></sc-for></div>
+    <button onClick="{{ introNext }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ intro.btn }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.login }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff;overflow:hidden">
+  <div style="position:absolute;top:0;inset-inline-end:0;width:180px;height:180px;pointer-events:none"><sc-for list="{{ foamA }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for></div>
+  <div style="height:56px;flex:none"></div>
+  <div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:24px;padding:24px 24px 0;overflow-y:auto;position:relative">
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:32px;font-weight:800;line-height:1.25">{{ t.login_t }}</div><div style="font-size:16px;color:#5E5E5E;line-height:1.5">{{ t.login_s }}</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.phone }}</div>
+      <div dir="ltr" style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.phone }};padding:0 14px;gap:10px">
+        <div style="position:relative;width:26px;height:18px;border-radius:3px;background:#E70013;overflow:hidden;flex:none"><div style="position:absolute;left:8px;top:4px;width:10px;height:10px;border-radius:50%;background:#fff"></div><div style="position:absolute;left:9.5px;top:5.5px;width:7px;height:7px;border-radius:50%;background:#E70013"></div><div style="position:absolute;left:11.5px;top:6px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+        <span style="font-size:16px;font-weight:600;font-family:Inter,sans-serif">+216</span>
+        <div style="width:1px;height:24px;background:#D0D0D0"></div>
+        <input value="{{ f.phone }}" onChange="{{ on.phone }}" inputMode="numeric" placeholder="XX XXX XXX" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%;font-family:Inter,sans-serif">
+      </div>
+      <sc-if value="{{ eh.phone }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.phone }}</div></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.password }}</div>
+      <div style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.pw }};padding-inline:16px 6px">
+        <input type="{{ pwType }}" value="{{ f.pw }}" onChange="{{ on.pw }}" placeholder="••••••••" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%">
+        <button onClick="{{ togglePw }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;color:#5E5E5E;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ pwIcon }}</span></button>
+      </div>
+      <sc-if value="{{ eh.pw }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.pw }}</div></sc-if>
+    </div>
+    <button onClick="{{ toForgot }}" style="align-self:flex-start;border:none;background:none;padding:8px 0;font-size:15px;font-weight:600;color:#0B3B8F;cursor:pointer;text-decoration:underline;text-underline-offset:3px">{{ t.forgot_link }}</button>
+  </div>
+  <div style="padding:16px 24px 8px;display:flex;flex-direction:column;gap:16px;align-items:center">
+    <button onClick="{{ doLogin }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.login_btn }}</button>
+    <div style="font-size:15px;color:#5E5E5E;display:flex;gap:6px;align-items:center">{{ t.no_account }}<button onClick="{{ toSignup }}" style="border:none;background:none;padding:6px 0;font-size:15px;font-weight:700;color:#0B3B8F;cursor:pointer">{{ t.signup_link }}</button></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.signup }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff;overflow:hidden">
+  <div style="position:absolute;top:0;inset-inline-end:0;width:180px;height:180px;pointer-events:none"><sc-for list="{{ foamA }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for></div>
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none;position:relative"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:20px;padding:16px 24px 0;overflow-y:auto;position:relative">
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:32px;font-weight:800;line-height:1.25">{{ t.signup_t }}</div><div style="font-size:16px;color:#5E5E5E">{{ t.signup_s }}</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.fullname }}</div>
+      <input value="{{ f.name }}" onChange="{{ on.name }}" placeholder="{{ t.name_ph }}" style="width:100%;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.name }};padding:0 16px;font-size:16px;outline:none">
+      <sc-if value="{{ eh.name }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.name }}</div></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.phone }}</div>
+      <div dir="ltr" style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.sphone }};padding:0 14px;gap:10px">
+        <div style="position:relative;width:26px;height:18px;border-radius:3px;background:#E70013;overflow:hidden;flex:none"><div style="position:absolute;left:8px;top:4px;width:10px;height:10px;border-radius:50%;background:#fff"></div><div style="position:absolute;left:9.5px;top:5.5px;width:7px;height:7px;border-radius:50%;background:#E70013"></div><div style="position:absolute;left:11.5px;top:6px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+        <span style="font-size:16px;font-weight:600;font-family:Inter,sans-serif">+216</span>
+        <div style="width:1px;height:24px;background:#D0D0D0"></div>
+        <input value="{{ f.sphone }}" onChange="{{ on.sphone }}" inputMode="numeric" placeholder="XX XXX XXX" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%;font-family:Inter,sans-serif">
+      </div>
+      <sc-if value="{{ eh.sphone }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.sphone }}</div></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.password }}</div>
+      <div style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.spw }};padding-inline:16px 6px">
+        <input type="{{ pwType }}" value="{{ f.spw }}" onChange="{{ on.spw }}" placeholder="{{ t.pw_ph }}" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%">
+        <button onClick="{{ togglePw }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;color:#5E5E5E;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ pwIcon }}</span></button>
+      </div>
+      <sc-if value="{{ eh.spw }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.spw }}</div></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.confirm_pw }}</div>
+      <input type="{{ pwType }}" value="{{ f.spw2 }}" onChange="{{ on.spw2 }}" placeholder="{{ t.pw_ph }}" style="width:100%;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.spw2 }};padding:0 16px;font-size:16px;outline:none">
+      <sc-if value="{{ eh.spw2 }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.spw2 }}</div></sc-if>
+    </div>
+  </div>
+  <div style="padding:16px 24px 8px;display:flex;flex-direction:column;gap:16px;align-items:center">
+    <button onClick="{{ doSignup }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.signup_btn }}</button>
+    <div style="font-size:15px;color:#5E5E5E;display:flex;gap:6px;align-items:center">{{ t.have_account }}<button onClick="{{ toLogin }}" style="border:none;background:none;padding:6px 0;font-size:15px;font-weight:700;color:#0B3B8F;cursor:pointer">{{ t.login_btn }}</button></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.otp }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff;overflow:hidden">
+  <div style="position:absolute;top:0;inset-inline-end:0;width:180px;height:180px;pointer-events:none"><sc-for list="{{ foamA }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for></div>
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none;position:relative"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:28px;padding:16px 24px 0;position:relative">
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:32px;font-weight:800;line-height:1.25">{{ t.otp_t }}</div><div style="font-size:16px;color:#5E5E5E;line-height:1.5">{{ t.otp_s }} <span dir="ltr" style="font-weight:700;color:#141414;unicode-bidi:isolate">{{ otpPhone }}</span></div></div>
+    <div style="position:relative">
+      <div dir="ltr" style="display:flex;gap:12px">
+        <sc-for list="{{ otpBoxes }}" as="b"><div style="width:64px;height:72px;border-radius:12px;background:{{ b.bg }};border:2px solid {{ b.bd }};display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;font-family:Inter,sans-serif">{{ b.d }}</div></sc-for>
+      </div>
+      <input value="{{ f.otp }}" onChange="{{ on.otp }}" inputMode="numeric" autoComplete="one-time-code" maxLength="4" style="position:absolute;inset:0;width:100%;opacity:0;font-size:16px;cursor:text">
+    </div>
+    <sc-if value="{{ eh.otp }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600;margin-top:-12px"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.otp }}</div></sc-if>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-if value="{{ timerOn }}"><div style="font-size:15px;color:#5E5E5E">{{ t.resend_in }} <span style="font-weight:700;color:#141414;font-family:Inter,sans-serif">{{ timerText }}</span></div></sc-if>
+      <sc-if value="{{ canResend }}"><button onClick="{{ resend }}" style="align-self:flex-start;border:none;background:none;padding:6px 0;font-size:15px;font-weight:700;color:#0B3B8F;cursor:pointer">{{ t.resend }}</button></sc-if>
+      <div style="align-self:flex-start;font-size:13px;color:#006B78;background:#E4F8FA;border-radius:999px;padding:6px 12px;font-weight:600">{{ t.otp_hint }}</div>
+    </div>
+  </div>
+  <div style="padding:16px 24px 8px"><button onClick="{{ verify }}" style="width:100%;height:56px;border:none;border-radius:999px;background:{{ verifyBtn.bg }};color:{{ verifyBtn.fg }};font-size:17px;font-weight:700;cursor:{{ verifyBtn.cur }}">{{ t.verify }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.forgot }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff;overflow:hidden">
+  <div style="position:absolute;top:0;inset-inline-end:0;width:180px;height:180px;pointer-events:none"><sc-for list="{{ foamA }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for></div>
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none;position:relative"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:24px;padding:16px 24px 0;position:relative">
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:32px;font-weight:800;line-height:1.25">{{ t.forgot_t }}</div><div style="font-size:16px;color:#5E5E5E;line-height:1.5">{{ t.forgot_s }}</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.phone }}</div>
+      <div dir="ltr" style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.fphone }};padding:0 14px;gap:10px">
+        <div style="position:relative;width:26px;height:18px;border-radius:3px;background:#E70013;overflow:hidden;flex:none"><div style="position:absolute;left:8px;top:4px;width:10px;height:10px;border-radius:50%;background:#fff"></div><div style="position:absolute;left:9.5px;top:5.5px;width:7px;height:7px;border-radius:50%;background:#E70013"></div><div style="position:absolute;left:11.5px;top:6px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+        <span style="font-size:16px;font-weight:600;font-family:Inter,sans-serif">+216</span>
+        <div style="width:1px;height:24px;background:#D0D0D0"></div>
+        <input value="{{ f.fphone }}" onChange="{{ on.fphone }}" inputMode="numeric" placeholder="XX XXX XXX" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%;font-family:Inter,sans-serif">
+      </div>
+      <sc-if value="{{ eh.fphone }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.fphone }}</div></sc-if>
+    </div>
+  </div>
+  <div style="padding:16px 24px 8px"><button onClick="{{ doForgot }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.send_code }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.newpass }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff;overflow:hidden">
+  <div style="position:absolute;top:0;inset-inline-end:0;width:180px;height:180px;pointer-events:none"><sc-for list="{{ foamA }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for></div>
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none;position:relative"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:20px;padding:16px 24px 0;position:relative">
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:32px;font-weight:800;line-height:1.25">{{ t.newpw_t }}</div><div style="font-size:16px;color:#5E5E5E">{{ t.newpw_s }}</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.new_pw }}</div>
+      <div style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.npw }};padding-inline:16px 6px">
+        <input type="{{ pwType }}" value="{{ f.npw }}" onChange="{{ on.npw }}" placeholder="{{ t.pw_ph }}" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%">
+        <button onClick="{{ togglePw }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;color:#5E5E5E;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ pwIcon }}</span></button>
+      </div>
+      <sc-if value="{{ eh.npw }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.npw }}</div></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;font-weight:600">{{ t.confirm_pw }}</div>
+      <input type="{{ pwType }}" value="{{ f.npw2 }}" onChange="{{ on.npw2 }}" placeholder="{{ t.pw_ph }}" style="width:100%;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.npw2 }};padding:0 16px;font-size:16px;outline:none">
+      <sc-if value="{{ eh.npw2 }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.npw2 }}</div></sc-if>
+    </div>
+  </div>
+  <div style="padding:16px 24px 8px"><button onClick="{{ doNewPw }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.save }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.location }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff;overflow:hidden">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;padding:0 32px;text-align:center">
+    <div style="position:relative;width:260px;height:260px;display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;inset:0;border-radius:50%;background:#EEF5FB"></div>
+      <div style="position:absolute;inset:40px;border-radius:50%;border:2px dashed #B9D3EE"></div>
+      <sc-for list="{{ locBub }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for>
+      <div style="position:relative;width:112px;height:112px;border-radius:50%;background:#0B3B8F;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 0 14px rgba(11,59,143,.12)"><span style="font-family:'Material Symbols Rounded';font-size:56px;line-height:1;font-variation-settings:'FILL' 1">near_me</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px"><div style="font-size:28px;font-weight:800;line-height:1.3">{{ t.loc_t }}</div><div style="font-size:16px;line-height:1.6;color:#5E5E5E;text-wrap:pretty">{{ t.loc_s }}</div></div>
+  </div>
+  <div style="padding:16px 24px 8px;display:flex;flex-direction:column;gap:8px">
+    <button onClick="{{ locAllow }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.allow }}</button>
+    <button onClick="{{ locLater }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#fff;color:#141414;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#F3F3F3">{{ t.not_now }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.map }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;overflow:hidden;background:#EEF0F2">
+  <div onClick="{{ mapTap }}" style="position:absolute;inset:0;filter:brightness(1.02)">
+    <sc-for list="{{ mapTiles }}" as="tl"><img src="{{ tl.src }}" alt="" draggable="false" style="position:absolute;left:{{ tl.l }}px;top:{{ tl.t }}px;width:256px;height:256px;user-select:none;pointer-events:none"><img src="{{ tl.src2 }}" alt="" draggable="false" style="position:absolute;left:{{ tl.l }}px;top:{{ tl.t }}px;width:256px;height:256px;user-select:none;pointer-events:none;opacity:.8"></sc-for>
+  </div>
+  <sc-if value="{{ showUser }}"><div style="position:absolute;left:{{ user.x }}px;top:{{ user.y }}px;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(11,59,143,.14);display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2"><div style="width:20px;height:20px;border-radius:50%;background:#0B3B8F;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div></div></sc-if>
+  <sc-for list="{{ pins }}" as="p">
+    <div onClick="{{ p.tap }}" style="position:absolute;left:{{ p.x }}px;top:{{ p.y }}px;transform:translate(-50%,-100%) scale({{ p.sc }});transform-origin:50% 100%;z-index:{{ p.z }};display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s">
+      <div style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;padding-inline:10px 12px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:13px;font-weight:700;white-space:nowrap">
+        <span style="width:11px;height:11px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:{{ p.drop }};flex:none;margin-top:2px"></span><span>{{ p.label }}</span>
+      </div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid {{ p.bg }};margin-top:-1px"></div>
+    </div>
+  </sc-for>
+
+  <div style="position:absolute;top:55px;left:16px;right:16px;display:flex;gap:8px;z-index:10">
+    <div style="flex:1;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:999px;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.14)">
+      <span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1">search</span>
+      <input value="{{ f.q }}" onChange="{{ on.q }}" placeholder="{{ t.search_ph }}" style="flex:1;min-width:0;border:none;outline:none;background:none;font-size:16px;font-weight:600;height:100%">
+    </div>
+    <button onClick="{{ openFilters }}" style="position:relative;width:52px;height:52px;border-radius:50%;border:none;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#F3F3F3">
+      <span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1">tune</span>
+      <sc-if value="{{ fltActive }}"><span style="position:absolute;top:2px;inset-inline-end:2px;min-width:20px;height:20px;border-radius:10px;background:#0B3B8F;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff">{{ fltCount }}</span></sc-if>
+    </button>
+  </div>
+  <sc-if value="{{ denied }}">
+    <div style="position:absolute;top:119px;left:16px;right:16px;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;padding-inline:14px 12px;border-radius:16px;background:#141414;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.2)">
+      <span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#22C4D6">location_off</span>
+      <div style="flex:1;font-size:14px;font-weight:600;line-height:1.4">{{ t.loc_banner }}</div>
+      <button onClick="{{ enableLoc }}" style="height:36px;padding:0 14px;border-radius:999px;border:none;background:#fff;color:#141414;font-weight:700;font-size:14px;cursor:pointer;flex:none">{{ t.enable }}</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ showRec }}">
+    <button onClick="{{ recenter }}" style="position:absolute;inset-inline-end:16px;bottom:{{ recBottom }}px;width:48px;height:48px;border-radius:50%;border:none;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9;transition:bottom .3s cubic-bezier(.2,.8,.2,1);color:#0B3B8F" style-active="background:#F3F3F3"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;font-variation-settings:'FILL' 1">near_me</span></button>
+  </sc-if>
+
+  <sc-if value="{{ showSheet }}">
+  <div style="position:absolute;left:0;right:0;bottom:84px;height:{{ sheetH }}px;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.12);display:flex;flex-direction:column;transition:height .32s cubic-bezier(.2,.8,.2,1);z-index:20">
+    <div onPointerDown="{{ sheetDown }}" onPointerUp="{{ sheetUp }}" style="padding:10px 0 6px;display:flex;justify-content:center;cursor:grab;touch-action:none;flex:none"><div style="width:40px;height:5px;border-radius:3px;background:#D6D6D6"></div></div>
+    <div onPointerDown="{{ sheetDown }}" onPointerUp="{{ sheetUp }}" style="display:flex;align-items:flex-end;justify-content:space-between;padding:4px 16px 8px;cursor:grab;touch-action:none;flex:none">
+      <div><div style="font-size:20px;font-weight:800">{{ t.nearest }}</div><div style="font-size:13px;color:#5E5E5E;margin-top:2px">{{ t.by_dist }}</div></div>
+      <div style="font-size:13px;font-weight:600;color:#5E5E5E;background:#F3F3F3;border-radius:999px;padding:4px 10px">{{ listCount }}</div>
+    </div>
+    <div style="flex:1;overflow-y:{{ sheetOv }};padding:0 16px 16px">
+      <sc-if value="{{ mapLoading }}">
+        <sc-for list="{{ skel }}" as="k"><div style="display:flex;gap:12px;align-items:center;padding:12px 0"><div style="width:64px;height:64px;border-radius:12px;background:#EEEEEE"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:14px;width:60%;border-radius:4px;background:#EEEEEE"></div><div style="height:10px;width:80%;border-radius:4px;background:#F3F3F3"></div><div style="height:10px;width:40%;border-radius:4px;background:#F3F3F3"></div></div></div></sc-for>
+      </sc-if>
+      <sc-if value="{{ listReady }}">
+        <sc-for list="{{ list }}" as="g">
+          <div onClick="{{ g.open }}" style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #F0F0F0;cursor:pointer" style-active="opacity:.6">
+            <div style="width:64px;height:64px;border-radius:12px;flex:none;background:repeating-linear-gradient(135deg,#E3EAF3 0 6px,#EEF3F8 6px 12px);display:flex;align-items:center;justify-content:center;color:#7F93AE"><span style="font-family:'Material Symbols Rounded';font-size:26px;line-height:1">local_car_wash</span></div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <div style="font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }}</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#5E5E5E;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:15px;line-height:1;color:#141414;font-variation-settings:'FILL' 1">star</span><span style="font-weight:700;color:#141414">{{ g.rating }}</span><span>·</span><span>{{ g.dist }}</span><span>·</span><span style="overflow:hidden;text-overflow:ellipsis">{{ g.area }}</span></div>
+              <div style="display:flex;gap:6px;align-items:center"><span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:{{ g.sBg }};color:{{ g.sFg }}">{{ g.status }}</span><span style="font-size:13px;color:#5E5E5E">{{ g.hours }}</span></div>
+            </div>
+            <div style="font-size:14px;font-weight:700;white-space:nowrap;flex:none">{{ g.from }}</div>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ noResults }}">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:24px 16px"><span style="font-family:'Material Symbols Rounded';font-size:40px;line-height:1;color:#AFAFAF">search_off</span><div style="font-size:17px;font-weight:700">{{ t.no_results }}</div><div style="font-size:14px;color:#5E5E5E">{{ t.no_results_s }}</div></div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ hasSel }}">
+  <div style="position:absolute;left:12px;right:12px;bottom:96px;background:#fff;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:12px;display:flex;flex-direction:column;gap:12px;z-index:20">
+    <div onClick="{{ openSel }}" style="display:flex;gap:12px;cursor:pointer">
+      <div style="width:96px;height:96px;border-radius:14px;flex:none;background:repeating-linear-gradient(135deg,#E3EAF3 0 6px,#EEF3F8 6px 12px);display:flex;align-items:center;justify-content:center;color:#7F93AE"><span style="font-family:'Material Symbols Rounded';font-size:32px;line-height:1">local_car_wash</span></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding-top:2px">
+        <div style="font-size:17px;font-weight:800;line-height:1.3">{{ selG.name }}</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:13px;color:#5E5E5E;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:15px;line-height:1;color:#141414;font-variation-settings:'FILL' 1">star</span><span style="font-weight:700;color:#141414">{{ selG.rating }}</span><span>({{ selG.reviews }})</span><span>·</span><span>{{ selG.dist }}</span></div>
+        <div style="display:flex;gap:6px;align-items:center;font-size:13px"><span style="font-weight:700;color:{{ selG.sFg }}">{{ selG.status }}</span><span style="color:#5E5E5E">· {{ selG.hours }}</span></div>
+      </div>
+      <button onClick="{{ clearSel }}" style="width:32px;height:32px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1">close</span></button>
+    </div>
+    <button onClick="{{ seeAvail }}" style="width:100%;height:52px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:16px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.see_avail }}</button>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ offlineOn }}">
+<div style="position:absolute;inset:0;bottom:84px;background:#fff;z-index:28;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 40px;text-align:center">
+  <div style="width:120px;height:120px;border-radius:50%;background:#F3F3F3;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:56px;line-height:1;color:#5E5E5E">wifi_off</span></div>
+  <div style="font-size:24px;font-weight:800">{{ t.offline_t }}</div>
+  <div style="font-size:16px;color:#5E5E5E;line-height:1.5">{{ t.offline_s }}</div>
+  <button onClick="{{ retry }}" style="margin-top:8px;height:48px;padding:0 28px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">refresh</span>{{ t.retry }}</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.garage }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#fff">
+  <div style="flex:1;overflow-y:auto;padding-bottom:120px">
+    <div onClick="{{ nextPhoto }}" style="position:relative;height:300px;background:repeating-linear-gradient(135deg,#E3EAF3 0 10px,#EEF3F8 10px 20px);display:flex;align-items:center;justify-content:center;cursor:pointer">
+      <span style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#5F7390;background:rgba(255,255,255,.75);padding:4px 8px;border-radius:6px;white-space:nowrap">{{ photoLabel }}</span>
+      <div style="position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:6px"><sc-for list="{{ photoDots }}" as="d"><div style="height:6px;width:{{ d.w }}px;border-radius:3px;background:{{ d.c }};box-shadow:0 0 0 1px rgba(0,0,0,.08);transition:width .2s"></div></sc-for></div>
+    </div>
+    <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:28px;font-weight:800;line-height:1.25">{{ gd.name }}</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:15px;color:#5E5E5E;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1;color:#141414;font-variation-settings:'FILL' 1">star</span><span style="font-weight:700;color:#141414">{{ gd.rating }}</span><span>({{ gd.reviews }})</span><span>·</span><span>{{ gd.dist }}</span></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:15px;color:#5E5E5E"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1">location_on</span>{{ gd.addr }}</div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:{{ gd.sBg }};color:{{ gd.sFg }}">{{ gd.status }}</span><span style="font-size:15px;color:#5E5E5E">{{ gd.hours }}</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <button onClick="{{ call }}" style="height:48px;border-radius:999px;border:none;background:#F3F3F3;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">call</span>{{ t.call }}</button>
+        <button onClick="{{ directions }}" style="height:48px;border-radius:999px;border:none;background:#F3F3F3;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">directions</span>{{ t.directions }}</button>
+      </div>
+      <div onClick="{{ directions }}" style="position:relative;height:140px;border-radius:16px;overflow:hidden;background:#EEF0F2;cursor:pointer">
+        <div style="position:absolute;inset:0;filter:brightness(1.02)"><sc-for list="{{ mini }}" as="tl"><img src="{{ tl.src }}" alt="" style="position:absolute;left:{{ tl.l }}px;top:{{ tl.t }}px;width:256px;height:256px"></sc-for></div>
+        <div style="position:absolute;left:50%;top:78px;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center"><div style="width:36px;height:36px;border-radius:50%;background:#0B3B8F;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.25)"><span style="width:14px;height:14px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></span></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #0B3B8F;margin-top:-1px"></div></div>
+      </div>
+      <div style="border-top:1px solid #EEEEEE;border-bottom:1px solid #EEEEEE">
+        <button onClick="{{ toggleHours }}" style="width:100%;display:flex;align-items:center;gap:12px;height:60px;border:none;background:none;cursor:pointer;padding:0;text-align:start">
+          <span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">schedule</span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16px;font-weight:700">{{ t.hours }}</span><span style="font-size:13px;color:#5E5E5E">{{ todayHours }}</span></div>
+          <span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;transform:rotate({{ hoursRot }}deg);transition:transform .2s;display:inline-block">expand_more</span>
+        </button>
+        <sc-if value="{{ hoursOpen }}">
+          <div style="display:flex;flex-direction:column;gap:10px;padding:0 0 16px;padding-inline-start:34px">
+            <sc-for list="{{ hoursList }}" as="h"><div style="display:flex;justify-content:space-between;font-size:15px;font-weight:{{ h.fw }}"><span>{{ h.day }}</span><span style="color:{{ h.fg }}">{{ h.h }}</span></div></sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:20px;font-weight:800;margin-bottom:4px">{{ t.services_prices }}</div>
+        <sc-for list="{{ gSvc }}" as="x">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F0F0F0">
+            <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:600">{{ x.name }}</div><div style="font-size:13px;color:#5E5E5E;margin-top:2px">{{ x.desc }} · {{ x.dur }}</div></div>
+            <div style="font-size:16px;font-weight:700;white-space:nowrap">{{ x.price }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:20px;font-weight:800">{{ t.reviews }}</div><span style="font-size:15px;font-weight:700;color:#0B3B8F">{{ t.see_all }}</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;background:#F6F6F6"><span style="font-size:36px;font-weight:800;font-family:Inter,sans-serif">{{ gd.rating }}</span><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:700">★★★★★</span><span style="font-size:13px;color:#5E5E5E">{{ gd.reviews }}</span></div></div>
+        <sc-for list="{{ reviews }}" as="r">
+          <div style="display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid #F0F0F0">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:#EDF2FC;color:#0B3B8F;display:flex;align-items:center;justify-content:center;font-weight:800">{{ r.ini }}</div><div style="flex:1"><div style="font-size:15px;font-weight:700">{{ r.name }}</div><div style="display:flex;gap:1px"><sc-for list="{{ r.stars }}" as="z"><span style="font-family:'Material Symbols Rounded';font-size:14px;line-height:1;color:{{ z.c }};font-variation-settings:'FILL' 1">star</span></sc-for></div></div><span style="font-size:12px;color:#6B6B6B">{{ r.date }}</span></div>
+            <div style="font-size:15px;line-height:1.5">{{ r.text }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;top:55px;left:16px;right:16px;display:flex;justify-content:space-between">
+    <button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button>
+    <button onClick="{{ share }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">ios_share</span></button>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #EEEEEE;padding:12px 16px 34px;display:flex;align-items:center;gap:16px">
+    <div style="display:flex;flex-direction:column"><span style="font-size:13px;color:#5E5E5E">{{ t.starting }}</span><span style="font-size:20px;font-weight:800;white-space:nowrap">{{ gd.from }}</span></div>
+    <button onClick="{{ bookNow }}" style="flex:1;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.book_now }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.book1 }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:47px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;gap:12px;height:60px;padding:0 16px;flex:none">
+    <button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button>
+    <div style="flex:1;min-width:0"><div style="font-size:18px;font-weight:800">{{ bkTitle }}</div><div style="font-size:13px;color:#5E5E5E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ bkG }}</div></div>
+  </div>
+  <sc-if value="{{ showSteps }}"><div style="display:flex;gap:8px;padding:4px 16px 0;flex:none"><sc-for list="{{ steps }}" as="p"><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:4px;border-radius:2px;background:{{ p.bar }}"></div><div style="font-size:12px;font-weight:{{ p.fw }};color:{{ p.fg }}">{{ p.label }}</div></div></sc-for></div></sc-if>
+  <div style="flex:1;overflow-y:auto;padding:20px 0 130px">
+    <div style="padding:0 16px;display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:24px;font-weight:800">{{ t.pick_time }}</div></div>
+    <div style="padding:4px 16px 0;font-size:14px;color:#5E5E5E;font-weight:600">{{ monthLabel }}</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:12px 16px 8px;scrollbar-width:none">
+      <sc-for list="{{ dates }}" as="d">
+        <button onClick="{{ d.pick }}" disabled="{{ d.dis }}" style="flex:none;width:60px;height:80px;border-radius:14px;border:1.5px solid {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }};cursor:{{ d.cur }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0">
+          <span style="font-size:12px;font-weight:600;color:{{ d.sub }}">{{ d.dow }}</span>
+          <span style="font-size:22px;font-weight:800;font-family:Inter,sans-serif;text-decoration:{{ d.dec }}">{{ d.day }}</span>
+          <span style="font-size:11px;font-weight:600;color:{{ d.sub }}">{{ d.mon }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:16px;padding:8px 16px 0;font-size:12px;color:#5E5E5E;font-weight:600">
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#0E8345"></span>{{ t.available }}</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#F5A623"></span>{{ t.few }}</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#C6C6C6"></span>{{ t.full }}</span>
+    </div>
+    <sc-if value="{{ slotLoading }}">
+      <div style="padding:24px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><sc-for list="{{ skelSlots }}" as="k"><div style="height:60px;border-radius:12px;background:#EEEEEE"></div></sc-for></div>
+    </sc-if>
+    <sc-if value="{{ slotsReady }}">
+      <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">wb_sunny</span><span style="font-size:17px;font-weight:700;flex:1">{{ t.morning }}</span><span style="font-size:13px;color:#5E5E5E">{{ mCount }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+          <sc-for list="{{ morning }}" as="sl"><button onClick="{{ sl.pick }}" disabled="{{ sl.dis }}" style="height:60px;border-radius:12px;border:1.5px solid {{ sl.bd }};background:{{ sl.bg }};color:{{ sl.fg }};cursor:{{ sl.cur }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0"><span style="font-size:16px;font-weight:700;font-family:Inter,sans-serif;text-decoration:{{ sl.dec }}">{{ sl.time }}</span><span style="font-size:12px;font-weight:600;color:{{ sl.sfg }};display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:{{ sl.dot }}"></span>{{ sl.sub }}</span></button></sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:12px"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">wb_twilight</span><span style="font-size:17px;font-weight:700;flex:1">{{ t.afternoon }}</span><span style="font-size:13px;color:#5E5E5E">{{ aCount }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+          <sc-for list="{{ afternoon }}" as="sl"><button onClick="{{ sl.pick }}" disabled="{{ sl.dis }}" style="height:60px;border-radius:12px;border:1.5px solid {{ sl.bd }};background:{{ sl.bg }};color:{{ sl.fg }};cursor:{{ sl.cur }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0"><span style="font-size:16px;font-weight:700;font-family:Inter,sans-serif;text-decoration:{{ sl.dec }}">{{ sl.time }}</span><span style="font-size:12px;font-weight:600;color:{{ sl.sfg }};display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:{{ sl.dot }}"></span>{{ sl.sub }}</span></button></sc-for>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #EEEEEE;padding:12px 16px 34px;display:flex;align-items:center;gap:16px;box-shadow:0 -4px 16px rgba(0,0,0,.04)">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ selText }}</span><sc-if value="{{ hasSelSub }}"><span style="font-size:14px;color:#5E5E5E">{{ selSub }}</span></sc-if></div>
+    <button onClick="{{ b1Next }}" style="height:56px;padding:0 32px;border:none;border-radius:999px;background:{{ b1Btn.bg }};color:{{ b1Btn.fg }};cursor:{{ b1Btn.cur }};font-size:17px;font-weight:700">{{ t.continue }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.book2 }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:47px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;gap:12px;height:60px;padding:0 16px;flex:none">
+    <button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button>
+    <div style="flex:1;min-width:0"><div style="font-size:18px;font-weight:800">{{ bkTitle }}</div><div style="font-size:13px;color:#5E5E5E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ bkG }}</div></div>
+  </div>
+  <div style="display:flex;gap:8px;padding:4px 16px 0;flex:none"><sc-for list="{{ steps }}" as="p"><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:4px;border-radius:2px;background:{{ p.bar }}"></div><div style="font-size:12px;font-weight:{{ p.fw }};color:{{ p.fg }}">{{ p.label }}</div></div></sc-for></div>
+  <div style="flex:1;overflow-y:auto;padding:20px 16px 130px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:12px">
+    <div style="font-size:24px;font-weight:800">{{ t.pick_services }}</div>
+    <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#E4F8FA;color:#00535D;font-size:14px;line-height:1.45;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">info</span><span>{{ t.same_slot }}</span></div>
+    <sc-if value="{{ svcErr }}"><div style="display:flex;gap:8px;align-items:center;padding:12px 14px;border-radius:12px;background:#FDECEA;color:#B3261E;font-size:14px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">error</span>{{ t.e_services }}</div></sc-if>
+    <sc-for list="{{ svcRows }}" as="x">
+      <div onClick="{{ x.toggle }}" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;border:1.5px solid {{ x.bd }};background:{{ x.bg }};cursor:pointer;transition:background .15s">
+        <div style="width:24px;height:24px;border-radius:6px;border:2px solid {{ x.boxBd }};background:{{ x.box }};display:flex;align-items:center;justify-content:center;flex:none;color:#fff"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1;opacity:{{ x.chk }};font-variation-settings:'wght' 700">check</span></div>
+        <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">{{ x.name }}</div><div style="font-size:13px;color:#5E5E5E;margin-top:2px;line-height:1.4">{{ x.desc }} · {{ x.dur }}</div></div>
+        <div style="font-size:16px;font-weight:700;white-space:nowrap">{{ x.price }}</div>
+      </div>
+    </sc-for>
+    <div style="font-size:18px;font-weight:800;margin-top:16px">{{ t.your_car }}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <sc-for list="{{ carChips }}" as="cc">
+        <button onClick="{{ cc.pick }}" style="display:flex;align-items:center;gap:8px;height:48px;padding:0 14px;border-radius:999px;border:1.5px solid {{ cc.bd }};background:{{ cc.bg }};cursor:pointer;font-size:14px;font-weight:{{ cc.fw }}"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">directions_car</span>{{ cc.label }}<span dir="rtl" style="display:inline-flex;gap:4px;font-size:11px;font-weight:700;background:#141414;color:#fff;border-radius:4px;padding:2px 6px;font-family:Cairo,Inter,sans-serif"><span>{{ cc.ps }}</span><span>تونس</span><span>{{ cc.pn }}</span></span></button>
+      </sc-for>
+      <button onClick="{{ addCar }}" style="display:flex;align-items:center;gap:6px;height:48px;padding:0 16px;border-radius:999px;border:1.5px dashed #AFAFAF;background:#fff;cursor:pointer;font-size:14px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">add</span>{{ t.add_car }}</button>
+    </div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #EEEEEE;padding:12px 16px 34px;display:flex;align-items:center;gap:16px;box-shadow:0 -4px 16px rgba(0,0,0,.04)">
+    <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:13px;color:#5E5E5E">{{ t.total }} · {{ nSvc }}</span><span style="font-size:22px;font-weight:800;white-space:nowrap">{{ total }}</span></div>
+    <button onClick="{{ b2Next }}" style="height:56px;padding:0 32px;border:none;border-radius:999px;background:{{ b2Btn.bg }};color:{{ b2Btn.fg }};cursor:pointer;font-size:17px;font-weight:700">{{ t.continue }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.book3 }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:47px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;gap:12px;height:60px;padding:0 16px;flex:none">
+    <button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button>
+    <div style="flex:1;min-width:0"><div style="font-size:18px;font-weight:800">{{ bkTitle }}</div><div style="font-size:13px;color:#5E5E5E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ bkG }}</div></div>
+  </div>
+  <div style="display:flex;gap:8px;padding:4px 16px 0;flex:none"><sc-for list="{{ steps }}" as="p"><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:4px;border-radius:2px;background:{{ p.bar }}"></div><div style="font-size:12px;font-weight:{{ p.fw }};color:{{ p.fg }}">{{ p.label }}</div></div></sc-for></div>
+  <div style="flex:1;overflow-y:auto;padding:20px 16px 130px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:20px">
+    <div style="font-size:24px;font-weight:800">{{ t.summary_t }}</div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div style="width:56px;height:56px;border-radius:12px;flex:none;background:repeating-linear-gradient(135deg,#E3EAF3 0 6px,#EEF3F8 6px 12px);display:flex;align-items:center;justify-content:center;color:#7F93AE"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1">local_car_wash</span></div>
+      <div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700">{{ sum.garage }}</div><div style="font-size:14px;color:#5E5E5E;margin-top:2px">{{ sum.addr }}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;border-radius:16px;border:1px solid #EEEEEE">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #F0F0F0"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">calendar_today</span><span style="flex:1;font-size:14px;color:#5E5E5E">{{ t.date }}</span><span style="font-size:15px;font-weight:700">{{ sum.date }}</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #F0F0F0"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">schedule</span><span style="flex:1;font-size:14px;color:#5E5E5E">{{ t.time }}</span><span style="font-size:15px;font-weight:700">{{ sum.time }}</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">directions_car</span><span style="flex:1;font-size:14px;color:#5E5E5E">{{ t.car }}</span><span style="font-size:15px;font-weight:700">{{ sum.car }}</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:18px;font-weight:800">{{ t.services }}</div>
+      <sc-for list="{{ sum.lines }}" as="l"><div style="display:flex;justify-content:space-between;font-size:15px"><span>{{ l.name }}</span><span style="font-weight:600">{{ l.price }}</span></div></sc-for>
+      <div style="height:1px;background:#EEEEEE;margin:4px 0"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:17px;font-weight:800">{{ t.total }}</span><span style="font-size:24px;font-weight:800">{{ sum.total }}</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:18px;font-weight:800">{{ t.payment }}</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:2px solid #0B3B8F;background:#F3F6FD">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:#05713C"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">payments</span></div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:700">{{ t.cash }}</div><div style="font-size:13px;color:#5E5E5E">{{ t.cash_s }}</div></div>
+        <div style="width:24px;height:24px;border-radius:50%;border:2px solid #0B3B8F;display:flex;align-items:center;justify-content:center"><div style="width:12px;height:12px;border-radius:50%;background:#0B3B8F"></div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:1.5px solid #EEEEEE;opacity:.55;cursor:not-allowed">
+        <div style="width:40px;height:40px;border-radius:50%;background:#F3F3F3;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">credit_card</span></div>
+        <div style="flex:1;font-size:16px;font-weight:700">{{ t.card }}</div>
+        <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#EEEEEE;color:#333">{{ t.soon }}</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#5E5E5E;line-height:1.45"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1;color:#05713C">verified_user</span>{{ t.cancel_note }}</div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #EEEEEE;padding:12px 16px 34px">
+    <button onClick="{{ confirm }}" style="width:100%;height:56px;border:none;border-radius:999px;background:{{ cBtnBg }};color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px" style-active="background:#082C6B">{{ spinner }}<sc-if value="{{ notBusy }}"><span>{{ t.confirm_res }} · {{ sum.total }}</span></sc-if><sc-if value="{{ busy }}"><span>{{ t.confirming }}</span></sc-if></button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.success }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff;overflow:hidden">
+  <sc-for list="{{ foamS }}" as="b"><div style="position:absolute;left:{{ b.x }}px;top:{{ b.y }}px;width:{{ b.s }}px;height:{{ b.s }}px;border-radius:50%;background:{{ b.c }}"></div></sc-for>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:56px 24px 0;gap:16px;text-align:center;position:relative">
+    <div style="position:relative;width:140px;height:140px;border-radius:50%;background:#E4F8FA;display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;top:-6px;inset-inline-end:4px;width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid #9FE7EF"></div>
+      <div style="position:absolute;bottom:6px;inset-inline-start:-8px;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #9FE7EF"></div>
+      <div style="width:100px;height:100px;border-radius:50%;background:#0E8345;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 24px rgba(14,131,69,.3)"><span style="font-family:'Material Symbols Rounded';font-size:60px;line-height:1;font-variation-settings:'wght' 600">check</span></div>
+    </div>
+    <div style="font-size:30px;font-weight:800;margin-top:8px">{{ t.success_t }}</div>
+    <div style="font-size:16px;color:#5E5E5E;line-height:1.5;max-width:300px">{{ t.success_s }}</div>
+    <div style="width:100%;margin-top:8px;border-radius:20px;background:#fff;border:1px solid #EEEEEE;box-shadow:0 4px 20px rgba(0,0,0,.06);padding:16px;display:flex;flex-direction:column;gap:12px;text-align:start">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;color:#5E5E5E">{{ t.ref }}</span><span dir="ltr" style="font-size:18px;font-weight:800;font-family:ui-monospace,Menlo,monospace;letter-spacing:.04em">{{ succ.ref }}</span></div>
+      <div style="height:1px;background:#F0F0F0"></div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:15px"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">local_car_wash</span><span style="font-weight:700">{{ succ.garage }}</span></div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:15px"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">calendar_today</span>{{ succ.date }}</div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:15px"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">schedule</span>{{ succ.time }}<span style="flex:1"></span><span style="font-weight:800">{{ succ.total }}</span></div>
+    </div>
+  </div>
+  <div style="padding:16px 24px 8px;display:flex;flex-direction:column;gap:8px;position:relative">
+    <button onClick="{{ addCal }}" style="width:100%;height:52px;border:none;border-radius:999px;background:#F3F3F3;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">event</span>{{ t.add_cal }}</button>
+    <button onClick="{{ toRes }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.my_res }}</button>
+    <button onClick="{{ toMap }}" style="width:100%;height:48px;border:none;border-radius:999px;background:none;font-size:16px;font-weight:700;cursor:pointer;color:#0B3B8F">{{ t.back_map }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.resched2 }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;padding:16px 16px 0;display:flex;flex-direction:column;gap:20px">
+    <div><div style="font-size:28px;font-weight:800;line-height:1.3">{{ t.resch_t }}</div><div style="font-size:15px;color:#5E5E5E;margin-top:6px">{{ rsG }}</div></div>
+    <div style="display:flex;flex-direction:column;align-items:stretch;gap:0">
+      <div style="padding:16px;border-radius:16px;background:#F6F6F6;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13px;font-weight:600;color:#5E5E5E">{{ t.old_time }}</span>
+        <span style="font-size:17px;font-weight:700;color:#6B6B6B;text-decoration:line-through">{{ rsOld.date }}</span>
+        <span style="font-size:15px;color:#6B6B6B;text-decoration:line-through">{{ rsOld.time }}</span>
+      </div>
+      <div style="display:flex;justify-content:center;margin:-10px 0;position:relative;z-index:1"><div style="width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #E2E2E2;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">arrow_downward</span></div></div>
+      <div style="padding:16px;border-radius:16px;border:2px solid #0B3B8F;background:#F3F6FD;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13px;font-weight:700;color:#0B3B8F">{{ t.new_time }}</span>
+        <span style="font-size:17px;font-weight:800">{{ rsNew.date }}</span>
+        <span style="font-size:15px;font-weight:600">{{ rsNew.time }}</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#5E5E5E"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1;color:#05713C">verified_user</span>{{ t.resch_note }}</div>
+  </div>
+  <div style="padding:16px 16px 8px"><button onClick="{{ doResched }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.confirm_change }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.res }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 84px;display:flex;flex-direction:column;background:#fff">
+  <div style="padding:16px 16px 16px;font-size:32px;font-weight:800">{{ t.my_res }}</div>
+  <div style="margin:0 16px;display:flex;padding:4px;border-radius:999px;background:#F3F3F3;gap:4px;flex:none">
+    <sc-for list="{{ segs }}" as="sg"><button onClick="{{ sg.pick }}" style="flex:1;height:40px;border-radius:999px;border:none;background:{{ sg.bg }};box-shadow:{{ sg.sh }};font-weight:{{ sg.fw }};color:{{ sg.fg }};font-size:14px;cursor:pointer;transition:background .15s">{{ sg.label }}</button></sc-for>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+    <sc-if value="{{ resLoading }}">
+      <sc-for list="{{ skel }}" as="k"><div style="border:1px solid #EEEEEE;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48px;border-radius:12px;background:#EEEEEE"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="height:14px;width:55%;border-radius:4px;background:#EEEEEE"></div><div style="height:10px;width:30%;border-radius:4px;background:#F3F3F3"></div></div></div><div style="height:10px;width:70%;border-radius:4px;background:#F3F3F3"></div><div style="display:flex;gap:6px"><div style="height:24px;width:80px;border-radius:12px;background:#F3F3F3"></div><div style="height:24px;width:60px;border-radius:12px;background:#F3F3F3"></div></div></div></sc-for>
+    </sc-if>
+    <sc-if value="{{ resHas }}">
+      <sc-for list="{{ resList }}" as="r">
+        <div onClick="{{ r.open }}" style="border:1px solid #EEEEEE;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;cursor:pointer" style-active="background:#FAFAFA">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="width:48px;height:48px;border-radius:12px;flex:none;background:repeating-linear-gradient(135deg,#E3EAF3 0 6px,#EEF3F8 6px 12px);display:flex;align-items:center;justify-content:center;color:#7F93AE"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">local_car_wash</span></div>
+            <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div dir="ltr" style="font-size:12px;color:#6B6B6B;font-family:ui-monospace,Menlo,monospace;text-align:start;unicode-bidi:plaintext">{{ r.ref }}</div></div>
+            <span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }};flex:none"><span style="font-family:'Material Symbols Rounded';font-size:14px;line-height:1;font-variation-settings:'FILL' 1">{{ r.bIcon }}</span>{{ r.badge }}</span>
+          </div>
+          <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:6px"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1;color:#5E5E5E">calendar_today</span>{{ r.date }}</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1;color:#5E5E5E">schedule</span>{{ r.time }}</span>
+          </div>
+          <sc-if value="{{ r.soon }}"><div style="align-self:flex-start;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#8A5A00;background:#FFF4DE;border-radius:999px;padding:4px 10px"><span style="font-family:'Material Symbols Rounded';font-size:14px;line-height:1">timer</span>{{ r.soonText }}</div></sc-if>
+          <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ r.chips }}" as="c"><span style="font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;background:#F3F3F3">{{ c }}</span></sc-for></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid #F0F0F0;padding-top:12px;font-size:15px"><span style="color:#5E5E5E">{{ t.total }}</span><span style="font-weight:800">{{ r.total }}</span></div>
+        </div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ resEmpty }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:24px 24px 48px">
+        <div style="position:relative;width:150px;height:150px;border-radius:50%;background:#EEF5FB;display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+          <div style="position:absolute;top:6px;inset-inline-end:10px;width:22px;height:22px;border-radius:50%;background:#CFF2F6"></div><div style="position:absolute;bottom:14px;inset-inline-start:2px;width:14px;height:14px;border-radius:50%;background:#D3E3F6"></div>
+          <span style="font-family:'Material Symbols Rounded';font-size:64px;line-height:1;color:#0B3B8F">{{ emptyV.icon }}</span>
+        </div>
+        <div style="font-size:22px;font-weight:800">{{ emptyV.title }}</div>
+        <div style="font-size:15px;color:#5E5E5E;line-height:1.5;max-width:280px">{{ emptyV.sub }}</div>
+        <button onClick="{{ findGarage }}" style="margin-top:8px;height:52px;padding:0 28px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">search</span>{{ t.find_garage }}</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.resd }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 0;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px;flex:none">
+    <button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button>
+    <div style="flex:1;font-size:18px;font-weight:800">{{ t.res_detail }}</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:12px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;padding:6px 12px;border-radius:999px;background:{{ rd.bBg }};color:{{ rd.bFg }}"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1;font-variation-settings:'FILL' 1">{{ rd.bIcon }}</span>{{ rd.badge }}</span>
+      <span dir="ltr" style="font-size:14px;font-weight:700;font-family:ui-monospace,Menlo,monospace;color:#5E5E5E">{{ rd.ref }}</span>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div style="width:64px;height:64px;border-radius:14px;flex:none;background:repeating-linear-gradient(135deg,#E3EAF3 0 6px,#EEF3F8 6px 12px);display:flex;align-items:center;justify-content:center;color:#7F93AE"><span style="font-family:'Material Symbols Rounded';font-size:28px;line-height:1">local_car_wash</span></div>
+      <div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800;line-height:1.3">{{ rd.name }}</div><div style="font-size:14px;color:#5E5E5E;margin-top:2px">{{ rd.addr }}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;border-radius:16px;border:1px solid #EEEEEE">
+      <sc-for list="{{ rdRows }}" as="w"><div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #F3F3F3"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ w.icon }}</span><span style="flex:1;font-size:14px;color:#5E5E5E">{{ w.label }}</span><span style="font-size:15px;font-weight:700">{{ w.value }}</span></div></sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ rd.lines }}" as="l"><div style="display:flex;justify-content:space-between;font-size:15px"><span>{{ l.name }}</span><span style="font-weight:600">{{ l.price }}</span></div></sc-for>
+      <div style="height:1px;background:#EEEEEE"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:17px;font-weight:800">{{ t.total }}</span><span style="font-size:22px;font-weight:800">{{ rd.total }}</span></div>
+    </div>
+    <div style="position:relative;height:140px;border-radius:16px;overflow:hidden;background:#EEF0F2">
+      <div style="position:absolute;inset:0;filter:brightness(1.02)"><sc-for list="{{ rdMini }}" as="tl"><img src="{{ tl.src }}" alt="" style="position:absolute;left:{{ tl.l }}px;top:{{ tl.t }}px;width:256px;height:256px"></sc-for></div>
+      <div style="position:absolute;left:50%;top:78px;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center"><div style="width:36px;height:36px;border-radius:50%;background:#0B3B8F;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.25)"><span style="width:14px;height:14px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:#22C4D6"></span></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #0B3B8F;margin-top:-1px"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <button onClick="{{ directions }}" style="height:48px;border-radius:999px;border:none;background:#F3F3F3;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">directions</span>{{ t.directions }}</button>
+      <button onClick="{{ call }}" style="height:48px;border-radius:999px;border:none;background:#F3F3F3;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">call</span>{{ t.call }}</button>
+    </div>
+    <sc-if value="{{ rd.up }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onClick="{{ openResched }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="background:#082C6B"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">edit_calendar</span>{{ t.reschedule }}</button>
+        <button onClick="{{ openCancel }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#FDECEA;color:#B3261E;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#F9D6D2">{{ t.cancel }}</button>
+        <div style="display:flex;gap:8px;justify-content:center;font-size:13px;color:#5E5E5E;margin-top:4px">{{ t.cancel_note }}</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ rd.locked }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF4DE;color:#6B4700;font-size:14px;line-height:1.45;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">lock_clock</span><span>{{ t.locked }}</span></div>
+        <button disabled="{{ true }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#EEEEEE;color:#9A9A9A;font-size:17px;font-weight:700;cursor:not-allowed">{{ t.reschedule }}</button>
+        <button disabled="{{ true }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#F6F6F6;color:#AFAFAF;font-size:17px;font-weight:700;cursor:not-allowed">{{ t.cancel }}</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ rd.done }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-if value="{{ rd.rated }}"><div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:16px;background:#F6F6F6"><span style="font-size:15px;font-weight:600">{{ t.your_rating }}</span><div style="display:flex;gap:2px"><sc-for list="{{ rd.starsV }}" as="z"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1;color:{{ z.c }};font-variation-settings:'FILL' 1">star</span></sc-for></div></div></sc-if>
+        <button onClick="{{ bookAgain }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="background:#082C6B"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">replay</span>{{ t.book_again }}</button>
+        <sc-if value="{{ rd.notRated }}"><button onClick="{{ openRate }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#F3F3F3;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">star</span>{{ t.rate }}</button></sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ rd.cancelled }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:12px;background:#FDECEA;color:#B3261E;font-size:14px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">event_busy</span>{{ t.cancelled_on }}</div>
+        <button onClick="{{ bookAgain }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.book_again }}</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.profile }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 84px;display:flex;flex-direction:column;background:#fff">
+  <div style="flex:1;overflow-y:auto;padding:16px 16px 24px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:24px">
+    <div style="display:flex;align-items:center;gap:16px;padding-top:8px">
+      <div style="flex:1;min-width:0"><div style="font-size:30px;font-weight:800;line-height:1.25">{{ t.user_name }}</div><div dir="ltr" style="font-size:15px;color:#5E5E5E;margin-top:4px;font-family:Inter,sans-serif;text-align:start;unicode-bidi:plaintext">{{ phoneFull }}</div></div>
+      <div style="width:72px;height:72px;border-radius:50%;background:#0B3B8F;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;flex:none;box-shadow:0 0 0 4px #E4F8FA">{{ t.initials }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column"><div style="font-size:13px;font-weight:700;color:#5E5E5E;padding:0 0 4px">{{ t.account }}</div>
+      <sc-for list="{{ menuA }}" as="m"><button onClick="{{ m.go }}" style="display:flex;align-items:center;gap:14px;height:60px;border:none;background:none;cursor:pointer;padding:0;text-align:start;border-bottom:1px solid #F3F3F3;color:{{ m.fg }}" style-active="opacity:.6"><span style="width:40px;height:40px;border-radius:50%;background:{{ m.ibg }};display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ m.icon }}</span></span><span style="flex:1;font-size:16px;font-weight:600">{{ m.label }}</span><span style="font-size:14px;color:#5E5E5E">{{ m.value }}</span><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#AFAFAF;display:inline-block;transform:scaleX({{ flip }})">chevron_right</span></button></sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column"><div style="font-size:13px;font-weight:700;color:#5E5E5E;padding:0 0 4px">{{ t.settings }}</div>
+      <sc-for list="{{ menuB }}" as="m"><button onClick="{{ m.go }}" style="display:flex;align-items:center;gap:14px;height:60px;border:none;background:none;cursor:pointer;padding:0;text-align:start;border-bottom:1px solid #F3F3F3;color:{{ m.fg }}" style-active="opacity:.6"><span style="width:40px;height:40px;border-radius:50%;background:{{ m.ibg }};display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ m.icon }}</span></span><span style="flex:1;font-size:16px;font-weight:600">{{ m.label }}</span><span style="font-size:14px;color:#5E5E5E">{{ m.value }}</span><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#AFAFAF;display:inline-block;transform:scaleX({{ flip }})">chevron_right</span></button></sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column"><div style="font-size:13px;font-weight:700;color:#5E5E5E;padding:0 0 4px">{{ t.support }}</div>
+      <sc-for list="{{ menuC }}" as="m"><button onClick="{{ m.go }}" style="display:flex;align-items:center;gap:14px;height:60px;border:none;background:none;cursor:pointer;padding:0;text-align:start;border-bottom:1px solid #F3F3F3;color:{{ m.fg }}" style-active="opacity:.6"><span style="width:40px;height:40px;border-radius:50%;background:{{ m.ibg }};display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;display:inline-block">{{ m.icon }}</span></span><span style="flex:1;font-size:16px;font-weight:600">{{ m.label }}</span><sc-if value="{{ m.chev }}"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#AFAFAF;display:inline-block;transform:scaleX({{ flip }})">chevron_right</span></sc-if></button></sc-for>
+    </div>
+    <div style="text-align:center;font-size:12px;color:#8A8A8A">Raghwa · v1.0</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.cars }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;overflow-y:auto;padding:8px 16px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:12px">
+    <div style="font-size:30px;font-weight:800;margin-bottom:8px">{{ t.my_cars }}</div>
+    <sc-for list="{{ carsList }}" as="cr">
+      <button onClick="{{ cr.edit }}" style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;border:1px solid #EEEEEE;background:#fff;cursor:pointer;text-align:start" style-active="background:#FAFAFA">
+        <span style="width:48px;height:48px;border-radius:50%;background:#F3F3F3;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Symbols Rounded';font-size:26px;line-height:1">directions_car</span></span>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;font-weight:700">{{ cr.label }}</span><sc-if value="{{ cr.def }}"><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#E4F8FA;color:#006B78">{{ t.default_car }}</span></sc-if></div>
+          <div dir="rtl" style="align-self:flex-start;display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 10px;border-radius:5px;background:#141414;color:#fff;font-size:14px;font-weight:700;font-family:Cairo,Inter,sans-serif;box-shadow:inset 0 0 0 1.5px #fff,0 0 0 1px #141414"><span>{{ cr.ps }}</span><span style="font-size:12px">تونس</span><span>{{ cr.pn }}</span></div>
+        </div>
+        <span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#AFAFAF">edit</span>
+      </button>
+    </sc-for>
+    <button onClick="{{ newCar }}" style="display:flex;align-items:center;justify-content:center;gap:8px;height:56px;border-radius:16px;border:1.5px dashed #AFAFAF;background:#fff;font-size:16px;font-weight:700;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">add</span>{{ t.add_car }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.carform }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;overflow-y:auto;padding:8px 24px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:20px">
+    <div style="font-size:30px;font-weight:800">{{ cfTitle }}</div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">{{ t.brand }}</div>
+      <input value="{{ f.brand }}" onChange="{{ on.brand }}" placeholder="{{ t.brand_ph }}" style="width:100%;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.brand }};padding:0 16px;font-size:16px;outline:none">
+      <sc-if value="{{ eh.brand }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.brand }}</div></sc-if></div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">{{ t.model }}</div>
+      <input value="{{ f.model }}" onChange="{{ on.model }}" placeholder="{{ t.model_ph }}" style="width:100%;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.model }};padding:0 16px;font-size:16px;outline:none">
+      <sc-if value="{{ eh.model }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.model }}</div></sc-if></div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">{{ t.plate }}</div>
+      <div dir="rtl" style="display:flex;align-items:center;gap:0;height:64px;border-radius:10px;background:#141414;color:#fff;padding:0 6px;box-shadow:inset 0 0 0 2px #fff,0 0 0 2px {{ plateBd }}">
+        <input value="{{ f.ps }}" onChange="{{ on.ps }}" inputMode="numeric" placeholder="215" style="flex:1;min-width:0;height:100%;border:none;background:none;outline:none;color:#fff;text-align:center;font-size:24px;font-weight:800;font-family:Inter,sans-serif">
+        <span style="font-family:Cairo,sans-serif;font-size:20px;font-weight:700;padding:0 8px">تونس</span>
+        <input value="{{ f.pn }}" onChange="{{ on.pn }}" inputMode="numeric" placeholder="4521" style="flex:1.3;min-width:0;height:100%;border:none;background:none;outline:none;color:#fff;text-align:center;font-size:24px;font-weight:800;font-family:Inter,sans-serif">
+      </div>
+      <div style="font-size:13px;color:#5E5E5E">{{ t.plate_hint }}</div>
+      <sc-if value="{{ plateErr }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ plateErrT }}</div></sc-if>
+    </div>
+    <sc-if value="{{ isEdit }}"><button onClick="{{ deleteCar }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;border:none;background:none;color:#B3261E;font-size:15px;font-weight:700;cursor:pointer;padding:8px 0"><span style="font-family:'Material Symbols Rounded';font-size:20px;line-height:1">delete</span>{{ t.delete_car }}</button></sc-if>
+  </div>
+  <div style="padding:16px 24px 8px"><button onClick="{{ saveCar }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.save }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.language }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="padding:8px 16px;display:flex;flex-direction:column;gap:12px">
+    <div style="font-size:30px;font-weight:800;margin-bottom:8px">{{ t.language }}</div>
+    <sc-for list="{{ langOpts }}" as="o">
+      <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:16px;height:76px;padding:0 20px;border-radius:16px;border:2px solid {{ o.bd }};background:{{ o.bg }};cursor:pointer;text-align:start">
+        <div style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E2E2E2;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;font-family:{{ o.font }}">{{ o.code }}</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:700;font-family:{{ o.font }}">{{ o.label }}</span><span style="font-size:13px;color:#5E5E5E;font-family:{{ o.font }}">{{ o.sub }}</span></div>
+        <div style="width:24px;height:24px;border-radius:50%;border:2px solid {{ o.rbd }};display:flex;align-items:center;justify-content:center"><div style="width:12px;height:12px;border-radius:50%;background:{{ o.dot }}"></div></div>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.notif }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="padding:8px 16px;display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:30px;font-weight:800">{{ t.notifications }}</div>
+    <div style="font-size:15px;color:#5E5E5E;line-height:1.5;margin-bottom:12px">{{ t.notif_s }}</div>
+    <div style="font-size:13px;font-weight:700;color:#5E5E5E">{{ t.booking_rem }}</div>
+    <sc-for list="{{ notifRows }}" as="n">
+      <div style="display:flex;align-items:center;gap:12px;min-height:72px;border-bottom:1px solid #F3F3F3">
+        <div style="flex:1"><div style="font-size:16px;font-weight:700">{{ n.label }}</div><div style="font-size:13px;color:#5E5E5E;margin-top:2px">{{ n.sub }}</div></div>
+        <button onClick="{{ n.toggle }}" style="position:relative;width:52px;height:32px;border-radius:16px;border:none;background:{{ n.bg }};cursor:pointer;flex:none;transition:background .2s;padding:0"><span style="position:absolute;top:2px;inset-inline-start:{{ n.x }}px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:inset-inline-start .2s"></span></button>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.changepw }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;overflow-y:auto;padding:8px 24px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:20px">
+    <div style="font-size:30px;font-weight:800">{{ t.change_pw }}</div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">{{ t.current_pw }}</div>
+      <div style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.cpw }};padding-inline:16px 6px"><input type="{{ pwType }}" value="{{ f.cpw }}" onChange="{{ on.cpw }}" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%"><button onClick="{{ togglePw }}" style="width:44px;height:44px;border:none;background:none;cursor:pointer;color:#5E5E5E;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ pwIcon }}</span></button></div>
+      <sc-if value="{{ eh.cpw }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.cpw }}</div></sc-if></div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">{{ t.new_pw }}</div>
+      <input type="{{ pwType }}" value="{{ f.cnpw }}" onChange="{{ on.cnpw }}" placeholder="{{ t.pw_ph }}" style="width:100%;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.cnpw }};padding:0 16px;font-size:16px;outline:none">
+      <sc-if value="{{ eh.cnpw }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.cnpw }}</div></sc-if></div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">{{ t.confirm_pw }}</div>
+      <input type="{{ pwType }}" value="{{ f.cnpw2 }}" onChange="{{ on.cnpw2 }}" placeholder="{{ t.pw_ph }}" style="width:100%;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.cnpw2 }};padding:0 16px;font-size:16px;outline:none">
+      <sc-if value="{{ eh.cnpw2 }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.cnpw2 }}</div></sc-if></div>
+  </div>
+  <div style="padding:16px 24px 8px"><button onClick="{{ savePw }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.save }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.changephone }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;padding:8px 24px;display:flex;flex-direction:column;gap:20px">
+    <div><div style="font-size:30px;font-weight:800">{{ t.change_phone }}</div><div style="font-size:15px;color:#5E5E5E;line-height:1.5;margin-top:8px">{{ t.phone_s }}</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">{{ t.new_phone }}</div>
+      <div dir="ltr" style="display:flex;align-items:center;height:56px;border-radius:12px;background:#F3F3F3;border:2px solid {{ eb.nphone }};padding:0 14px;gap:10px">
+        <div style="position:relative;width:26px;height:18px;border-radius:3px;background:#E70013;overflow:hidden;flex:none"><div style="position:absolute;left:8px;top:4px;width:10px;height:10px;border-radius:50%;background:#fff"></div><div style="position:absolute;left:9.5px;top:5.5px;width:7px;height:7px;border-radius:50%;background:#E70013"></div><div style="position:absolute;left:11.5px;top:6px;width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+        <span style="font-size:16px;font-weight:600;font-family:Inter,sans-serif">+216</span><div style="width:1px;height:24px;background:#D0D0D0"></div>
+        <input value="{{ f.nphone }}" onChange="{{ on.nphone }}" inputMode="numeric" placeholder="XX XXX XXX" style="flex:1;min-width:0;border:none;background:none;outline:none;font-size:16px;height:100%;font-family:Inter,sans-serif">
+      </div>
+      <sc-if value="{{ eh.nphone }}"><div style="display:flex;align-items:center;gap:6px;color:#B3261E;font-size:13px;font-weight:600"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1">error</span>{{ er.nphone }}</div></sc-if>
+    </div>
+  </div>
+  <div style="padding:16px 24px 8px"><button onClick="{{ savePhone }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ t.send_code }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.help }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;overflow-y:auto;padding:8px 16px 24px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:20px">
+    <div style="font-size:30px;font-weight:800">{{ t.help }}</div>
+    <div style="display:flex;flex-direction:column"><div style="font-size:13px;font-weight:700;color:#5E5E5E;padding-bottom:4px">{{ t.contact }}</div>
+      <sc-for list="{{ helpRows }}" as="h"><button onClick="{{ h.go }}" style="display:flex;align-items:center;gap:14px;height:64px;border:none;background:none;cursor:pointer;padding:0;text-align:start;border-bottom:1px solid #F3F3F3"><span style="width:40px;height:40px;border-radius:50%;background:#F3F3F3;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">{{ h.icon }}</span></span><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16px;font-weight:600">{{ h.label }}</span><span style="font-size:13px;color:#5E5E5E;font-family:Inter,sans-serif">{{ h.value }}</span></span><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#AFAFAF;display:inline-block;transform:scaleX({{ flip }})">chevron_right</span></button></sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:13px;font-weight:700;color:#5E5E5E">{{ t.faq }}</div>
+      <sc-for list="{{ faqs }}" as="q"><div style="padding:16px;border-radius:16px;background:#F6F6F6;display:flex;flex-direction:column;gap:6px"><div style="font-size:16px;font-weight:700">{{ q.q }}</div><div style="font-size:14px;color:#454545;line-height:1.55">{{ q.a }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ s.terms }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:47px 0 34px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;height:56px;padding:0 16px;flex:none"><button onClick="{{ back }}" style="width:44px;height:44px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="background:#E2E2E2"><span style="font-family:'Material Symbols Rounded';font-size:24px;line-height:1;display:inline-block;transform:scaleX({{ flip }})">arrow_back</span></button></div>
+  <div style="flex:1;overflow-y:auto;padding:8px 24px 24px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:14px;font-size:15px;line-height:1.65;color:#333">
+    <div style="font-size:30px;font-weight:800;color:#141414;line-height:1.3">{{ t.terms }}</div>
+    <div style="font-size:13px;color:#6B6B6B">{{ t.updated }}</div>
+    <p style="margin:0">{{ t.terms_1 }}</p>
+    <div style="font-size:18px;font-weight:800;color:#141414;margin-top:8px">{{ t.terms_h1 }}</div><p style="margin:0">{{ t.terms_2 }}</p>
+    <div style="font-size:18px;font-weight:800;color:#141414;margin-top:8px">{{ t.terms_h2 }}</div><p style="margin:0">{{ t.terms_3 }}</p>
+    <div style="font-size:18px;font-weight:800;color:#141414;margin-top:8px">{{ t.terms_h3 }}</div><p style="margin:0">{{ t.terms_4 }}</p>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTabs }}">
+<div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:#fff;border-top:1px solid #EEEEEE;display:flex;padding:6px 8px 0;z-index:30">
+  <sc-for list="{{ tabs }}" as="tb"><button onClick="{{ tb.go }}" style="flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;height:52px;cursor:pointer;color:{{ tb.fg }};padding:4px 0 0"><span style="font-family:'Material Symbols Rounded';font-size:26px;line-height:1;font-variation-settings:'FILL' {{ tb.fill }}">{{ tb.icon }}</span><span style="font-size:12px;font-weight:{{ tb.fw }}">{{ tb.label }}</span></button></sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ fOpen }}">
+<div onClick="{{ closeFilters }}" style="position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:40"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;max-height:780px;background:#fff;border-radius:24px 24px 0 0;z-index:41;display:flex;flex-direction:column;padding-bottom:34px">
+  <div style="padding:10px 0 4px;display:flex;justify-content:center"><div style="width:40px;height:5px;border-radius:3px;background:#D6D6D6"></div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 12px">
+    <button onClick="{{ closeFilters }}" style="width:40px;height:40px;border-radius:50%;border:none;background:#F3F3F3;display:flex;align-items:center;justify-content:center;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1">close</span></button>
+    <div style="font-size:18px;font-weight:800">{{ t.filters }}</div>
+    <button onClick="{{ resetF }}" style="border:none;background:none;font-size:15px;font-weight:700;color:#0B3B8F;cursor:pointer;padding:8px 0">{{ t.reset }}</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:16px;font-weight:700">{{ t.open_now }}</div><div style="font-size:13px;color:#5E5E5E;margin-top:2px">{{ t.open_now_s }}</div></div>
+      <button onClick="{{ toggleOpenNow }}" style="position:relative;width:52px;height:32px;border-radius:16px;border:none;background:{{ fdOpen.bg }};cursor:pointer;flex:none;transition:background .2s;padding:0"><span style="position:absolute;top:2px;inset-inline-start:{{ fdOpen.x }}px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:inset-inline-start .2s"></span></button></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:16px;font-weight:700">{{ t.distance }}</div><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ distOpts }}" as="o"><button onClick="{{ o.pick }}" style="height:40px;padding:0 16px;border-radius:999px;border:none;background:{{ o.bg }};color:{{ o.fg }};font-size:14px;font-weight:600;cursor:pointer">{{ o.label }}</button></sc-for></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:16px;font-weight:700">{{ t.rating }}</div><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ ratingOpts }}" as="o"><button onClick="{{ o.pick }}" style="height:40px;padding:0 16px;border-radius:999px;border:none;background:{{ o.bg }};color:{{ o.fg }};font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px"><sc-if value="{{ o.star }}"><span style="font-family:'Material Symbols Rounded';font-size:16px;line-height:1;font-variation-settings:'FILL' 1">star</span></sc-if>{{ o.label }}</button></sc-for></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:16px;font-weight:700">{{ t.price }}</div><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ priceOpts }}" as="o"><button onClick="{{ o.pick }}" style="height:40px;padding:0 16px;border-radius:999px;border:none;background:{{ o.bg }};color:{{ o.fg }};font-size:14px;font-weight:600;cursor:pointer">{{ o.label }}</button></sc-for></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:16px;font-weight:700">{{ t.services }}</div><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ svcOpts }}" as="o"><button onClick="{{ o.pick }}" style="height:40px;padding:0 14px;border-radius:999px;border:none;background:{{ o.bg }};color:{{ o.fg }};font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1">{{ o.icon }}</span>{{ o.label }}</button></sc-for></div></div>
+  </div>
+  <div style="padding:12px 16px 0;border-top:1px solid #EEEEEE"><button onClick="{{ applyF }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#0B3B8F;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#082C6B">{{ applyLabel }}</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ cancelOpen }}">
+<div onClick="{{ closeCancel }}" style="position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:40"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;z-index:41;display:flex;flex-direction:column;gap:20px;padding:10px 16px 42px">
+  <div style="display:flex;justify-content:center"><div style="width:40px;height:5px;border-radius:3px;background:#D6D6D6"></div></div>
+  <div><div style="font-size:24px;font-weight:800">{{ t.cancel_t }}</div><div style="font-size:15px;color:#5E5E5E;margin-top:6px">{{ rd.date }} · {{ rd.time }}</div></div>
+  <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:15px;font-weight:700">{{ t.cancel_s }}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ reasons }}" as="o"><button onClick="{{ o.pick }}" style="height:40px;padding:0 14px;border-radius:999px;border:none;background:{{ o.bg }};color:{{ o.fg }};font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><sc-if value="{{ o.hasIcon }}"><span style="font-family:'Material Symbols Rounded';font-size:18px;line-height:1">check</span></sc-if>{{ o.label }}</button></sc-for></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <button onClick="{{ doCancel }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#D92D20;color:#fff;font-size:17px;font-weight:700;cursor:pointer" style-active="background:#B3261E">{{ t.yes_cancel }}</button>
+    <button onClick="{{ closeCancel }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#F3F3F3;font-size:17px;font-weight:700;cursor:pointer">{{ t.keep }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ rateOpen }}">
+<div onClick="{{ closeRate }}" style="position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:40"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;z-index:41;display:flex;flex-direction:column;gap:20px;padding:10px 16px 42px">
+  <div style="display:flex;justify-content:center"><div style="width:40px;height:5px;border-radius:3px;background:#D6D6D6"></div></div>
+  <div style="text-align:center"><div style="font-size:24px;font-weight:800">{{ t.rate_t }}</div><div style="font-size:15px;color:#5E5E5E;margin-top:6px">{{ rd.name }}</div></div>
+  <div dir="ltr" style="display:flex;justify-content:center;gap:8px"><sc-for list="{{ rateStars }}" as="z"><button onClick="{{ z.pick }}" style="width:52px;height:52px;border:none;background:none;cursor:pointer;padding:0;color:{{ z.c }}"><span style="font-family:'Material Symbols Rounded';font-size:48px;line-height:1;font-variation-settings:'FILL' {{ z.fill }}">star</span></button></sc-for></div>
+  <textarea value="{{ f.comment }}" onChange="{{ on.comment }}" placeholder="{{ t.comment_ph }}" rows="3" style="width:100%;border-radius:12px;background:#F3F3F3;border:2px solid transparent;padding:14px 16px;font-size:16px;outline:none;resize:none"></textarea>
+  <button onClick="{{ sendRate }}" style="width:100%;height:56px;border:none;border-radius:999px;background:{{ rateBtn.bg }};color:{{ rateBtn.fg }};font-size:17px;font-weight:700;cursor:pointer">{{ t.send }}</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ logoutOpen }}">
+<div onClick="{{ closeLogout }}" style="position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:40"></div>
+<div style="position:absolute;left:24px;right:24px;top:50%;transform:translateY(-50%);background:#fff;border-radius:24px;z-index:41;display:flex;flex-direction:column;gap:12px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,.2)">
+  <div style="width:52px;height:52px;border-radius:50%;background:#FDECEA;color:#B3261E;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Rounded';font-size:26px;line-height:1">logout</span></div>
+  <div style="font-size:22px;font-weight:800">{{ t.logout_t }}</div>
+  <div style="font-size:15px;color:#5E5E5E;line-height:1.5">{{ t.logout_s }}</div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button onClick="{{ closeLogout }}" style="flex:1;height:52px;border:none;border-radius:999px;background:#F3F3F3;font-size:16px;font-weight:700;cursor:pointer">{{ t.stay }}</button>
+    <button onClick="{{ doLogout }}" style="flex:1;height:52px;border:none;border-radius:999px;background:#D92D20;color:#fff;font-size:16px;font-weight:700;cursor:pointer">{{ t.logout }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}">
+<div style="position:absolute;left:16px;right:16px;bottom:{{ toastBottom }}px;z-index:70;display:flex;justify-content:center;pointer-events:none">
+  <div style="display:flex;align-items:center;gap:10px;min-height:48px;padding:12px 18px;border-radius:14px;background:#141414;color:#fff;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25)"><span style="font-family:'Material Symbols Rounded';font-size:22px;line-height:1;color:#22C4D6;font-variation-settings:'FILL' 1">check_circle</span>{{ toastMsg }}</div>
+</div>
+</sc-if>
+
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:{{ hiBg }};z-index:90;pointer-events:none"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ar&quot;,&quot;fr&quot;],&quot;default&quot;:&quot;ar&quot;,&quot;tsType&quot;:&quot;'ar'|'fr'&quot;},&quot;start&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;still&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;nav&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{n:number,to?:string,patch?:object}&quot;},&quot;onScreen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(s:string)=&gt;void&quot;},&quot;onLang&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(l:string)=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = this.init();
+  init() {
+    return {
+      lang: this.props.lang || 'ar', screen: 'splash', hist: [], intro: 0,
+      f: { phone: '22 345 678', pw: '', name: '', sphone: '', spw: '', spw2: '', fphone: '', npw: '', npw2: '', otp: '', cpw: '', cnpw: '', cnpw2: '', nphone: '', brand: '', model: '', ps: '', pn: '', comment: '', q: '' },
+      err: {}, showPw: false, otpCtx: 'signup', timer: 45,
+      sheet: 'collapsed', sel: null, fOpen: false, flt: { ...F0 }, fd: { ...F0 },
+      denied: false, offline: false, mapLoading: false, mapSeen: false,
+      gid: 'marsa', photo: 0, hoursOpen: false,
+      bk: { di: 0, m: null, svc: [], car: 'polo' }, slotLoading: false, busy: false, svcErr: false,
+      res: RES0.map(r => ({ ...r })), seg: 'up', resLoading: false, resSeen: false, empty: false, rid: 'RG-24655', lastRef: 'RG-24817',
+      cancelOpen: false, reasons: [], rs: { di: 6, m: null }, rateOpen: false, stars: 0,
+      cars: CARS0.map(c => ({ ...c })), editCar: null, notif: { h1: true, d1: false },
+      toast: null, logoutOpen: false, mode: 'book'
+    };
+  }
+  componentDidMount() {
+    if (this.props.start) this.preset(this.props.start);
+    else this.enter('splash');
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearTimeout(this.tt); clearTimeout(this.st); }
+  componentDidUpdate(pp, ps) {
+    const n = this.props.nav, pn = pp.nav;
+    if (n && (!pn || n.n !== pn.n)) { if (n.to) this.preset(n.to); if (n.patch) this.setState(n.patch); }
+    if (this.props.lang && this.props.lang !== pp.lang && this.props.lang !== this.state.lang) this.setState({ lang: this.props.lang });
+    if (ps.screen !== this.state.screen) { this.enter(this.state.screen); this.props.onScreen && this.props.onScreen(this.state.screen); }
+    if (ps.lang !== this.state.lang && this.props.onLang) this.props.onLang(this.state.lang);
+  }
+  enter(sc) {
+    const still = this.props.still;
+    clearInterval(this.iv);
+    if (sc === 'splash' && !still) { clearTimeout(this.st); this.st = setTimeout(() => this.state.screen === 'splash' && this.setState({ screen: 'lang', hist: [] }), 2200); }
+    if (sc === 'otp' && !still) { this.setState({ timer: 45 }); this.iv = setInterval(() => this.setState(s => s.timer > 0 ? { timer: s.timer - 1 } : null), 1000); }
+    if (sc === 'map' && !this.state.mapSeen && !still) { this.setState({ mapLoading: true, mapSeen: true }); setTimeout(() => this.setState({ mapLoading: false }), 1200); }
+    if (sc === 'res' && !this.state.resSeen && !still) { this.setState({ resLoading: true, resSeen: true }); setTimeout(() => this.setState({ resLoading: false }), 1000); }
+  }
+  go(screen, patch) { this.setState(s => ({ screen, hist: [...s.hist, s.screen], err: {}, ...(patch || {}) })); }
+  root(screen, patch) { this.setState({ screen, hist: [], err: {}, sel: null, fOpen: false, cancelOpen: false, rateOpen: false, logoutOpen: false, ...(patch || {}) }); }
+  back() {
+    this.setState(s => {
+      const h = [...s.hist]; let prev = h.pop();
+      if (!prev) prev = s.screen === 'book1' && s.mode === 'resched' ? 'resd' : (PARENT[s.screen] || 'map');
+      return { screen: prev, hist: h, err: {} };
+    });
+  }
+  toast(k) { clearTimeout(this.tt); this.setState({ toast: k }); this.tt = setTimeout(() => this.setState({ toast: null }), 2600); }
+  setF(k, v) {
+    if (['phone', 'sphone', 'fphone', 'nphone'].includes(k)) v = fmtPhone(v);
+    if (k === 'otp') v = digits(v).slice(0, 4);
+    if (k === 'ps') v = digits(v).slice(0, 3);
+    if (k === 'pn') v = digits(v).slice(0, 4);
+    this.setState(s => ({ f: { ...s.f, [k]: v }, err: { ...s.err, [k]: null }, ...(k === 'q' && s.sheet === 'collapsed' ? { sheet: 'half' } : {}) }));
+  }
+  validate(rules) {
+    const f = this.state.f, err = {};
+    for (const [k, r] of rules) {
+      const v = f[k] || '';
+      if (r === 'phone') { const d = digits(v); if (!d) err[k] = 'e_phone_req'; else if (d.length !== 8) err[k] = 'e_phone_len'; }
+      if (r === 'req' && !v.trim()) err[k] = 'e_req';
+      if (r === 'name' && !v.trim()) err[k] = 'e_name_req';
+      if (r === 'pwreq' && !v) err[k] = 'e_pw_req';
+      if (r === 'pw') { if (!v) err[k] = 'e_pw_req'; else if (v.length < 8) err[k] = 'e_pw_len'; }
+      if (typeof r === 'object' && r.match && v !== f[r.match]) err[k] = 'e_pw_match';
+      if (r === 'plate' && !v) err[k] = 'e_plate';
+    }
+    this.setState({ err });
+    return Object.keys(err).length === 0;
+  }
+  pickDate(i) {
+    const key = this.state.mode === 'resched' ? 'rs' : 'bk';
+    this.setState(s => ({ [key]: { ...s[key], di: i, m: null }, slotLoading: !this.props.still }));
+    clearTimeout(this.sl); this.sl = setTimeout(() => this.setState({ slotLoading: false }), 550);
+  }
+  pickSlot(m) { const key = this.state.mode === 'resched' ? 'rs' : 'bk'; this.setState(s => ({ [key]: { ...s[key], m } })); }
+  preset(key) {
+    const [sc, v] = key.split(':');
+    const base = { screen: sc, hist: [], err: {}, sel: null, fOpen: false, cancelOpen: false, rateOpen: false, logoutOpen: false, sheet: 'collapsed', mapLoading: false, resLoading: false, slotLoading: false, offline: false, mapSeen: true, resSeen: true, mode: 'book', busy: false, toast: null, svcErr: false };
+    const p = { ...base };
+    const f = { ...this.state.f };
+    const bkSel = { di: 0, m: 660, svc: ['full', 'pol'], car: 'polo' };
+    switch (key) {
+      case 'intro2': Object.assign(p, { screen: 'intro', intro: 1 }); break;
+      case 'intro3': Object.assign(p, { screen: 'intro', intro: 2 }); break;
+      case 'intro': p.intro = 0; break;
+      case 'login:err': f.phone = '22 34'; f.pw = ''; p.err = { phone: 'e_phone_len', pw: 'e_pw_req' }; p.screen = 'login'; break;
+      case 'signup:err': Object.assign(f, { name: '', sphone: '22 345 678', spw: 'foam2026', spw2: 'foam2025' }); p.err = { name: 'e_name_req', spw2: 'e_pw_match' }; break;
+      case 'otp': f.otp = '12'; p.otpCtx = 'signup'; break;
+      case 'otp:err': f.otp = '5821'; p.otpCtx = 'signup'; p.screen = 'otp'; p.err = { otp: 'e_otp' }; break;
+      case 'map:half': p.sheet = 'half'; break;
+      case 'map:expanded': p.sheet = 'expanded'; break;
+      case 'map:pin': p.sel = 'marsa'; break;
+      case 'map:filters': p.fOpen = true; p.fd = { ...F0, open: true, dist: 5, svc: ['pol'] }; break;
+      case 'map:loading': p.mapLoading = true; p.sheet = 'half'; break;
+      case 'map:denied': p.denied = true; break;
+      case 'map:offline': p.offline = true; break;
+      case 'map': p.denied = false; break;
+      case 'garage': p.gid = 'marsa'; p.hoursOpen = false; p.hist = ['map']; break;
+      case 'garage:hours': p.screen = 'garage'; p.gid = 'marsa'; p.hoursOpen = true; p.hist = ['map']; break;
+      case 'book1': p.gid = 'marsa'; p.bk = { ...bkSel, m: null, svc: [] }; p.hist = ['map', 'garage']; break;
+      case 'book1:sel': p.screen = 'book1'; p.gid = 'marsa'; p.bk = { ...bkSel, svc: [] }; p.hist = ['map', 'garage']; break;
+      case 'book1:loading': p.screen = 'book1'; p.gid = 'marsa'; p.bk = { ...bkSel, m: null, svc: [] }; p.slotLoading = true; p.hist = ['map', 'garage']; break;
+      case 'book2': p.gid = 'marsa'; p.bk = bkSel; p.hist = ['map', 'garage', 'book1']; break;
+      case 'book2:err': p.screen = 'book2'; p.gid = 'marsa'; p.bk = { ...bkSel, svc: [] }; p.svcErr = true; p.hist = ['map', 'garage', 'book1']; break;
+      case 'book3': p.gid = 'marsa'; p.bk = bkSel; p.hist = ['map', 'garage', 'book1', 'book2']; break;
+      case 'success': p.gid = 'marsa'; p.bk = bkSel; p.lastRef = 'RG-24817'; this.ensureNew(p, bkSel); break;
+      case 'res': p.seg = 'up'; p.empty = false; break;
+      case 'res:loading': p.screen = 'res'; p.seg = 'up'; p.resLoading = true; break;
+      case 'res:empty': p.screen = 'res'; p.empty = true; p.seg = v === 'empty' ? this.state.seg : 'up'; break;
+      case 'res:past': p.screen = 'res'; p.seg = 'past'; p.empty = false; break;
+      case 'res:cancelled': p.screen = 'res'; p.seg = 'cancelled'; p.empty = false; break;
+      case 'resd:up': p.screen = 'resd'; p.rid = 'RG-24655'; p.hist = ['res']; break;
+      case 'resd:locked': p.screen = 'resd'; p.rid = 'RG-24702'; p.hist = ['res']; break;
+      case 'resd:past': p.screen = 'resd'; p.rid = 'RG-23961'; p.hist = ['res']; break;
+      case 'resd:cancelled': p.screen = 'resd'; p.rid = 'RG-24105'; p.hist = ['res']; break;
+      case 'cancel': p.screen = 'resd'; p.rid = 'RG-24655'; p.cancelOpen = true; p.reasons = ['r1']; p.hist = ['res']; break;
+      case 'resched': p.screen = 'book1'; p.mode = 'resched'; p.rid = 'RG-24655'; p.rs = { di: 6, m: null }; p.hist = ['res', 'resd']; break;
+      case 'resched2': p.screen = 'resched2'; p.mode = 'resched'; p.rid = 'RG-24655'; p.rs = { di: 6, m: 600 }; p.hist = ['res', 'resd', 'book1']; break;
+      case 'rate': p.screen = 'resd'; p.rid = 'RG-23961'; p.rateOpen = true; p.stars = 4; p.hist = ['res']; break;
+      case 'carform': p.editCar = null; Object.assign(f, { brand: '', model: '', ps: '', pn: '' }); p.hist = ['profile', 'cars']; break;
+      case 'carform:err': p.screen = 'carform'; p.editCar = null; Object.assign(f, { brand: 'Kia', model: '', ps: '', pn: '45' }); p.err = { model: 'e_req', ps: 'e_plate' }; p.hist = ['profile', 'cars']; break;
+      case 'logout': p.screen = 'profile'; p.logoutOpen = true; break;
+      case 'changephone': f.nphone = ''; p.hist = ['profile']; break;
+      default: if (PARENT[sc] === 'profile') p.hist = ['profile'];
+    }
+    p.f = f;
+    this.setState(p);
+    if (p.screen === 'otp' && !this.props.still) this.enter('otp');
+  }
+  ensureNew(p, bk) {
+    if (this.state.res.some(r => r.ref === 'RG-24817')) return;
+    p.res = [{ ref: 'RG-24817', g: 'marsa', di: bk.di, m: bk.m, svc: bk.svc, st: 'up', car: bk.car }, ...this.state.res];
+  }
+  confirm() {
+    if (this.state.busy) return;
+    this.setState({ busy: true });
+    setTimeout(() => {
+      this.setState(s => {
+        const ref = 'RG-' + (24817 + s.res.filter(r => r.ref.startsWith('RG-248')).length);
+        return { busy: false, screen: 'success', hist: [], lastRef: ref, res: [{ ref, g: s.gid, di: s.bk.di, m: s.bk.m, svc: s.bk.svc, st: 'up', car: s.bk.car }, ...s.res] };
+      });
+    }, this.props.still ? 0 : 1100);
+  }
+
+  renderVals() {
+    const st = this.state, L = st.lang, li = L === 'ar' ? 0 : 1, ar = L === 'ar';
+    const t = {}; for (const k in S) t[k] = S[k][li];
+    const tr = (k, o) => S[k][li].replace(/\{(\w+)\}/g, (_, x) => o[x]);
+    const iso = s => ar ? '\u2066' + s + '\u2069' : s;
+    const price = p => ar ? p + ' د.ت' : p + ' TND';
+    const num = n => String(n).replace('.', ',');
+    const noop = () => {};
+    const dLong = di => { const d = dayAt(di); const s = DOWF[L][d.getDay()] + ' ' + d.getDate() + ' ' + MON[L][d.getMonth()]; return ar ? s : s[0].toUpperCase() + s.slice(1); };
+    const range = m => iso(hm(m) + ' – ' + hm(m + 30));
+    const sc = st.screen;
+    const s = {}; SCREENS.forEach(k => s[k] = k === sc);
+    const eb = {}, er = {}, eh = {};
+    FIELDS.forEach(k => { const e = st.err[k]; eb[k] = e ? '#D92D20' : 'transparent'; er[k] = e ? t[e] : ''; eh[k] = !!e; });
+    const on = {}; FIELDS.forEach(k => on[k] = e => this.setF(k, e.target.value));
+    const gById = id => G.find(x => x.id === id) || G[0];
+    const svcPrice = (g, id) => SVM[id].p + (g.from - 10);
+    const gv = g => ({
+      id: g.id, name: g.n[li], area: g.ar[li], addr: g.a[li], rating: num(g.r.toFixed(1)), reviews: tr('reviews_n', { n: g.rc }),
+      dist: tr('km', { d: num(g.d) }), from: tr('from', { p: price(g.from) }), status: g.open ? t.open : t.closed,
+      sBg: g.open ? '#E6F4EC' : '#FDECEA', sFg: g.open ? '#05713C' : '#B3261E',
+      hours: g.open ? tr('closes_at', { t: g.close }) : tr('opens_at', { t: g.opens }), tel: g.tel || '+216 71 000 000'
+    });
+    const vals = { dir: ar ? 'rtl' : 'ltr', lang: L, font: ar ? "'Cairo','Inter',sans-serif" : "'Inter','Cairo',sans-serif", flip: ar ? -1 : 1, s, t, eb, er, eh, on, f: st.f, noop };
+    vals.sbFg = sc === 'splash' ? '#fff' : '#141414';
+    vals.hiBg = sc === 'splash' ? 'rgba(255,255,255,.8)' : '#141414';
+    vals.back = () => this.back();
+
+    // splash / onboarding
+    vals.foam = FOAM; vals.foamA = FOAM_A; vals.locBub = LOC_BUB;
+    vals.toLang = () => this.root('lang');
+    vals.langOpts = [['ar', 'ع', 'عربي', 'الدارجة التونسية', "'Cairo',sans-serif"], ['fr', 'Fr', 'Français', 'Français', "'Inter',sans-serif"]].map(([k, code, label, sub, font]) => {
+      const sel = st.lang === k;
+      return { code, label, sub, font, bd: sel ? '#0B3B8F' : '#E2E2E2', bg: sel ? '#EDF2FC' : '#fff', rbd: sel ? '#0B3B8F' : '#AFAFAF', dot: sel ? '#0B3B8F' : 'transparent', pick: () => { this.setState({ lang: k }); if (sc === 'language') this.toast('lang_saved'); } };
+    });
+    vals.langNext = () => this.root('intro', { intro: 0 });
+    const ii = st.intro, IN = INTRO[ii];
+    vals.intro = { icon: IN.icon, chip: IN.chip === 'p' ? tr('from', { p: price(10) }) : IN.chip === 'c' ? price(20) : '10:30', title: t['intro' + (ii + 1) + '_t'], body: t['intro' + (ii + 1) + '_b'], btn: ii === 2 ? t.start : t.next,
+      dots: [0, 1, 2].map(i => ({ w: i === ii ? 24 : 8, c: i === ii ? '#0B3B8F' : '#D6D6D6', go: () => this.setState({ intro: i }) })) };
+    vals.introBub = INTRO_BUB;
+    vals.introNext = () => ii < 2 ? this.setState({ intro: ii + 1 }) : this.root('login');
+    vals.introSkip = () => this.root('login');
+
+    // auth
+    vals.pwType = st.showPw ? 'text' : 'password';
+    vals.pwIcon = st.showPw ? 'visibility_off' : 'visibility';
+    vals.togglePw = () => this.setState({ showPw: !st.showPw });
+    vals.toForgot = () => this.go('forgot', { f: { ...st.f, fphone: st.f.phone } });
+    vals.toSignup = () => this.go('signup');
+    vals.toLogin = () => this.root('login');
+    vals.doLogin = () => { if (this.validate([['phone', 'phone'], ['pw', 'pwreq']])) this.root('location'); };
+    vals.doSignup = () => { if (this.validate([['name', 'name'], ['sphone', 'phone'], ['spw', 'pw'], ['spw2', { match: 'spw' }]])) this.go('otp', { otpCtx: 'signup', f: { ...st.f, otp: '' } }); };
+    vals.doForgot = () => { if (this.validate([['fphone', 'phone']])) this.go('otp', { otpCtx: 'forgot', f: { ...st.f, otp: '' } }); };
+    vals.doNewPw = () => { if (this.validate([['npw', 'pw'], ['npw2', { match: 'npw' }]])) { this.root('login'); this.toast('pw_changed'); } };
+    const otpPh = st.otpCtx === 'signup' ? st.f.sphone : st.otpCtx === 'forgot' ? st.f.fphone : st.f.nphone;
+    vals.otpPhone = '+216 ' + (otpPh || '22 345 678');
+    vals.otpBoxes = [0, 1, 2, 3].map(i => ({ d: st.f.otp[i] || '', bg: st.err.otp ? '#FDECEA' : '#F3F3F3', bd: st.err.otp ? '#D92D20' : i === Math.min(st.f.otp.length, 3) ? '#0B3B8F' : 'transparent' }));
+    vals.timerOn = st.timer > 0; vals.canResend = st.timer <= 0;
+    vals.timerText = '00:' + String(st.timer).padStart(2, '0');
+    vals.resend = () => { this.toast('code_sent'); this.enter('otp'); };
+    const otpOk = st.f.otp.length === 4;
+    vals.verifyBtn = { bg: otpOk ? '#0B3B8F' : '#E2E2E2', fg: otpOk ? '#fff' : '#8A8A8A', cur: otpOk ? 'pointer' : 'not-allowed' };
+    vals.verify = () => {
+      if (!otpOk) return;
+      if (st.f.otp !== '1234') return this.setState({ err: { otp: 'e_otp' } });
+      if (st.otpCtx === 'signup') this.root('location');
+      else if (st.otpCtx === 'forgot') this.go('newpass', { hist: ['login'] });
+      else { this.root('profile'); this.toast('phone_changed'); }
+    };
+    vals.locAllow = () => this.root('map', { denied: false });
+    vals.locLater = () => this.root('map', { denied: true });
+
+    return Object.assign(vals, this.mapVals(st, { t, tr, li, ar, price, num, gv, gById, svcPrice, iso, dLong, range, noop, sc, L }));
+  }
+  mapVals(st, c) {
+    const { t, tr, li, ar, price, num, gv, gById, svcPrice, iso, dLong, range, noop, sc, L } = c;
+    const v = {};
+    // tabs
+    const tab = ['map', 'garage'].includes(sc) ? 'map' : ['res', 'resd'].includes(sc) ? 'res' : 'profile';
+    v.showTabs = ['map', 'res', 'profile'].includes(sc);
+    v.tabs = [['map', 'map', t.map_tab], ['res', 'event_note', t.res_tab], ['profile', 'person', t.profile]].map(([k, icon, label]) => ({ icon, label, fg: tab === k ? '#0B3B8F' : '#6B6B6B', fw: tab === k ? 700 : 500, fill: tab === k ? 1 : 0, go: () => this.root(k) }));
+    v.offlineOn = st.offline && v.showTabs && sc !== 'profile';
+    v.retry = () => { this.setState({ offline: false, mapLoading: sc === 'map', resLoading: sc === 'res' }); setTimeout(() => this.setState({ mapLoading: false, resLoading: false }), 900); };
+    v.hasToast = !!st.toast; v.toastMsg = st.toast ? t[st.toast] : '';
+    v.toastBottom = v.showTabs ? 100 : 120;
+
+    // map
+    const fl = st.flt, q = (st.f.q || '').trim().toLowerCase();
+    const pass = (g, F) => (!F.open || g.open) && (!F.dist || g.d <= F.dist) && (!F.rating || g.r >= F.rating) && (!F.price || g.from <= F.price) && F.svc.every(x => g.svc.includes(x));
+    const shown = G.filter(g => pass(g, fl) && (!q || (g.n.join(' ') + ' ' + g.ar.join(' ')).toLowerCase().includes(q)));
+    const den = st.denied;
+    const mv = den ? view(TUNIS.lat, TUNIS.lon, 12, 390, 844, 195, 400) : view(USER.lat, USER.lon, 13, 390, 844, 195, 300);
+    v.mapTiles = mv.tiles;
+    v.showUser = !den; v.user = mv.at(USER.lat, USER.lon);
+    v.pins = shown.map(g => { const p = mv.at(g.lat, g.lon), sel = st.sel === g.id; return { ...p, label: tr('from', { p: price(g.from) }), bg: sel ? '#0B3B8F' : g.open ? '#fff' : '#F3F3F3', fg: sel ? '#fff' : g.open ? '#141414' : '#6B6B6B', drop: g.open ? '#22C4D6' : '#AFAFAF', sc: sel ? 1.18 : 1, z: sel ? 6 : 3, tap: e => { e.stopPropagation(); this.setState({ sel: g.id }); } }; }).filter(p => p.x > -60 && p.x < 450 && p.y > 0 && p.y < 860);
+    v.mapTap = () => st.sel && this.setState({ sel: null });
+    v.denied = den;
+    v.enableLoc = () => this.go('location');
+    v.recenter = () => den ? this.go('location') : this.toast(null);
+    const SH = { collapsed: 176, half: 440, expanded: 700 };
+    v.sheetH = SH[st.sheet]; v.sheetOv = st.sheet === 'collapsed' ? 'hidden' : 'auto';
+    v.showSheet = !st.sel; v.hasSel = !!st.sel;
+    v.showRec = st.sheet !== 'expanded' || !!st.sel;
+    v.recBottom = st.sel ? 84 + 12 + 200 + 12 : 84 + v.sheetH + 12;
+    v.sheetDown = e => { this.py = e.clientY; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} };
+    v.sheetUp = e => { const dy = e.clientY - (this.py == null ? e.clientY : this.py); this.py = null; const o = ['collapsed', 'half', 'expanded']; let i = o.indexOf(st.sheet); if (dy < -24) i = Math.min(2, i + 1); else if (dy > 24) i = Math.max(0, i - 1); else i = (i + 1) % 3; this.setState({ sheet: o[i] }); };
+    v.listCount = tr('n_garages', { n: shown.length });
+    v.list = shown.slice().sort((a, b) => a.d - b.d).map(g => ({ ...gv(g), open: () => this.go('garage', { gid: g.id, photo: 0, hoursOpen: false }) }));
+    v.mapLoading = st.mapLoading; v.listReady = !st.mapLoading && shown.length > 0; v.noResults = !st.mapLoading && shown.length === 0;
+    v.skel = [1, 2, 3, 4];
+    const sg = st.sel ? gById(st.sel) : null;
+    v.selG = sg ? gv(sg) : {};
+    v.openSel = () => this.go('garage', { gid: sg.id, photo: 0, hoursOpen: false });
+    v.seeAvail = () => this.go('book1', { gid: sg.id, mode: 'book', bk: { di: 0, m: null, svc: [], car: 'polo' } });
+    v.clearSel = e => { e && e.stopPropagation(); this.setState({ sel: null }); };
+    const nF = fl.open + !!fl.dist + !!fl.rating + !!fl.price + fl.svc.length;
+    v.fltActive = nF > 0; v.fltCount = nF;
+    v.openFilters = () => this.setState({ fOpen: true, fd: { ...st.flt, svc: [...st.flt.svc] } });
+    v.closeFilters = () => this.setState({ fOpen: false });
+    v.fOpen = st.fOpen;
+    const fd = st.fd, setFd = p => this.setState({ fd: { ...fd, ...p } });
+    const chip = on => ({ bg: on ? '#0B3B8F' : '#F3F3F3', fg: on ? '#fff' : '#141414' });
+    v.fdOpen = { bg: fd.open ? '#0B3B8F' : '#D6D6D6', x: fd.open ? 22 : 2 };
+    v.toggleOpenNow = () => setFd({ open: !fd.open });
+    v.distOpts = [0, 2, 5, 10].map(d => ({ label: d ? tr('less', { d: tr('km', { d }) }) : t.any, ...chip(fd.dist === d), pick: () => setFd({ dist: d }) }));
+    v.ratingOpts = [0, 4, 4.5].map(r => ({ label: r ? tr('plus', { r: num(r) }) : t.any, star: !!r, ...chip(fd.rating === r), pick: () => setFd({ rating: r }) }));
+    v.priceOpts = [0, 10, 15].map(p => ({ label: p ? tr('max_p', { p: price(p) }) : t.any, ...chip(fd.price === p), pick: () => setFd({ price: p }) }));
+    v.svcOpts = SV.map(x => { const on = fd.svc.includes(x.id); return { label: x.n[li], ...chip(on), icon: on ? 'check' : 'add', pick: () => setFd({ svc: on ? fd.svc.filter(y => y !== x.id) : [...fd.svc, x.id] }) }; });
+    v.resetF = () => this.setState({ fd: { ...F0, svc: [] } });
+    v.applyLabel = tr('show_n', { n: G.filter(g => pass(g, fd)).length });
+    v.applyF = () => this.setState({ flt: fd, fOpen: false, sel: null, sheet: st.sheet === 'collapsed' ? 'half' : st.sheet });
+
+    // garage
+    const g = gById(st.gid), gd = gv(g);
+    v.gd = gd;
+    v.photoLabel = (ar ? 'صورة الڨراج ' : 'photo station ') + (st.photo + 1) + '/3';
+    v.photoDots = [0, 1, 2].map(i => ({ w: i === st.photo ? 20 : 6, c: i === st.photo ? '#fff' : 'rgba(255,255,255,.6)' }));
+    v.nextPhoto = () => this.setState({ photo: (st.photo + 1) % 3 });
+    v.share = () => this.toast('link_copied'); v.call = () => this.toast('calling'); v.directions = () => this.toast('opening_maps');
+    const mm = view(g.lat, g.lon, 15, 358, 140, 179, 78);
+    v.mini = mm.tiles;
+    v.hoursOpen = st.hoursOpen; v.toggleHours = () => this.setState({ hoursOpen: !st.hoursOpen });
+    v.hoursRot = st.hoursOpen ? 180 : 0;
+    v.todayHours = t.today + ' · ' + iso('08:00 – ' + g.close);
+    v.hoursList = [1, 2, 3, 4, 5, 6, 0].map(d => ({ day: DOWF[L][d][0].toUpperCase() + DOWF[L][d].slice(1), h: d === 0 ? t.closed : iso('08:00 – ' + g.close), fw: d === 6 ? 700 : 400, fg: d === 0 ? '#B3261E' : '#141414' }));
+    v.gSvc = g.svc.map(id => ({ name: SVM[id].n[li], desc: SVM[id].d[li], dur: tr('min', { n: SVM[id].dur }), price: price(svcPrice(g, id)) }));
+    v.reviews = REV.map(r => ({ name: r.n[li], ini: r.n[li][0], date: r.d[li], text: r.x[li], stars: [1, 2, 3, 4, 5].map(i => ({ c: i <= r.s ? '#141414' : '#D6D6D6' })) }));
+    v.bookNow = () => this.go('book1', { mode: 'book', bk: { di: 0, m: null, svc: [], car: 'polo' } });
+
+    // booking
+    const isR = st.mode === 'resched';
+    const rr = st.res.find(r => r.ref === st.rid) || st.res[0];
+    const bg = isR ? gById(rr.g) : g;
+    const sel = isR ? st.rs : st.bk;
+    v.bkTitle = isR ? t.resch_title : t.booking; v.bkG = gv(bg).name;
+    v.showSteps = !isR;
+    const stepIdx = sc === 'book1' ? 0 : sc === 'book2' ? 1 : 2;
+    v.steps = [t.step_slot, t.step_services, t.step_confirm].map((label, i) => ({ label: (i + 1) + '. ' + label, bar: i <= stepIdx ? '#0B3B8F' : '#E2E2E2', fg: i <= stepIdx ? '#141414' : '#8A8A8A', fw: i === stepIdx ? 700 : 500 }));
+    v.monthLabel = MON[L][dayAt(sel.di).getMonth()] + ' 2026';
+    v.dates = Array.from({ length: 14 }, (_, i) => {
+      const d = dayAt(i), closed = d.getDay() === 0, on = sel.di === i;
+      return { dow: i === 0 ? t.today_s : DOW[L][d.getDay()], day: d.getDate(), mon: MONS[L][d.getMonth()], bg: on ? '#0B3B8F' : closed ? '#F6F6F6' : '#fff', fg: on ? '#fff' : closed ? '#AFAFAF' : '#141414', sub: on ? '#CFE0FF' : closed ? '#AFAFAF' : '#6B6B6B', bd: on ? '#0B3B8F' : closed ? '#F6F6F6' : '#E2E2E2', dec: closed ? 'line-through' : 'none', cur: closed ? 'not-allowed' : 'pointer', dis: closed, pick: closed ? noop : () => this.pickDate(i) };
+    });
+    const close = toM(bg.close), times = []; for (let m = 480; m + 30 <= close; m += 30) times.push(m);
+    const isOld = m => isR && sel.di === rr.di && m === rr.m;
+    const mk = m => {
+      let a = avail(bg.id, sel.di, m); const old = isOld(m); if (old) a = 0;
+      const on = sel.m === m, dis = a <= 0;
+      return { time: hm(m), sub: old ? (ar ? 'وقتك' : 'Actuel') : a < 0 ? t.past : a === 0 ? t.full : t['left' + a], bg: on ? '#0B3B8F' : dis ? '#F6F6F6' : '#fff', fg: on ? '#fff' : dis ? '#AFAFAF' : '#141414', sfg: on ? '#DCE7FF' : dis ? '#9A9A9A' : a === 1 ? '#8A5A00' : '#05713C', dot: on ? '#22C4D6' : dis ? '#C6C6C6' : a === 1 ? '#F5A623' : '#0E8345', bd: on ? '#0B3B8F' : dis ? '#F6F6F6' : '#E2E2E2', dec: a < 0 ? 'line-through' : 'none', cur: dis ? 'not-allowed' : 'pointer', dis, pick: dis ? noop : () => this.pickSlot(m) };
+    };
+    v.morning = times.filter(m => m < 720).map(mk); v.afternoon = times.filter(m => m >= 720).map(mk);
+    const cnt = arr => arr.filter(x => !x.dis).length;
+    v.mCount = cnt(v.morning) + ' ' + (ar ? 'متاح' : 'dispo.'); v.aCount = cnt(v.afternoon) + ' ' + (ar ? 'متاح' : 'dispo.');
+    v.slotLoading = st.slotLoading; v.slotsReady = !st.slotLoading;
+    v.skelSlots = Array.from({ length: 9 }, (_, i) => i);
+    const hasSlot = sel.m != null;
+    v.selText = hasSlot ? dLong(sel.di) : t.pick_slot; v.selSub = hasSlot ? range(sel.m) : '';
+    v.hasSelSub = hasSlot;
+    v.b1Btn = { bg: hasSlot ? '#0B3B8F' : '#E2E2E2', fg: hasSlot ? '#fff' : '#8A8A8A', cur: hasSlot ? 'pointer' : 'not-allowed' };
+    v.b1Next = () => hasSlot && this.go(isR ? 'resched2' : 'book2');
+    v.svcRows = bg.svc.map(id => { const x = SVM[id], on = st.bk.svc.includes(id); return { name: x.n[li], desc: x.d[li], dur: tr('min', { n: x.dur }), price: price(svcPrice(bg, id)), bg: on ? '#F3F6FD' : '#fff', bd: on ? '#0B3B8F' : '#E2E2E2', box: on ? '#0B3B8F' : '#fff', boxBd: on ? '#0B3B8F' : '#AFAFAF', chk: on ? 1 : 0, toggle: () => this.setState(s => ({ svcErr: false, bk: { ...s.bk, svc: on ? s.bk.svc.filter(y => y !== id) : [...s.bk.svc, id] } })) }; });
+    v.carChips = st.cars.map(cr => { const on = st.bk.car === cr.id; return { label: cr.b + ' ' + cr.m, ps: cr.ps, pn: cr.pn, bg: on ? '#EDF2FC' : '#fff', bd: on ? '#0B3B8F' : '#E2E2E2', fw: on ? 700 : 500, pick: () => this.setState(s => ({ bk: { ...s.bk, car: cr.id } })) }; });
+    v.addCar = () => this.go('carform', { editCar: null, err: {}, f: { ...st.f, brand: '', model: '', ps: '', pn: '' } });
+    const total = st.bk.svc.reduce((a, id) => a + svcPrice(bg, id), 0);
+    v.total = price(total); v.nSvc = st.bk.svc.length === 1 ? t.one_service : tr('n_services', { n: st.bk.svc.length });
+    const hasSvc = st.bk.svc.length > 0;
+    v.b2Btn = { bg: hasSvc ? '#0B3B8F' : '#E2E2E2', fg: hasSvc ? '#fff' : '#8A8A8A' };
+    v.svcErr = st.svcErr;
+    v.b2Next = () => hasSvc ? this.go('book3') : this.setState({ svcErr: true });
+    const car = st.cars.find(x => x.id === st.bk.car) || st.cars[0] || { b: '—', m: '', ps: '', pn: '' };
+    v.sum = { garage: gd.name, addr: gd.addr, date: dLong(st.bk.di), time: hasSlot ? range(st.bk.m) : '', car: car.b + ' ' + car.m, ps: car.ps, pn: car.pn, total: price(total),
+      lines: st.bk.svc.map(id => ({ name: SVM[id].n[li], price: price(svcPrice(bg, id)) })) };
+    v.confirm = () => this.confirm(); v.busy = st.busy; v.notBusy = !st.busy;
+    v.cBtnBg = st.busy ? '#3D5E9E' : '#0B3B8F';
+    v.spinner = st.busy ? React.createElement('span', { style: { width: 20, height: 20, borderRadius: '50%', border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: '#fff', display: 'inline-block', animation: 'rgspin .8s linear infinite' } }) : null;
+
+    // success
+    const lr = st.res.find(r => r.ref === st.lastRef) || { g: 'marsa', di: 0, m: 660, svc: ['full', 'pol'] };
+    const lg = gById(lr.g);
+    v.succ = { ref: st.lastRef, garage: lg.n[li], date: dLong(lr.di), time: range(lr.m), total: price(lr.svc.reduce((a, id) => a + svcPrice(lg, id), 0)) };
+    v.foamS = FOAM_S;
+    v.addCal = () => this.toast('cal_added');
+    v.toRes = () => this.root('res', { seg: 'up' });
+    v.toMap = () => this.root('map');
+
+    // reservations
+    const rv = r => {
+      const rg = gById(r.g), total = r.svc.reduce((a, id) => a + svcPrice(rg, id), 0);
+      const mins = r.di * 1440 + r.m - NOWM;
+      const badge = { up: ['#E6F4EC', '#05713C', t.st_up, 'check_circle'], done: ['#E6F4EC', '#05713C', t.st_done, 'task_alt'], cancelled: ['#FDECEA', '#B3261E', t.st_cancelled, 'cancel'] }[r.st];
+      const cr = st.cars.find(x => x.id === r.car) || CARS0[0];
+      return { ref: r.ref, name: rg.n[li], addr: rg.a[li], date: dLong(r.di), time: range(r.m), chips: r.svc.map(id => SVM[id].n[li]), total: price(total), bBg: badge[0], bFg: badge[1], badge: badge[2], bIcon: badge[3],
+        soon: r.st === 'up' && mins < 24 * 60 && mins > 0, soonText: tr('in_time', { h: Math.floor(mins / 60), m: String(mins % 60).padStart(2, '0') }), car: cr.b + ' ' + cr.m, ps: cr.ps, pn: cr.pn,
+        lines: r.svc.map(id => ({ name: SVM[id].n[li], price: price(svcPrice(rg, id)) })), tel: rg.tel || '+216 71 000 000', gid: rg.id,
+        up: r.st === 'up' && mins >= 120, locked: r.st === 'up' && mins < 120, done: r.st === 'done', cancelled: r.st === 'cancelled', rated: r.rating > 0, notRated: r.st === 'done' && !r.rating,
+        starsV: [1, 2, 3, 4, 5].map(i => ({ c: i <= (r.rating || 0) ? '#141414' : '#D6D6D6' })), open: () => this.go('resd', { rid: r.ref, cancelOpen: false, rateOpen: false }) };
+    };
+    const seg = st.seg;
+    const filt = st.empty ? [] : st.res.filter(r => seg === 'up' ? r.st === 'up' : seg === 'past' ? r.st === 'done' : r.st === 'cancelled').sort((a, b) => seg === 'up' ? (a.di * 1440 + a.m) - (b.di * 1440 + b.m) : (b.di * 1440 + b.m) - (a.di * 1440 + a.m));
+    v.segs = [['up', t.upcoming], ['past', t.past_seg], ['cancelled', t.cancelled_seg]].map(([k, label]) => ({ label, bg: seg === k ? '#fff' : 'transparent', sh: seg === k ? '0 1px 4px rgba(0,0,0,.12)' : 'none', fw: seg === k ? 700 : 500, fg: seg === k ? '#141414' : '#5E5E5E', pick: () => this.setState({ seg: k }) }));
+    v.resLoading = st.resLoading; v.resList = filt.map(rv);
+    v.resHas = !st.resLoading && filt.length > 0; v.resEmpty = !st.resLoading && filt.length === 0;
+    v.emptyV = { up: ['event_available', t.empty_up_t, t.empty_up_s], past: ['history', t.empty_past_t, t.empty_past_s], cancelled: ['event_busy', t.empty_can_t, t.empty_can_s] }[seg].reduce((o, x, i) => (o[['icon', 'title', 'sub'][i]] = x, o), {});
+    v.findGarage = () => this.root('map');
+    const rd = rv(rr);
+    v.rd = rd;
+    v.rdMini = view(gById(rr.g).lat, gById(rr.g).lon, 15, 358, 140, 179, 78).tiles;
+    v.rdRows = [['calendar_today', t.date, rd.date], ['schedule', t.time, rd.time], ['directions_car', t.car, rd.car], ['payments', t.payment, t.cash]].map(([icon, label, value]) => ({ icon, label, value }));
+    v.openCancel = () => this.setState({ cancelOpen: true, reasons: [] });
+    v.openResched = () => this.go('book1', { mode: 'resched', rs: { di: rr.di === 5 ? 6 : Math.max(1, rr.di), m: null } });
+    v.bookAgain = () => this.go('book1', { gid: rr.g, mode: 'book', bk: { di: 0, m: null, svc: [...rr.svc], car: rr.car || 'polo' } });
+    v.openRate = () => this.setState({ rateOpen: true, stars: 0, f: { ...st.f, comment: '' } });
+    v.cancelOpen = st.cancelOpen; v.closeCancel = () => this.setState({ cancelOpen: false });
+    v.reasons = ['r1', 'r2', 'r3', 'r4', 'r5'].map(k => { const on = st.reasons.includes(k); return { label: t[k], bg: on ? '#0B3B8F' : '#F3F3F3', fg: on ? '#fff' : '#141414', icon: on ? 'check' : '', hasIcon: on, pick: () => this.setState({ reasons: on ? st.reasons.filter(x => x !== k) : [...st.reasons, k] }) }; });
+    v.doCancel = () => { this.setState(s => ({ cancelOpen: false, res: s.res.map(r => r.ref === s.rid ? { ...r, st: 'cancelled' } : r) })); this.toast('cancelled_toast'); };
+    v.rateOpen = st.rateOpen; v.closeRate = () => this.setState({ rateOpen: false });
+    v.rateStars = [1, 2, 3, 4, 5].map(i => ({ c: i <= st.stars ? '#F5A623' : '#D6D6D6', fill: i <= st.stars ? 1 : 0, pick: () => this.setState({ stars: i }) }));
+    const canRate = st.stars > 0;
+    v.rateBtn = { bg: canRate ? '#0B3B8F' : '#E2E2E2', fg: canRate ? '#fff' : '#8A8A8A' };
+    v.sendRate = () => { if (!canRate) return; this.setState(s => ({ rateOpen: false, res: s.res.map(r => r.ref === s.rid ? { ...r, rating: s.stars } : r) })); this.toast('thanks_toast'); };
+    v.rsOld = { date: dLong(rr.di), time: range(rr.m) };
+    v.rsNew = { date: dLong(st.rs.di), time: st.rs.m != null ? range(st.rs.m) : '' };
+    v.rsG = gById(rr.g).n[li];
+    v.doResched = () => { this.setState(s => ({ screen: 'resd', hist: ['res'], mode: 'book', res: s.res.map(r => r.ref === s.rid ? { ...r, di: s.rs.di, m: s.rs.m } : r) })); this.toast('resched_toast'); };
+
+    // profile
+    v.phoneFull = '+216 22 345 678';
+    const item = (icon, label, value, go, danger) => ({ icon, label, value: value || '', fg: danger ? '#B3261E' : '#141414', ibg: danger ? '#FDECEA' : '#F3F3F3', chev: !danger, go });
+    v.menuA = [item('directions_car', t.my_cars, tr('n_cars', { n: st.cars.length }), () => this.go('cars')), item('lock', t.change_pw, '', () => this.go('changepw', { f: { ...st.f, cpw: '', cnpw: '', cnpw2: '' } })), item('smartphone', t.change_phone, '', () => this.go('changephone', { f: { ...st.f, nphone: '' } }))];
+    v.menuB = [item('translate', t.language, t.lang_name, () => this.go('language')), item('notifications', t.notifications, '', () => this.go('notif'))];
+    v.menuC = [item('help', t.help, '', () => this.go('help')), item('description', t.terms, '', () => this.go('terms')), item('logout', t.logout, '', () => this.setState({ logoutOpen: true }), true)];
+    v.logoutOpen = st.logoutOpen; v.closeLogout = () => this.setState({ logoutOpen: false });
+    v.doLogout = () => this.root('login', { f: { ...st.f, pw: '' } });
+    v.carsList = st.cars.map(cr => ({ label: cr.b + ' ' + cr.m, ps: cr.ps, pn: cr.pn, def: cr.def, edit: () => this.go('carform', { editCar: cr.id, err: {}, f: { ...st.f, brand: cr.b, model: cr.m, ps: cr.ps, pn: cr.pn } }) }));
+    v.newCar = () => this.go('carform', { editCar: null, err: {}, f: { ...st.f, brand: '', model: '', ps: '', pn: '' } });
+    v.cfTitle = st.editCar ? t.edit_car : t.add_car_t; v.isEdit = !!st.editCar;
+    v.plateBd = st.err.ps || st.err.pn ? '#D92D20' : '#141414';
+    v.plateErr = !!(st.err.ps || st.err.pn); v.plateErrT = t.e_plate;
+    v.saveCar = () => {
+      const f = st.f, err = {};
+      if (!f.brand.trim()) err.brand = 'e_req'; if (!f.model.trim()) err.model = 'e_req';
+      if (f.ps.length < 1 || f.pn.length < 1) err.ps = 'e_plate';
+      if (Object.keys(err).length) return this.setState({ err });
+      this.setState(s => {
+        const cars = s.editCar ? s.cars.map(x => x.id === s.editCar ? { ...x, b: f.brand, m: f.model, ps: f.ps, pn: f.pn } : x) : [...s.cars, { id: 'c' + Date.now(), b: f.brand, m: f.model, ps: f.ps, pn: f.pn, def: false }];
+        const h = [...s.hist]; const prev = h.pop() || 'cars';
+        return { cars, screen: prev, hist: h, err: {} };
+      });
+      this.toast('car_saved');
+    };
+    v.deleteCar = () => { this.setState(s => { const h = [...s.hist]; return { cars: s.cars.filter(x => x.id !== s.editCar), screen: h.pop() || 'cars', hist: h }; }); this.toast('car_deleted'); };
+    const tg = (on, fn) => ({ bg: on ? '#0B3B8F' : '#D6D6D6', x: on ? 22 : 2, toggle: fn });
+    v.notifRows = [['h1', t.remind_1h, t.remind_1h_s], ['d1', t.remind_1d, t.remind_1d_s]].map(([k, label, sub]) => ({ label, sub, ...tg(st.notif[k], () => this.setState(s => ({ notif: { ...s.notif, [k]: !s.notif[k] } }))) }));
+    v.savePw = () => { if (this.validate([['cpw', 'pwreq'], ['cnpw', 'pw'], ['cnpw2', { match: 'cnpw' }]])) { this.root('profile'); this.toast('pw_changed'); } };
+    v.savePhone = () => { if (this.validate([['nphone', 'phone']])) this.go('otp', { otpCtx: 'phone', f: { ...st.f, otp: '' } }); };
+    v.helpRows = [['call', t.call_us, iso('+216 70 100 200')], ['chat', t.whatsapp, iso('+216 22 100 200')], ['mail', t.email, 'aide@raghwa.tn']].map(([icon, label, value]) => ({ icon, label, value, go: () => this.toast('calling') }));
+    v.faqs = [1, 2, 3].map(i => ({ q: t['q' + i], a: t['a' + i] }));
+    return v;
+  }
+}
+
+
+const NOWM = 615;
+const dayAt = i => new Date(2026, 9, 3 + i);
+const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const toM = s => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
+const digits = v => (v || '').replace(/\D/g, '');
+const fmtPhone = v => { const d = digits(v).slice(0, 8); return [d.slice(0, 2), d.slice(2, 5), d.slice(5, 8)].filter(Boolean).join(' '); };
+const avail = (gid, di, m) => { if (di === 0 && m <= NOWM) return -1; const h = (di * 7 + (m / 30) * 13 + gid.charCodeAt(0)) % 10; return h < 2 ? 0 : h < 4 ? 1 : h < 6 ? 2 : 3; };
+const proj = (lat, lon, z) => { const s = 256 * Math.pow(2, z), r = lat * Math.PI / 180; return { x: (lon + 180) / 360 * s, y: (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * s }; };
+const view = (lat, lon, z, w, h, ax, ay) => {
+  const c = proj(lat, lon, z), ox = c.x - ax, oy = c.y - ay, tiles = [];
+  for (let tx = Math.floor(ox / 256); tx * 256 < ox + w; tx++) for (let ty = Math.floor(oy / 256); ty * 256 < oy + h; ty++)
+    tiles.push({ src: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/' + z + '/' + ty + '/' + tx, src2: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/' + z + '/' + ty + '/' + tx, l: Math.round(tx * 256 - ox), t: Math.round(ty * 256 - oy) });
+  return { tiles, at: (la, lo) => { const p = proj(la, lo, z); return { x: Math.round(p.x - ox), y: Math.round(p.y - oy) }; } };
+};
+const SCREENS = ['splash', 'lang', 'intro', 'login', 'signup', 'otp', 'forgot', 'newpass', 'location', 'map', 'garage', 'book1', 'book2', 'book3', 'success', 'resched2', 'res', 'resd', 'profile', 'cars', 'carform', 'language', 'notif', 'changepw', 'changephone', 'help', 'terms'];
+const FIELDS = ['phone', 'pw', 'name', 'sphone', 'spw', 'spw2', 'fphone', 'npw', 'npw2', 'otp', 'cpw', 'cnpw', 'cnpw2', 'nphone', 'brand', 'model', 'ps', 'pn', 'comment', 'q'];
+const PARENT = { lang: 'splash', intro: 'lang', login: 'intro', signup: 'login', otp: 'login', forgot: 'login', newpass: 'login', location: 'login', garage: 'map', book1: 'garage', book2: 'book1', book3: 'book2', resched2: 'book1', resd: 'res', cars: 'profile', carform: 'cars', language: 'profile', notif: 'profile', changepw: 'profile', changephone: 'profile', help: 'profile', terms: 'profile', success: 'map' };
+const F0 = { open: false, dist: 0, rating: 0, price: 0, svc: [] };
+const USER = { lat: 36.8790, lon: 10.3200 }, TUNIS = { lat: 36.8065, lon: 10.1815 };
+const DOW = { ar: ['أحد', 'اثنين', 'ثلاثاء', 'إربعاء', 'خميس', 'جمعة', 'سبت'], fr: ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'] };
+const DOWF = { ar: ['الأحد', 'الإثنين', 'الثلاثاء', 'الإربعاء', 'الخميس', 'الجمعة', 'السبت'], fr: ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'] };
+const MON = { ar: ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'], fr: ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] };
+const MONS = { ar: MON.ar, fr: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'] };
+const SV = [
+  { id: 'ext', n: ['غسيل من برّا', 'Lavage extérieur'], d: ['كاروسري، جانطات وبلّار', 'Carrosserie, jantes et vitres'], p: 10, dur: 20 },
+  { id: 'int', n: ['غسيل من داخل', 'Lavage intérieur'], d: ['أسبيراتور، تابلو وبلّار من داخل', 'Aspiration, tableau de bord, vitres'], p: 12, dur: 25 },
+  { id: 'full', n: ['غسيل كامل', 'Lavage complet'], d: ['برّا وداخل مع بعضهم', 'Extérieur + intérieur'], p: 20, dur: 40 },
+  { id: 'pol', n: ['تلميع', 'Lustrage'], d: ['شمعة حماية ولمعة للكاروسري', 'Cire de protection et brillance'], p: 35, dur: 45 },
+  { id: 'eng', n: ['تنظيف الموتور', 'Nettoyage moteur'], d: ['تنظيف بلوك الموتور من الزيت والغبرة', 'Dégraissage du bloc moteur'], p: 15, dur: 20 },
+  { id: 'seat', n: ['تنظيف الكراسي', 'Nettoyage sièges'], d: ['شامبوان وتنشيف الكراسي', 'Shampooing et séchage des sièges'], p: 40, dur: 60 }
+];
+const SVM = {}; SV.forEach(x => SVM[x.id] = x);
+const ALL = SV.map(x => x.id);
+const G = [
+  { id: 'marsa', n: ['رغوة واش المرسى', 'Raghwa Wash La Marsa'], ar: ['المرسى', 'La Marsa'], a: ['شارع الحبيب بورقيبة، المرسى', 'Avenue Habib Bourguiba, La Marsa'], lat: 36.8775, lon: 10.3305, r: 4.7, rc: 128, d: 1.2, open: true, close: '19:00', from: 10, svc: ALL, tel: '+216 71 774 210' },
+  { id: 'plage', n: ['لافاج المرسى بلاج', 'Marsa Plage Lavage'], ar: ['المرسى', 'La Marsa'], a: ['نهج الطيب المهيري، المرسى', 'Rue Taïeb Mhiri, La Marsa'], lat: 36.8865, lon: 10.3245, r: 4.1, rc: 39, d: 1.8, open: false, opens: '14:00', close: '20:00', from: 10, svc: ['ext', 'int', 'full'] },
+  { id: 'sbs', n: ['بُلّز سيدي بوسعيد', 'Bulles Sidi Bou Saïd'], ar: ['سيدي بوسعيد', 'Sidi Bou Saïd'], a: ['شارع الحبيب ثامر، سيدي بوسعيد', 'Rue Habib Thameur, Sidi Bou Saïd'], lat: 36.8710, lon: 10.3410, r: 4.5, rc: 86, d: 2.4, open: true, close: '18:00', from: 12, svc: ['ext', 'int', 'full', 'pol'] },
+  { id: 'carthage', n: ['قرطاج كلين', 'Carthage Clean'], ar: ['قرطاج', 'Carthage'], a: ['شارع الجمهورية، قرطاج', 'Avenue de la République, Carthage'], lat: 36.8540, lon: 10.3260, r: 4.3, rc: 54, d: 3.1, open: true, close: '19:00', from: 10, svc: ALL },
+  { id: 'lac2', n: ['لاك 2 أوتو سبا', 'Lac 2 Auto Spa'], ar: ['البحيرة 2', 'Les Berges du Lac 2'], a: ['نهج بحيرة توركانا، البحيرة 2', 'Rue du Lac Turkana, Lac 2'], lat: 36.8430, lon: 10.2720, r: 4.8, rc: 212, d: 4.6, open: true, close: '20:00', from: 15, svc: ALL },
+  { id: 'lac1', n: ['لاك 1 إكسبراس', 'Lac 1 Express Wash'], ar: ['البحيرة 1', 'Les Berges du Lac 1'], a: ['نهج بحيرة ليمان، البحيرة 1', 'Rue du Lac Léman, Lac 1'], lat: 36.8335, lon: 10.2335, r: 4.2, rc: 71, d: 6.3, open: true, close: '19:00', from: 8, svc: ['ext', 'int', 'full', 'eng'] },
+  { id: 'ennasr', n: ['النصر شاين', 'Ennasr Shine'], ar: ['النصر', 'Ennasr'], a: ['شارع الهادي نويرة، النصر 2', 'Avenue Hédi Nouira, Ennasr 2'], lat: 36.8590, lon: 10.1940, r: 4.4, rc: 97, d: 8.9, open: true, close: '21:00', from: 10, svc: ALL },
+  { id: 'menzah', n: ['المنزه واش', 'Menzah Wash'], ar: ['المنزه 6', 'El Menzah 6'], a: ['شارع عثمان بن عفان، المنزه 6', 'Avenue Othman Ibn Affan, El Menzah 6'], lat: 36.8470, lon: 10.1830, r: 3.9, rc: 41, d: 9.4, open: false, opens: '15:00', close: '19:00', from: 9, svc: ['ext', 'int', 'full'] },
+  { id: 'ariana', n: ['أريانة موس', 'Ariana Mousse'], ar: ['أريانة', 'Ariana'], a: ['شارع الحبيب بورقيبة، أريانة', 'Avenue Habib Bourguiba, Ariana'], lat: 36.8625, lon: 10.1650, r: 4.6, rc: 150, d: 10.7, open: true, close: '19:00', from: 10, svc: ALL },
+  { id: 'bardo', n: ['باردو كار كير', 'Bardo Car Care'], ar: ['باردو', 'Le Bardo'], a: ['شارع 20 مارس، باردو', 'Avenue du 20 Mars, Le Bardo'], lat: 36.8090, lon: 10.1340, r: 4.0, rc: 63, d: 14.2, open: true, close: '18:30', from: 8, svc: ['ext', 'int', 'full', 'eng'] }
+];
+const REV = [
+  { n: ['سامي ت.', 'Sami T.'], s: 5, d: ['منذ 3 أيام', 'il y a 3 jours'], x: ['خدمة نظيفة وفي الوقت، الكرهبة خرجت تلمع.', 'Travail soigné et ponctuel, la voiture brille.'] },
+  { n: ['إيناس م.', 'Inès M.'], s: 4, d: ['منذ جمعة', 'il y a 1 semaine'], x: ['الجماعة لطاف، أما استنيت 10 دقايق زايدين.', 'Équipe sympa, mais 10 min d’attente en plus.'] },
+  { n: ['كريم ب.', 'Karim B.'], s: 5, d: ['منذ جمعتين', 'il y a 2 semaines'], x: ['أحسن لافاج في المرسى، والسوم معقول.', 'Le meilleur lavage de La Marsa, prix correct.'] }
+];
+const RES0 = [
+  { ref: 'RG-24702', g: 'lac2', di: 0, m: 690, svc: ['ext'], st: 'up', car: 'polo' },
+  { ref: 'RG-24655', g: 'marsa', di: 5, m: 960, svc: ['full', 'pol'], st: 'up', car: 'polo' },
+  { ref: 'RG-23961', g: 'sbs', di: -14, m: 570, svc: ['full'], st: 'done', rating: 0, car: 'polo' },
+  { ref: 'RG-23502', g: 'carthage', di: -35, m: 660, svc: ['ext', 'int'], st: 'done', rating: 5, car: 'polo' },
+  { ref: 'RG-24105', g: 'ennasr', di: -9, m: 1050, svc: ['int'], st: 'cancelled', car: 'polo' }
+];
+const CARS0 = [
+  { id: 'polo', b: 'Volkswagen', m: 'Polo', ps: '215', pn: '4521', def: true },
+  { id: 'picanto', b: 'Kia', m: 'Picanto', ps: '231', pn: '1087', def: false }
+];
+const INTRO = [{ icon: 'location_on', chip: 'p' }, { icon: 'schedule', chip: 't' }, { icon: 'payments', chip: 'c' }];
+const FOAM = [
+  { x: -40, y: 610, s: 180, o: .06, bo: .12 }, { x: 120, y: 700, s: 90, o: .05, bo: .14 }, { x: 250, y: 640, s: 150, o: .07, bo: .12 },
+  { x: 300, y: 560, s: 40, o: .1, bo: .2 }, { x: 60, y: 560, s: 24, o: .12, bo: .25 }, { x: 290, y: 90, s: 120, o: .04, bo: .1 },
+  { x: 30, y: 140, s: 46, o: .05, bo: .14 }, { x: 200, y: 520, s: 16, o: .2, bo: .3 }, { x: 330, y: 760, s: 70, o: .06, bo: .14 }
+];
+const FOAM_A = [{ x: 90, y: -30, s: 120, c: '#E4F8FA' }, { x: 60, y: 70, s: 44, c: '#EDF2FC' }, { x: 140, y: 100, s: 28, c: '#E4F8FA' }, { x: 40, y: 20, s: 16, c: '#CFF2F6' }];
+const FOAM_S = [{ x: 40, y: 90, s: 60, c: '#E4F8FA' }, { x: 300, y: 70, s: 90, c: '#E4F8FA' }, { x: 260, y: 200, s: 26, c: '#CFF2F6' }, { x: 80, y: 220, s: 18, c: '#CFF2F6' }, { x: 120, y: 60, s: 14, c: '#D3E3F6' }, { x: 330, y: 260, s: 12, c: '#D3E3F6' }, { x: 20, y: 300, s: 34, c: '#EDF2FC' }];
+const INTRO_BUB = [{ x: 30, y: 40, s: 54, c: '#DDF3F7' }, { x: 70, y: 230, s: 30, c: '#D3E3F6' }, { x: 260, y: 230, s: 64, c: '#DDF3F7' }, { x: 290, y: 150, s: 18, c: '#BFE9F0' }, { x: 40, y: 140, s: 14, c: '#BFE9F0' }];
+const LOC_BUB = [{ x: 20, y: 40, s: 26, c: '#BFE9F0' }, { x: 214, y: 30, s: 18, c: '#D3E3F6' }, { x: 220, y: 200, s: 30, c: '#BFE9F0' }, { x: 10, y: 190, s: 14, c: '#D3E3F6' }];
+const S = {
+  tagline: ['احجز لافاج كرهبتك في دقيقة', 'Votre lavage auto, réservé en une minute'],
+  continue: ['كمّل', 'Continuer'], next: ['اللي بعدو', 'Suivant'], skip: ['فوّت', 'Passer'], start: ['يلّا نبداو', 'Commencer'],
+  intro1_t: ['لقى لافاج قريب منك', 'Trouvez un lavage près de vous'], intro1_b: ['شوف الڨراجات اللي حذاك على الخريطة، بالأسوام والتقييمات.', 'Repérez les stations autour de vous, avec leurs prix et leurs avis.'],
+  intro2_t: ['اختار الوقت اللي يناسبك', 'Choisissez votre créneau'], intro2_b: ['احجز بلاصتك بنص ساعة، من غير ما تستنّى في الصف.', 'Réservez un créneau de 30 min, sans faire la queue.'],
+  intro3_t: ['خلّص كاش في الڨراج', 'Payez au garage'], intro3_b: ['ما تخلّص كان كي توصل. والإلغاء بلاش حتى لقبل بساعتين.', 'Réglez en espèces sur place. Annulation gratuite jusqu’à 2 h avant.'],
+  login_t: ['مرحبا بيك', 'Bon retour !'], login_s: ['دخّل نومرو التليفون وكلمة السر متاعك', 'Connectez-vous avec votre numéro et votre mot de passe'],
+  phone: ['نومرو التليفون', 'Numéro de téléphone'], password: ['كلمة السر', 'Mot de passe'], forgot_link: ['نسيت كلمة السر؟', 'Mot de passe oublié ?'],
+  login_btn: ['ادخل', 'Se connecter'], no_account: ['ما عندكش حساب؟', 'Pas encore de compte ?'], signup_link: ['اعمل حساب', 'Créer un compte'],
+  signup_t: ['اعمل حساب جديد', 'Créez votre compte'], signup_s: ['ما ياخذش منك كان دقيقة', 'Ça prend moins d’une minute'], fullname: ['الاسم واللقب', 'Nom et prénom'], name_ph: ['مثلا: أحمد بن صالح', 'ex. Ahmed Ben Salah'],
+  confirm_pw: ['عاود كلمة السر', 'Confirmer le mot de passe'], pw_ph: ['8 حروف على الأقل', '8 caractères minimum'], signup_btn: ['اعمل الحساب', 'Créer mon compte'], have_account: ['عندك حساب؟', 'Déjà un compte ?'],
+  otp_t: ['دخّل الكود', 'Entrez le code'], otp_s: ['بعثنالك كود فيه 4 أرقام على', 'Code à 4 chiffres envoyé au'], resend_in: ['تنجم تعاود تبعث الكود بعد', 'Renvoyer le code dans'], resend: ['عاود ابعث الكود', 'Renvoyer le code'],
+  verify: ['تثبّت', 'Vérifier'], otp_hint: ['كود التجربة: 1234', 'Code démo : 1234'], code_sent: ['بعثنالك كود جديد', 'Nouveau code envoyé'],
+  forgot_t: ['نسيت كلمة السر؟', 'Mot de passe oublié ?'], forgot_s: ['دخّل النومرو متاعك ونبعثولك كود باش تبدّل كلمة السر.', 'Saisissez votre numéro, nous vous enverrons un code pour réinitialiser votre mot de passe.'], send_code: ['ابعث الكود', 'Envoyer le code'],
+  newpw_t: ['كلمة سر جديدة', 'Nouveau mot de passe'], newpw_s: ['اختار كلمة سر فيها 8 حروف على الأقل', 'Choisissez au moins 8 caractères'], new_pw: ['كلمة السر الجديدة', 'Nouveau mot de passe'], save: ['سجّل', 'Enregistrer'],
+  loc_t: ['خلّينا نعرفو وين إنت', 'Activez la localisation'], loc_s: ['باش نوريولك أقرب الڨراجات ليك ونحسبولك المسافة.', 'Pour afficher les stations les plus proches et calculer la distance.'], allow: ['اسمح', 'Autoriser'], not_now: ['موش توا', 'Plus tard'],
+  e_phone_req: ['دخّل نومرو التليفون', 'Saisissez votre numéro'], e_phone_len: ['النومرو لازمو 8 أرقام', 'Le numéro doit contenir 8 chiffres'], e_pw_req: ['دخّل كلمة السر', 'Saisissez votre mot de passe'],
+  e_pw_len: ['كلمة السر لازمها 8 حروف على الأقل', '8 caractères minimum'], e_pw_match: ['زوز كلمات السر موش كيف كيف', 'Les mots de passe ne correspondent pas'], e_name_req: ['دخّل اسمك ولقبك', 'Saisissez votre nom'],
+  e_otp: ['الكود غالط، عاود جرّب', 'Code incorrect, réessayez'], e_req: ['الخانة هذي لازمة', 'Champ obligatoire'], e_plate: ['الماتريكيلة موش صحيحة', 'Immatriculation invalide'], e_services: ['اختار خدمة وحدة على الأقل', 'Choisissez au moins un service'],
+  search_ph: ['لوّج على ڨراج ولا منطقة', 'Rechercher une station ou un quartier'], nearest: ['أقرب الڨراجات', 'Stations à proximité'], by_dist: ['مرتّبين حسب المسافة', 'Triées par distance'], n_garages: ['{n} ڨراجات', '{n} stations'],
+  open: ['محلول', 'Ouvert'], closed: ['مسكّر', 'Fermé'], closes_at: ['يسكّر {t}', 'ferme à {t}'], opens_at: ['يحلّ {t}', 'ouvre à {t}'], from: ['من {p}', 'dès {p}'], km: ['{d} كم', '{d} km'],
+  see_avail: ['شوف الأوقات', 'Voir les disponibilités'], loc_banner: ['فعّل الموقع باش تشوف الڨراجات القريبة ليك', 'Activez la localisation pour voir les stations proches'], enable: ['فعّل', 'Activer'],
+  filters: ['فيلتر', 'Filtres'], open_now: ['محلول توا', 'Ouvert maintenant'], open_now_s: ['ورّيني كان الڨراجات المحلولة', 'Uniquement les stations ouvertes'], distance: ['المسافة', 'Distance'], rating: ['التقييم', 'Note'], price: ['السوم يبدا من', 'Prix de départ'],
+  services: ['الخدمات', 'Services'], any: ['الكل', 'Tous'], reset: ['امسح', 'Réinitialiser'], show_n: ['ورّيني {n} ڨراجات', 'Afficher {n} stations'], less: ['أقل من {d}', '< {d}'], plus: ['{r} و فوق', '{r} et +'], max_p: ['حتى {p}', 'jusqu’à {p}'],
+  offline_t: ['ما فماش انترنت', 'Pas de connexion'], offline_s: ['ثبّت في الويفي ولا الداتا متاعك وعاود جرّب.', 'Vérifiez votre Wi-Fi ou vos données mobiles, puis réessayez.'], retry: ['عاود جرّب', 'Réessayer'],
+  no_results: ['ما لقينا حتى ڨراج', 'Aucune station trouvée'], no_results_s: ['بدّل الفيلتر ولا لوّج على منطقة أخرى.', 'Modifiez les filtres ou cherchez un autre quartier.'],
+  reviews_n: ['{n} تقييم', '{n} avis'], call: ['كلّم', 'Appeler'], directions: ['الطريق', 'Itinéraire'], hours: ['أوقات الخدمة', 'Horaires'], services_prices: ['الخدمات والأسوام', 'Services et tarifs'],
+  reviews: ['التقييمات', 'Avis'], see_all: ['شوف الكل', 'Tout voir'], book_now: ['احجز توا', 'Réserver'], today: ['اليوم', 'Aujourd’hui'], today_s: ['اليوم', 'Auj.'], starting: ['يبدا من', 'À partir de'], min: ['{n} دق', '{n} min'],
+  link_copied: ['تنسخ الرابط', 'Lien copié'], calling: ['قاعدين نكلّمو الڨراج…', 'Appel en cours…'], opening_maps: ['قاعدين نحلّو الخريطة…', 'Ouverture de l’itinéraire…'],
+  booking: ['حجز', 'Réservation'], step_slot: ['الوقت', 'Créneau'], step_services: ['الخدمات', 'Services'], step_confirm: ['التأكيد', 'Confirmation'],
+  pick_time: ['وقتاش تحب تجي؟', 'Quand souhaitez-vous venir ?'], morning: ['الصباح', 'Matin'], afternoon: ['العشية', 'Après-midi'], left1: ['بلاصة وحدة', '1 place'], left2: ['زوز بلايص', '2 places'], left3: ['3 بلايص', '3 places'],
+  full: ['مكمّل', 'Complet'], past: ['فات', 'Passé'], available: ['متاح', 'Disponible'], few: ['بلايص قلال', 'Peu de places'], pick_slot: ['اختار وقت', 'Choisissez un créneau'],
+  pick_services: ['شنوّة تحب نعملولك؟', 'Quels services souhaitez-vous ?'], same_slot: ['الخدمات الكل اللي تختارهم يتعملو في نفس الوقت.', 'Tous les services choisis sont réalisés sur le même créneau.'],
+  your_car: ['الكرهبة', 'Votre voiture'], add_car: ['زيد كرهبة', 'Ajouter une voiture'], total: ['المجموع', 'Total'], n_services: ['{n} خدمات', '{n} services'], one_service: ['خدمة وحدة', '1 service'],
+  summary_t: ['ثبّت الحجز متاعك', 'Vérifiez votre réservation'], garage: ['الڨراج', 'Station'], date: ['النهار', 'Date'], time: ['الوقت', 'Créneau'], car: ['الكرهبة', 'Voiture'],
+  payment: ['الخلاص', 'Paiement'], cash: ['كاش في الڨراج', 'Espèces au garage'], cash_s: ['تخلّص كي توفى الخدمة', 'Vous payez après le lavage'], card: ['بالكارطة', 'Carte bancaire'], soon: ['قريب', 'Bientôt'],
+  cancel_note: ['الإلغاء بلاش حتى لقبل الموعد بساعتين.', 'Annulation gratuite jusqu’à 2 h avant le créneau.'], confirm_res: ['أكّد الحجز', 'Confirmer la réservation'], confirming: ['قاعدين نأكّدو…', 'Confirmation…'],
+  success_t: ['تأكّد الحجز!', 'Réservation confirmée !'], success_s: ['نستناوك في الوقت. حاول توصل 5 دقايق قبل.', 'Nous vous attendons. Arrivez 5 min en avance.'], ref: ['رقم الحجز', 'Référence'],
+  add_cal: ['زيد للكالوندرية', 'Ajouter au calendrier'], my_res: ['حجوزاتي', 'Mes réservations'], back_map: ['ارجع للخريطة', 'Retour à la carte'], cal_added: ['تزاد للكالوندرية', 'Ajouté au calendrier'],
+  upcoming: ['الجايين', 'À venir'], past_seg: ['اللي فاتو', 'Passées'], cancelled_seg: ['الملغيين', 'Annulées'], st_up: ['مأكّد', 'Confirmée'], st_done: ['تعمل', 'Terminée'], st_cancelled: ['ملغي', 'Annulée'],
+  empty_up_t: ['ما عندك حتى حجز جاي', 'Aucune réservation à venir'], empty_up_s: ['لقى ڨراج قريب واحجز بلاصتك في دقيقة.', 'Trouvez une station et réservez en une minute.'],
+  empty_past_t: ['ما عندك حتى حجز فات', 'Aucune réservation passée'], empty_past_s: ['الغسلات اللي تعملهم باش يظهرو هوني.', 'Vos lavages terminés apparaîtront ici.'],
+  empty_can_t: ['ما عندك حتى حجز ملغي', 'Aucune réservation annulée'], empty_can_s: ['ميزيان! ما ألغيت حتى موعد.', 'Parfait, vous n’avez rien annulé.'], find_garage: ['لوّج على ڨراج', 'Trouver une station'],
+  res_detail: ['تفاصيل الحجز', 'Détails'], reschedule: ['بدّل الوقت', 'Modifier'], cancel: ['ألغي', 'Annuler'], locked: ['باقي أقل من ساعتين على الموعد، ما عادش تنجم تبدّل ولا تلغي.', 'Moins de 2 h avant votre créneau : modification et annulation indisponibles.'],
+  in_time: ['الموعد بعد {h}:{m}', 'Dans {h} h {m}'], book_again: ['احجز مرة أخرى', 'Réserver à nouveau'], rate: ['قيّم الخدمة', 'Noter le service'], your_rating: ['التقييم متاعك', 'Votre note'],
+  cancelled_on: ['تلغى الحجز هذا', 'Cette réservation a été annulée'], cancel_t: ['تحب تلغي الحجز؟', 'Annuler la réservation ?'], cancel_s: ['قلّنا علاش (اختياري)', 'Pourquoi ? (facultatif)'],
+  r1: ['بدّلت البلان', 'Changement de programme'], r2: ['لقيت ڨراج آخر', 'J’ai trouvé une autre station'], r3: ['الوقت ما عادش يناسبني', 'Le créneau ne me convient plus'], r4: ['الكرهبة موش معايا', 'Je n’ai pas la voiture'], r5: ['سبب آخر', 'Autre raison'],
+  yes_cancel: ['إيه، ألغي', 'Oui, annuler'], keep: ['لا، خلّيه', 'Non, garder'], cancelled_toast: ['تلغى الحجز', 'Réservation annulée'],
+  resch_title: ['بدّل الوقت', 'Modifier le créneau'], resch_t: ['ثبّت الوقت الجديد', 'Confirmez le nouveau créneau'], old_time: ['الوقت القديم', 'Ancien créneau'], new_time: ['الوقت الجديد', 'Nouveau créneau'],
+  confirm_change: ['أكّد التبديل', 'Confirmer la modification'], resched_toast: ['تبدّل الوقت متاع الحجز', 'Créneau modifié'], resch_note: ['ما فماش حتى مصاريف زايدة على التبديل.', 'Aucun frais pour cette modification.'],
+  rate_t: ['كيفاش كانت الغسلة؟', 'Comment s’est passé le lavage ?'], comment_ph: ['زيد كلمة (اختياري)', 'Ajoutez un commentaire (facultatif)'], send: ['ابعث', 'Envoyer'], thanks_toast: ['يعيشك على التقييم', 'Merci pour votre avis'],
+  profile: ['البروفيل', 'Profil'], map_tab: ['الخريطة', 'Carte'], res_tab: ['حجوزاتي', 'Réservations'],
+  user_name: ['أحمد بن صالح', 'Ahmed Ben Salah'], initials: ['أ.ب', 'AB'], my_cars: ['كراهبي', 'Mes voitures'], language: ['اللغة', 'Langue'], notifications: ['التنبيهات', 'Notifications'],
+  change_pw: ['بدّل كلمة السر', 'Changer le mot de passe'], change_phone: ['بدّل نومرو التليفون', 'Changer de numéro'], help: ['المعاونة والاتصال', 'Aide et contact'], terms: ['الشروط والأحكام', 'Conditions d’utilisation'], logout: ['اخرج', 'Se déconnecter'],
+  account: ['الحساب', 'Compte'], settings: ['الإعدادات', 'Préférences'], support: ['المعاونة', 'Assistance'], lang_name: ['عربي', 'Français'], n_cars: ['{n} كراهب', '{n} voitures'],
+  stay: ['لا، نبقى', 'Annuler'], logout_t: ['تحب تخرج؟', 'Se déconnecter ?'], logout_s: ['باش يلزمك تدخل من جديد بالنومرو وكلمة السر.', 'Vous devrez vous reconnecter avec votre numéro et votre mot de passe.'],
+  add_car_t: ['زيد كرهبة', 'Ajouter une voiture'], edit_car: ['بدّل الكرهبة', 'Modifier la voiture'], brand: ['الماركة', 'Marque'], model: ['الموديل', 'Modèle'], plate: ['الماتريكيلة', 'Immatriculation'],
+  plate_hint: ['السيري على اليمين والنومرو على اليسار', 'Série à droite, numéro à gauche'], default_car: ['الأساسية', 'Par défaut'], car_saved: ['تسجّلت الكرهبة', 'Voiture enregistrée'], delete_car: ['فسّخ الكرهبة', 'Supprimer la voiture'], car_deleted: ['تفسخت الكرهبة', 'Voiture supprimée'],
+  brand_ph: ['مثلا: Volkswagen', 'ex. Volkswagen'], model_ph: ['مثلا: Polo', 'ex. Polo'],
+  notif_s: ['نبعثولك تنبيه على التليفون قبل الموعد متاعك.', 'Recevez une notification avant votre créneau.'], remind_1h: ['تذكير قبل بساعة', 'Rappel 1 h avant'], remind_1h_s: ['باش ما تفوّتش الموعد', 'Pour ne pas rater votre créneau'],
+  remind_1d: ['تذكير قبل بنهار', 'Rappel la veille'], remind_1d_s: ['نهار قبل على الساعة 18:00', 'La veille à 18:00'], booking_rem: ['تذكير بالحجوزات', 'Rappels de réservation'],
+  current_pw: ['كلمة السر الحالية', 'Mot de passe actuel'], pw_changed: ['تبدّلت كلمة السر', 'Mot de passe modifié'], new_phone: ['النومرو الجديد', 'Nouveau numéro'],
+  phone_s: ['باش نبعثولك كود على النومرو الجديد باش نتثبّتو.', 'Nous enverrons un code de vérification au nouveau numéro.'], phone_changed: ['تبدّل النومرو', 'Numéro modifié'], lang_saved: ['تبدّلت اللغة', 'Langue modifiée'],
+  contact: ['اتصل بينا', 'Nous contacter'], call_us: ['كلّمنا', 'Nous appeler'], whatsapp: ['واتساب', 'WhatsApp'], email: ['إيميل', 'E-mail'], faq: ['أسئلة متكرّرة', 'Questions fréquentes'],
+  q1: ['كيفاش نخلّص؟', 'Comment payer ?'], a1: ['تخلّص كاش في الڨراج كي توفى الخدمة. الخلاص بالكارطة جاي قريب.', 'En espèces au garage, après le lavage. Le paiement par carte arrive bientôt.'],
+  q2: ['نجم نلغي الحجز؟', 'Puis-je annuler ?'], a2: ['إيه، بلاش حتى لقبل الموعد بساعتين من "حجوزاتي".', 'Oui, gratuitement jusqu’à 2 h avant, depuis « Mes réservations ».'],
+  q3: ['شنوّة يصير كان نفوت الموعد؟', 'Et si j’arrive en retard ?'], a3: ['الڨراج يستنّاك 10 دقايق، من بعد البلاصة تتعطى لحريف آخر.', 'La station vous attend 10 min, puis le créneau est libéré.'],
+  terms_1: ['باستعمالك لرغوة، إنت موافق على الشروط هذي.', 'En utilisant Raghwa, vous acceptez les présentes conditions.'],
+  terms_h1: ['الحجز', 'Réservations'], terms_2: ['كل حجز يخص وقت بنص ساعة في ڨراج معيّن. الڨراج هو المسؤول على الخدمة والأسوام.', 'Chaque réservation porte sur un créneau de 30 min. La station est responsable du service et des tarifs.'],
+  terms_h2: ['الإلغاء', 'Annulation'], terms_3: ['تنجم تلغي ولا تبدّل بلاش حتى لقبل الموعد بساعتين. بعد هكا، ما عادش ممكن.', 'Annulation ou modification gratuite jusqu’à 2 h avant le créneau.'],
+  terms_h3: ['المعطيات الشخصية', 'Données personnelles'], terms_4: ['نستعملو النومرو والموقع متاعك كان باش نقدّمولك الخدمة. ما نبيعو حتى معطيات.', 'Votre numéro et votre position servent uniquement au service. Aucune donnée n’est revendue.'],
+  updated: ['آخر تحديث: سبتمبر 2026', 'Dernière mise à jour : septembre 2026']
+};
+</script>
+</body>
+</html>

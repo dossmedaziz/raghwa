@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Raghwa",
+    "slug": "raghwa-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "tn.raghwa.customer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B3B8F",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "tn.raghwa.customer"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B3B8F",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Raghwa uses your location to show the nearest car washes. / رغوة تستعمل الموقع متاعك باش توريك أقرب الڨراجات."
+        }
+      ],
+      "@rnmapbox/maps"
+    ],
+    "scheme": "raghwa"
+  }
+}
