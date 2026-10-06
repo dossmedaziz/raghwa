@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Pressable, TextInput, View, useWindowDimensions } from 'react-native'
+import { BackHandler, Pressable, TextInput, View, useWindowDimensions } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
-import BottomSheet, { BottomSheetFlatList, BottomSheetFooter, BottomSheetModal, BottomSheetScrollView, type BottomSheetFooterProps } from '@gorhom/bottom-sheet'
+import BottomSheet, {
+  BottomSheetBackdrop, BottomSheetFlatList, BottomSheetFooter, BottomSheetScrollView, type BottomSheetBackdropProps, type BottomSheetFooterProps,
+} from '@gorhom/bottom-sheet'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { colors, elevation } from '@/theme'
 import { Box, Button, Chip, Icon, IconButton, Skeleton, Text, Thumb, Toggle } from '@/components/ui'
 import { TAB_H } from '@/components/screen'
-import { useSheetModal } from '@/components/sheet'
 import { GarageMap } from '@/components/GarageMap'
 import type { MapHandle } from '@/components/map-parts'
 import { OfflineView, useOnline } from '@/components/offline'
@@ -215,12 +216,17 @@ function GarageRowSkeleton() {
   )
 }
 
-/** Filters as a gorhom modal sheet: sized to its content, sticky "Show N" footer, backdrop + Android back close it. */
+/**
+ * Filters as a gorhom sheet on the map screen (same kind as the stations list): closed until the filter
+ * button opens it, fixed height, sticky "Show N" footer; backdrop tap, swipe down and Android back close it.
+ */
 function FiltersSheet({ visible, onClose, current, onApply }: { visible: boolean; onClose: () => void; current: Filters; onApply: (f: Filters) => void }) {
   const { t, tr, li, L } = useT()
   const { height } = useWindowDimensions()
   const insets = useSafeAreaInsets()
-  const { ref, props } = useSheetModal(visible, onClose)
+  const ref = useRef<BottomSheet>(null)
+  // Map area (screen minus the tab bar), leaving room above the sheet for the status bar.
+  const snapPoints = useMemo(() => [Math.min(720, height - insets.bottom - TAB_H - insets.top - 24)], [height, insets.bottom, insets.top])
   const [fd, setFd] = useState<Filters>(current)
   const up = (p: Partial<Filters>) => setFd((x) => ({ ...x, ...p }))
   const count = G.filter((g) => passes(g, fd)).length
@@ -232,7 +238,21 @@ function FiltersSheet({ visible, onClose, current, onApply }: { visible: boolean
     if (visible) setFd({ ...current, svc: [...current.svc] })
   }
 
-  const footerH = 12 + 56 + Math.max(insets.bottom, 16) + 8
+  useEffect(() => {
+    if (visible) ref.current?.snapToIndex(0)
+    else ref.current?.close()
+  }, [visible])
+  useEffect(() => {
+    if (!visible) return
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { onClose(); return true })
+    return () => sub.remove()
+  }, [visible, onClose])
+
+  const backdrop = useCallback(
+    (p: BottomSheetBackdropProps) => <BottomSheetBackdrop {...p} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.42} pressBehavior="close" />, [],
+  )
+  // The tab bar sits below the map screen, so no home-indicator inset is needed here.
+  const footerH = 12 + 56 + 12
   const footer = useCallback((p: BottomSheetFooterProps) => (
     <BottomSheetFooter {...p}>
       <View style={{ backgroundColor: colors.bg, paddingHorizontal: 16, paddingTop: 12, paddingBottom: footerH - 68, borderTopWidth: 1, borderTopColor: colors.grey150 }}>
@@ -242,7 +262,11 @@ function FiltersSheet({ visible, onClose, current, onApply }: { visible: boolean
   ), [count, fd, footerH, onApply, tr])
 
   return (
-    <BottomSheetModal ref={ref} {...props} enableDynamicSizing maxDynamicContentSize={Math.min(780, height - 60)} footerComponent={footer}>
+    <BottomSheet ref={ref} index={-1} snapPoints={snapPoints} enableDynamicSizing={false} enablePanDownToClose
+      onChange={(i) => { if (i === -1 && visible) onClose() }}
+      backdropComponent={backdrop} footerComponent={footer}
+      backgroundStyle={{ backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderRadius: 0 }}
+      handleIndicatorStyle={{ width: 40, height: 5, backgroundColor: colors.grey300 }}>
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: footerH + 16 }} showsVerticalScrollIndicator={false}>
         <Box flexDirection="row" alignItems="center" justifyContent="space-between" style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
           <IconButton icon="close" size={40} iconSize={22} label="close" onPress={onClose} />
@@ -274,7 +298,7 @@ function FiltersSheet({ visible, onClose, current, onApply }: { visible: boolean
           </ChipGroup>
         </Box>
       </BottomSheetScrollView>
-    </BottomSheetModal>
+    </BottomSheet>
   )
 }
 
