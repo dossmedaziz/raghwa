@@ -39,7 +39,18 @@
           "locationWhenInUsePermission": "Raghwa uses your location to show the nearest car washes. / رغوة تستعمل الموقع متاعك باش توريك أقرب الڨراجات."
         }
       ],
-      "@rnmapbox/maps"
+      "@rnmapbox/maps",
+      [
+        "expo-quick-actions",
+        {
+          "androidIcons": {
+            "shortcut_reservations": {
+              "foregroundImage": "./assets/shortcut-reservations.png",
+              "backgroundColor": "#EDF2FC"
+            }
+          }
+        }
+      ]
     ],
     "scheme": "raghwa"
   }

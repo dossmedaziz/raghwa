@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { View, useColorScheme } from 'react-native'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Platform, View, useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
@@ -10,7 +10,9 @@ import { ThemeProvider } from '@shopify/restyle'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { DarkTheme, DefaultTheme, NavigationContainer, type NavigationState } from '@react-navigation/native'
+import { DarkTheme, DefaultTheme, NavigationContainer, createNavigationContainerRef, type NavigationState } from '@react-navigation/native'
+import * as QuickActions from 'expo-quick-actions'
+import { useQuickActionCallback } from 'expo-quick-actions/hooks'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { applyScheme, colors, themes, type Scheme } from '@/theme'
@@ -34,6 +36,33 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
 initMapbox()
 
 const Stack = createNativeStackNavigator<RootParams>()
+const navRef = createNavigationContainerRef<RootParams>()
+
+/** Home-screen shortcut (long-press the app icon): "My reservations". */
+const RES_ACTION = 'reservations'
+
+/**
+ * Registers the shortcut in the current language and opens the Reservations tab when it is used,
+ * including on a cold start (the action is held until navigation is ready).
+ */
+function useReservationsShortcut() {
+  const { t } = useT()
+  useEffect(() => {
+    if (Platform.OS === 'web') return
+    QuickActions.setItems([{ id: RES_ACTION, title: t.my_res, icon: Platform.OS === 'ios' ? 'symbol:calendar' : 'shortcut_reservations' }]).catch(() => {})
+  }, [t.my_res])
+
+  const pending = useRef(false)
+  const open = useCallback(() => {
+    // Signed-out users stay on the login flow.
+    if (!useStore.getState().authed) return
+    if (!navRef.isReady()) { pending.current = true; return }
+    pending.current = false
+    navRef.navigate('Tabs', { screen: 'Reservations', params: { seg: 'up' } })
+  }, [])
+  useQuickActionCallback(useCallback((a: QuickActions.Action) => { if (a.id === RES_ACTION) open() }, [open]))
+  return { onReady: () => { if (pending.current) open() } }
+}
 const Tab = createBottomTabNavigator<TabParams>()
 
 function Tabs() {
@@ -69,6 +98,7 @@ function Root({ scheme }: { scheme: Scheme }) {
   // Switching theme remounts the tree (key below); the navigation state is kept so the user stays put.
   const navState = useRef<NavigationState | undefined>(undefined)
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme
+  const shortcut = useReservationsShortcut()
   return (
     // RTL via the `direction` layout style: instant language switching, and it works in Expo Go
     // (I18nManager.forceRTL needs a reload and is reset by Expo Go).
@@ -76,8 +106,8 @@ function Root({ scheme }: { scheme: Scheme }) {
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       {/* Inside the `direction` view so bottom-sheet modals follow the reading direction. */}
       <BottomSheetModalProvider>
-        <NavigationContainer theme={{ ...base, colors: { ...base.colors, background: colors.bg, card: colors.bg } }}
-          initialState={navState.current} onStateChange={(st) => { navState.current = st }}>
+        <NavigationContainer ref={navRef} theme={{ ...base, colors: { ...base.colors, background: colors.bg, card: colors.bg } }}
+          initialState={navState.current} onStateChange={(st) => { navState.current = st }} onReady={shortcut.onReady}>
           <Stack.Navigator initialRouteName={initial}
             screenOptions={{ headerShown: false, animation: ar ? 'slide_from_left' : 'slide_from_right', contentStyle: { backgroundColor: colors.bg } }}>
             <Stack.Screen name="Splash" component={Splash} options={{ animation: 'fade' }} />
