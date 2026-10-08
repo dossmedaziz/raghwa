@@ -13,7 +13,7 @@ async function bootstrap() {
   const config = app.get(ConfigService) as AppConfig;
   if (config.get('SWAGGER_ENABLED', { infer: true })) setupSwagger(app);
 
-  const port = config.get('PORT', { infer: true });
+  const port = 3000;
   await app.listen(port);
   Logger.log(`API on http://localhost:${port} · docs: /docs/owner and /docs/customer`, 'Bootstrap');
 }
