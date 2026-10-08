@@ -26,7 +26,8 @@ export function OnboardingPage() {
   const [max, setMax] = useState(1)
   const [err, setErr] = useState<Errors>({})
   const g = useStore((s) => s.garage)
-  const { isCustom, customDur } = useStore()
+  const { isCustom, customDur, publishGarage } = useStore()
+  const garageCount = useStore((s) => s.garageIds.length)
 
   const go = (n: number) => { setStep(n); setErr({}); window.scrollTo(0, 0) }
   const next = () => {
@@ -43,6 +44,7 @@ export function OnboardingPage() {
     setErr(e)
     if (Object.keys(e).length) return
     if (step === 6) {
+      publishGarage()
       notify('toastPublished')
       return nav('/dashboard')
     }
@@ -60,6 +62,11 @@ export function OnboardingPage() {
             <span className="text-[12.5px] text-muted-foreground">{t.obSub}</span>
           </div>
           <LangSwitch />
+          {garageCount > 1 && (
+            <Button variant="ghost" onClick={() => nav('/garages')} className="text-ink-2">
+              <Icon name="garage_home" /><span className="hidden sm:inline">{t.allGarages}</span>
+            </Button>
+          )}
         </div>
         <div className="h-1 bg-[#E8EEF6]">
           <div className="h-full bg-aqua transition-[width] duration-300" style={{ width: Math.round((step / 6) * 100) + '%' }} />

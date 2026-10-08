@@ -106,7 +106,7 @@ export function LoginPage() {
     setErr(er)
     if (hasErrors(er)) return
     login()
-    nav('/dashboard')
+    nav('/garages')
   }
   return (
     <>
@@ -218,7 +218,8 @@ export function VerifyPage() {
   const { t } = useT()
   const nav = useNavigate()
   const { purpose, phone: ph } = useStore((s) => s.otp)
-  const login = useStore((s) => s.login)
+  const login = useStore((s) => s.login), selectGarage = useStore((s) => s.selectGarage)
+  const firstGarage = useStore((s) => s.garageIds[0])
   const otp = useOtp()
   const isForgot = purpose === 'forgot'
   const submit = (e: FormEvent) => {
@@ -226,6 +227,7 @@ export function VerifyPage() {
     if (!otp.validate()) return
     if (isForgot) return nav('/reset-password')
     login()
+    selectGarage(firstGarage)
     notify('toastVerified')
     nav('/onboarding')
   }

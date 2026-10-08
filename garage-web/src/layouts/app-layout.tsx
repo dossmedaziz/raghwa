@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Icon, LangSwitch, LogoMark } from '@/components/common'
+import { GarageAvatar, Icon, LangSwitch, LogoMark } from '@/components/common'
 import { CancelReservationDialog, ReservationDrawer } from '@/components/reservations'
 import { OWNER } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { phone } from '@/lib/format'
 import { notify, useT } from '@/lib/i18n'
-import { useStore } from '@/store'
+import { listGarages, useStore } from '@/store'
 
 const NAV = [
   ['/dashboard', 'space_dashboard', 'navDashboard'],
@@ -91,21 +91,30 @@ function TopBar() {
   const { t, ar } = useT()
   const nav = useNavigate()
   const logout = useLogout()
-  const garage = useStore((s) => s.garage), ownerPhone = useStore((s) => s.ownerPhone)
+  const garage = useStore((s) => s.garage), published = useStore((s) => s.published), ownerPhone = useStore((s) => s.ownerPhone)
   const notifs = useStore((s) => s.notifs), markAllRead = useStore((s) => s.markAllRead)
   const unread = notifs.filter((n) => n.unread).length
   const ownerName = ar ? OWNER.ar : OWNER.fr
 
   return (
     <header className="sticky top-0 z-20 flex h-[68px] items-center gap-3.5 border-b bg-white px-6">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary font-latin text-sm font-extrabold text-white">RW</span>
-      <div className="flex min-w-0 flex-1 flex-col leading-tight">
-        <span className="truncate text-[15px] font-bold">{garage.name}</span>
-        <span className="flex items-center gap-1.5 text-[12.5px] font-semibold whitespace-nowrap text-success">
-          <span className="size-[7px] rounded-full bg-success-dot" />
-          {t.visible} · <span className="font-medium text-muted-foreground">{garage.area}</span>
-        </span>
-      </div>
+      <GarageSwitcher>
+        <button type="button" className="flex min-w-0 items-center gap-3.5 rounded-xl p-1 pe-2 text-start hover:bg-muted">
+          <GarageAvatar name={garage.name} />
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="flex items-center gap-1 text-[15px] font-bold">
+              <span className="truncate">{garage.name || t.untitledGarage}</span>
+              <Icon name="unfold_more" size={18} className="shrink-0 text-muted-foreground" />
+            </span>
+            <span className={cn('flex items-center gap-1.5 text-[12.5px] font-semibold whitespace-nowrap', published ? 'text-success' : 'text-amber-ink')}>
+              <span className={cn('size-[7px] rounded-full', published ? 'bg-success-dot' : 'bg-amber-ink')} />
+              {published ? t.visible : t.notVisible}
+              {garage.area && <> · <span className="font-medium text-muted-foreground">{garage.area}</span></>}
+            </span>
+          </span>
+        </button>
+      </GarageSwitcher>
+      <div className="flex-1" />
       <LangSwitch compact />
 
       <Popover>
@@ -151,6 +160,9 @@ function TopBar() {
             <span dir="ltr" className="text-start font-latin text-[12.5px] text-muted-foreground">{phone(ownerPhone)}</span>
           </div>
           <DropdownMenuSeparator className="mb-1.5" />
+          <DropdownMenuItem onSelect={() => nav('/garages')} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
+            <Icon name="garage_home" className="text-muted-foreground" />{t.switchGarage}
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => nav('/profile')} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
             <Icon name="storefront" className="text-muted-foreground" />{t.navProfile}
           </DropdownMenuItem>
@@ -163,6 +175,43 @@ function TopBar() {
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
+  )
+}
+
+/** Dropdown on the garage name: jump straight to another garage, or open the full picker. */
+function GarageSwitcher({ children }: { children: ReactNode }) {
+  const { t } = useT()
+  const nav = useNavigate()
+  const state = useStore()
+  const garages = listGarages(state)
+  const pick = (id: string, published: boolean) => {
+    if (id !== state.activeGarageId) state.selectGarage(id)
+    nav(published ? '/dashboard' : '/onboarding')
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent align="start" sideOffset={8} className="w-[300px] rounded-2xl p-2 shadow-pop">
+        <span className="block px-3 pt-2 pb-1.5 text-xs font-bold text-muted-foreground">{t.switchGarage}</span>
+        {garages.map((g) => (
+          <DropdownMenuItem key={g.id} onSelect={() => pick(g.id, g.published)} className="gap-3 rounded-[10px] px-3 py-2.5">
+            <GarageAvatar name={g.garage.name} size={32} className="rounded-lg text-xs" />
+            <span className="flex min-w-0 flex-1 flex-col leading-tight">
+              <span className="truncate text-sm font-semibold">{g.garage.name || t.untitledGarage}</span>
+              <span className="truncate text-xs text-muted-foreground">{g.published ? g.garage.area : t.draft}</span>
+            </span>
+            {g.id === state.activeGarageId && <Icon name="check" className="text-primary" />}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator className="my-1.5" />
+        <DropdownMenuItem onSelect={() => nav('/garages')} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
+          <Icon name="garage_home" className="text-muted-foreground" />{t.allGarages}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => { state.addGarage(); nav('/onboarding') }} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
+          <Icon name="add" className="text-muted-foreground" />{t.addGarage}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

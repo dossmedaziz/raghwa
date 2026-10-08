@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { Card } from '@/components/ui/card'
 import { Icon, IconTile } from '@/components/common'
 import { resTotal, useResActions, useResFormat } from '@/components/reservations'
-import { CHART, KPI, NOW, OWNER, TODAY } from '@/data/mock'
+import { NOW, OWNER, TODAY } from '@/data/mock'
 import { MONTHS_L } from '@/data/i18n-strings'
 import { cn } from '@/lib/utils'
 import { addDays, dow, fmtDate, fx, genSlots, money, tm } from '@/lib/format'
@@ -12,7 +12,7 @@ import { Page } from '@/layouts/app-layout'
 
 export function DashboardPage() {
   const { t, L, ar } = useT()
-  const reservations = useStore((s) => s.reservations)
+  const reservations = useStore((s) => s.reservations), stats = useStore((s) => s.stats)
   const hours = useStore((s) => s.hours), cap = useStore((s) => s.capacity)
   const blocks = useStore((s) => s.blocks), slotBlocks = useStore((s) => s.slotBlocks)
   const dur = useSlotDuration()
@@ -25,8 +25,8 @@ export function DashboardPage() {
   const weekEnd = addDays(TODAY, 6 - dow(TODAY))
   const upWeek = reservations.filter((r) => r.status === 'upcoming' && r.date >= TODAY && r.date <= weekEnd).length
   const base = reservations.length ? 1 : 0
-  const monthDone = base * KPI.doneBase + reservations.filter((r) => r.status === 'done' && r.date.startsWith('2026-10')).length
-  const revenue = base * KPI.revBase + live.filter((r) => r.date.startsWith('2026-10')).reduce((a, r) => a + resTotal(r), 0)
+  const monthDone = base * stats.doneBase + reservations.filter((r) => r.status === 'done' && r.date.startsWith('2026-10')).length
+  const revenue = base * stats.revBase + live.filter((r) => r.date.startsWith('2026-10')).reduce((a, r) => a + resTotal(r), 0)
 
   const kpis = [
     { icon: 'today', label: t.kpiToday, value: todayRes.length, sub: fx(t.kpiTodaySub, { n: todayRes.filter((r) => r.status === 'upcoming').length }), tile: 'bg-blue-wash text-primary' },
@@ -52,7 +52,7 @@ export function DashboardPage() {
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
     .slice(0, 5)
 
-  const chart = CHART.map(([d, v]) => [d, v ?? todayRes.length] as const)
+  const chart = stats.chart.map(([d, v]) => [d, v ?? todayRes.length] as const)
   const cMax = Math.max(1, ...chart.map((x) => x[1]))
 
   return (

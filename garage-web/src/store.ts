@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { Lang } from '@/data/i18n-strings'
 import {
-  BLOCKS, GARAGE, HOURS, NOTIFS, NOW, OWNER, RESERVATIONS, SERVICES, SLOT_BLOCKS, TODAY,
-  type BlockReason, type DayHours, type Notif, type Reservation, type Service, type Status,
+  GARAGE, GARAGES, NOW, OWNER, TODAY, newGarageSeed,
+  type BlockReason, type DayHours, type GarageSeed, type GarageStats, type Notif, type Reservation, type Service, type Status,
 } from '@/data/mock'
 
 const clone = <T,>(x: T): T => structuredClone(x)
@@ -12,13 +12,10 @@ export type UploadKey = 'logo' | 'p1' | 'p2' | 'p3'
 export type PrefKey = 'n1' | 'n2' | 'n3' | 'n4'
 export type GarageInfo = Omit<typeof GARAGE, 'phone'> & { phone: string }
 
-interface State {
-  lang: Lang
-  authed: boolean
-  /** Phone + purpose carried from sign-up / forgot-password into the OTP screen. */
-  otp: { purpose: 'signup' | 'forgot'; phone: string }
+/** Everything that belongs to one garage. The active garage's copy lives flat on the store. */
+export interface Workspace {
+  published: boolean
   garage: GarageInfo
-  ownerPhone: string
   hours: DayHours[]
   slotDur: number
   isCustom: boolean
@@ -29,14 +26,37 @@ interface State {
   notifs: Notif[]
   blocks: Record<string, BlockReason>
   slotBlocks: Record<string, BlockReason>
-  prefs: Record<PrefKey, boolean>
   uploads: Record<UploadKey, boolean>
+  stats: GarageStats
+}
+
+const WORKSPACE_KEYS = [
+  'published', 'garage', 'hours', 'slotDur', 'isCustom', 'customDur', 'capacity', 'services', 'reservations',
+  'notifs', 'blocks', 'slotBlocks', 'uploads', 'stats',
+] as const satisfies readonly (keyof Workspace)[]
+
+interface State extends Workspace {
+  lang: Lang
+  authed: boolean
+  /** Phone + purpose carried from sign-up / forgot-password into the OTP screen. */
+  otp: { purpose: 'signup' | 'forgot'; phone: string }
+  ownerPhone: string
+  prefs: Record<PrefKey, boolean>
+  /** Garage the owner is managing right now; null until one is picked after login. */
+  activeGarageId: string | null
+  /** Stored copies of every garage the owner has, in display order. The active one may be stale. */
+  garageIds: string[]
+  workspaces: Record<string, Workspace>
 }
 
 interface Actions {
   setLang: (l: Lang) => void
   login: () => void
   logout: () => void
+  selectGarage: (id: string) => void
+  /** Creates a blank draft garage, makes it active and returns its id. */
+  addGarage: () => string
+  publishGarage: () => void
   startOtp: (purpose: State['otp']['purpose'], phone: string) => void
   updateGarage: (p: Partial<GarageInfo>) => void
   setOwnerPhone: (p: string) => void
@@ -58,22 +78,34 @@ interface Actions {
   setUpload: (k: UploadKey, v: boolean) => void
 }
 
-const initialData = () => ({
-  garage: clone(GARAGE),
-  ownerPhone: OWNER.phone,
-  hours: clone(HOURS),
-  slotDur: 30,
-  isCustom: false,
-  customDur: '',
-  capacity: 3,
-  services: clone(SERVICES),
-  reservations: clone(RESERVATIONS),
-  notifs: clone(NOTIFS),
-  blocks: clone(BLOCKS),
-  slotBlocks: clone(SLOT_BLOCKS),
-  prefs: { n1: true, n2: true, n3: true, n4: false },
-  uploads: { logo: true, p1: true, p2: true, p3: false },
-})
+const toWorkspace = ({ id: _, ...seed }: GarageSeed): Workspace => ({ ...clone(seed), isCustom: false, customDur: '' })
+
+const pickWorkspace = (s: Workspace): Workspace =>
+  Object.fromEntries(WORKSPACE_KEYS.map((k) => [k, s[k]])) as unknown as Workspace
+
+const initialData = () => {
+  const workspaces = Object.fromEntries(GARAGES.map((g) => [g.id, toWorkspace(g)]))
+  return {
+    ownerPhone: OWNER.phone,
+    prefs: { n1: true, n2: true, n3: true, n4: false },
+    activeGarageId: null as string | null,
+    garageIds: GARAGES.map((g) => g.id),
+    workspaces,
+    // Flat fields hold the first garage until one is picked, so every screen always has data to show.
+    ...workspaces[GARAGES[0].id],
+  }
+}
+
+/** Saves the active garage back into `workspaces` and loads `id` in its place. */
+function switchTo(s: State, id: string): Partial<State> {
+  const workspaces = s.activeGarageId ? { ...s.workspaces, [s.activeGarageId]: pickWorkspace(s) } : s.workspaces
+  return { workspaces, activeGarageId: id, ...workspaces[id] }
+}
+
+/** Every garage with up-to-date data (the active one is read from the live flat fields). */
+export function listGarages(s: State): (Workspace & { id: string })[] {
+  return s.garageIds.map((id) => ({ id, ...(id === s.activeGarageId ? pickWorkspace(s) : s.workspaces[id]) }))
+}
 
 export const useStore = create<State & Actions>()(
   persist(
@@ -86,6 +118,13 @@ export const useStore = create<State & Actions>()(
       setLang: (lang) => set({ lang }),
       login: () => set({ authed: true }),
       logout: () => set({ authed: false, ...initialData() }),
+      selectGarage: (id) => set((s) => (s.workspaces[id] ? switchTo(s, id) : {})),
+      addGarage: () => {
+        const id = 'g' + Date.now()
+        set((s) => switchTo({ ...s, garageIds: [...s.garageIds, id], workspaces: { ...s.workspaces, [id]: toWorkspace(newGarageSeed(id)) } }, id))
+        return id
+      },
+      publishGarage: () => set({ published: true }),
       startOtp: (purpose, phone) => set({ otp: { purpose, phone } }),
       updateGarage: (p) => set((s) => ({ garage: { ...s.garage, ...p } })),
       setOwnerPhone: (ownerPhone) => set({ ownerPhone }),
@@ -133,8 +172,15 @@ export const useStore = create<State & Actions>()(
     {
       name: 'raghwa-pro',
       storage: createJSONStorage(() => localStorage),
-      // Only the language and session survive a reload; the demo data resets.
-      partialize: (s) => ({ lang: s.lang, authed: s.authed }),
+      // Only the language, session and chosen garage survive a reload; the demo data resets.
+      partialize: (s) => ({ lang: s.lang, authed: s.authed, activeGarageId: s.activeGarageId }),
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<State>
+        const id = p.activeGarageId
+        // A garage added during the previous visit is gone after a reload: fall back to the picker.
+        const garage = id && current.workspaces[id] ? { activeGarageId: id, ...current.workspaces[id] } : { activeGarageId: null }
+        return { ...current, lang: p.lang ?? current.lang, authed: p.authed ?? current.authed, ...garage }
+      },
     },
   ),
 )

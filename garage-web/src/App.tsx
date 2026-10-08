@@ -6,6 +6,7 @@ import { useT } from '@/lib/i18n'
 import { useStore } from '@/store'
 import { AppLayout } from '@/layouts/app-layout'
 import { AuthLayout, ForgotPage, LoginPage, NewPasswordPage, SignupPage, VerifyPage } from '@/pages/auth'
+import { GaragesPage } from '@/pages/garages'
 import { OnboardingPage } from '@/pages/onboarding'
 import { DashboardPage } from '@/pages/dashboard'
 import { ReservationsPage } from '@/pages/reservations'
@@ -17,6 +18,12 @@ import { SettingsPage } from '@/pages/settings'
 function RequireAuth() {
   const authed = useStore((s) => s.authed)
   return authed ? <Outlet /> : <Navigate to="/login" replace />
+}
+
+/** The garage screens need a garage picked first (owners can have several). */
+function RequireGarage() {
+  const active = useStore((s) => s.activeGarageId)
+  return active ? <Outlet /> : <Navigate to="/garages" replace />
 }
 
 export default function App() {
@@ -39,14 +46,17 @@ export default function App() {
             <Route path="/reset-password" element={<NewPasswordPage />} />
           </Route>
           <Route element={<RequireAuth />}>
-            <Route path="/onboarding" element={<OnboardingPage />} />
-            <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/reservations" element={<ReservationsPage />} />
-              <Route path="/schedule" element={<SchedulePage />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/garages" element={<GaragesPage />} />
+            <Route element={<RequireGarage />}>
+              <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/reservations" element={<ReservationsPage />} />
+                <Route path="/schedule" element={<SchedulePage />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Route>
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />

@@ -109,24 +109,28 @@ const R: Row[] = [
 
 const BT = ['19:42', '21:05', '08:17', '13:36', '22:48', '17:10', '10:24']
 
-export const RESERVATIONS: Reservation[] = R.map((r, i) => {
-  const x = r[8] ?? {}
-  const [nameAr, nameFr, phone, date, time, svc, status, car] = r
-  const history: HistoryEntry[] = [{ type: 'booked', date: addDays(date, -(1 + (i % 3))), time: BT[i % BT.length] }]
-  if (x.resched) history.push({ type: 'resched', date: addDays(date, -1), time: '09:12', from: x.resched })
-  if (status === 'done') history.push({ type: 'done', date, time: mt(tm(time) + 40) })
-  if (status === 'cancelled')
-    history.push({ type: 'cancelled', by: x.by, date: x.by === 'garage' ? date : addDays(date, -1), time: x.by === 'garage' ? '09:30' : '18:55' })
-  return {
-    id: 'r' + i,
-    ref: 'RGW-' + (1187 - i * 3 + (i % 2)),
-    nameAr, nameFr, phone, date, time,
-    lines: svc.map((id) => ({ id, price: PRICE[id] })),
-    status,
-    car: car ? { brand: car[0], model: car[1], s: car[2], n: car[3] } : null,
-    history,
-  }
-})
+function buildReservations(rows: Row[], prefix: string, refBase: number): Reservation[] {
+  return rows.map((r, i) => {
+    const x = r[8] ?? {}
+    const [nameAr, nameFr, phone, date, time, svc, status, car] = r
+    const history: HistoryEntry[] = [{ type: 'booked', date: addDays(date, -(1 + (i % 3))), time: BT[i % BT.length] }]
+    if (x.resched) history.push({ type: 'resched', date: addDays(date, -1), time: '09:12', from: x.resched })
+    if (status === 'done') history.push({ type: 'done', date, time: mt(tm(time) + 40) })
+    if (status === 'cancelled')
+      history.push({ type: 'cancelled', by: x.by, date: x.by === 'garage' ? date : addDays(date, -1), time: x.by === 'garage' ? '09:30' : '18:55' })
+    return {
+      id: prefix + i,
+      ref: 'RGW-' + (refBase - i * 3 + (i % 2)),
+      nameAr, nameFr, phone, date, time,
+      lines: svc.map((id) => ({ id, price: PRICE[id] })),
+      status,
+      car: car ? { brand: car[0], model: car[1], s: car[2], n: car[3] } : null,
+      history,
+    }
+  })
+}
+
+export const RESERVATIONS: Reservation[] = buildReservations(R, 'r', 1187)
 
 /** Monday → Sunday. Closed on Sunday, lunch break on weekdays. */
 export const HOURS: DayHours[] = [0, 1, 2, 3, 4, 5, 6].map((i) => ({
@@ -169,3 +173,129 @@ export const CITIES = [
   ['Tunis', 'تونس'], ['Ariana', 'أريانة'], ['Ben Arous', 'بن عروس'], ['La Manouba', 'منوبة'],
   ['Nabeul', 'نابل'], ['Sousse', 'سوسة'], ['Sfax', 'صفاقس'],
 ] as const
+
+/* ───────────── Multi-garage demo ───────────── */
+
+export interface GarageStats {
+  /** Bookings before the tracked demo window, added to the live counts on the dashboard. */
+  doneBase: number
+  revBase: number
+  chart: [string, number | null][]
+}
+
+export interface GarageSeed {
+  id: string
+  published: boolean
+  garage: Garage
+  hours: DayHours[]
+  slotDur: number
+  capacity: number
+  services: Service[]
+  reservations: Reservation[]
+  notifs: Notif[]
+  blocks: Record<string, BlockReason>
+  slotBlocks: Record<string, BlockReason>
+  uploads: Record<'logo' | 'p1' | 'p2' | 'p3', boolean>
+  stats: GarageStats
+}
+
+const R_LAC: Row[] = [
+  ['ليلى بن حسين', 'Leila Ben Hassine', '22110987', '2026-10-21', '09:00', ['full'], 'done', ['Renault', 'Mégane', 243, 2210]],
+  ['طارق الورغي', 'Tarek Ouerghi', '98556677', '2026-10-21', '10:00', ['ext', 'int'], 'done', ['Toyota', 'Corolla', 239, 7781]],
+  ['هيفاء الصيد', 'Haifa Essid', '55443322', '2026-10-21', '12:00', ['polish'], 'upcoming', ['BMW', 'X1', 247, 1102]],
+  ['زياد الكعبي', 'Ziad Kaabi', '24990011', '2026-10-21', '15:00', ['full'], 'upcoming', null],
+  ['منى الشريف', 'Mouna Cherif', '50778899', '2026-10-22', '09:30', ['int'], 'upcoming', ['Peugeot', '2008', 244, 3390]],
+  ['كريم الدهماني', 'Karim Dhahmani', '93221100', '2026-10-23', '11:00', ['full', 'engine'], 'upcoming', ['Volkswagen', 'Tiguan', 246, 5512]],
+  ['رحمة القاسمي', 'Rahma Kasmi', '27665544', '2026-10-20', '16:00', ['ext'], 'cancelled', null, { by: 'customer' }],
+  ['نزار الهمامي', 'Nizar Hammami', '52334455', '2026-10-19', '10:30', ['full'], 'done', ['Kia', 'Sportage', 240, 8823]],
+]
+
+const defaultUploads = { logo: true, p1: true, p2: true, p3: false }
+
+export const GARAGES: GarageSeed[] = [
+  {
+    id: 'g-marsa',
+    published: true,
+    garage: GARAGE,
+    hours: HOURS,
+    slotDur: 30,
+    capacity: 3,
+    services: SERVICES,
+    reservations: RESERVATIONS,
+    notifs: NOTIFS,
+    blocks: BLOCKS,
+    slotBlocks: SLOT_BLOCKS,
+    uploads: defaultUploads,
+    stats: { ...KPI, chart: CHART },
+  },
+  {
+    id: 'g-lac',
+    published: true,
+    garage: {
+      name: 'Raghwa Wash Lac 2',
+      desc: 'غسيل سريع وتلميع في قلب البحيرة، باركينغ مغطّي.',
+      phone: '71 960 233',
+      address: 'Rue du Lac Biwa',
+      area: 'Les Berges du Lac',
+      city: 'Tunis',
+      lat: 36.8372,
+      lng: 10.2433,
+    },
+    hours: [0, 1, 2, 3, 4, 5, 6].map(() => ({ open: true, from: '09:00', to: '20:00', brk: false, bFrom: '13:00', bTo: '14:00' })),
+    slotDur: 45,
+    capacity: 2,
+    services: SERVICES.map((s) => ({ ...s, price: Math.round(s.price * 1.2), active: s.id !== 'engine' })),
+    reservations: buildReservations(R_LAC, 'l', 2412),
+    notifs: [
+      { ar: 'حجز جديد من كريم الدهماني · الخميس 11:00', fr: 'Nouvelle réservation : Karim Dhahmani · jeu. 11:00', tAr: 'قبل 20 دقيقة', tFr: 'il y a 20 min', unread: true, icon: 'event_available' },
+      { ar: 'رحمة القاسمي بطّلت الحجز متاع البارح 16:00', fr: 'Rahma Kasmi a annulé sa réservation d’hier 16:00', tAr: 'البارح 18:55', tFr: 'hier, 18:55', unread: false, icon: 'event_busy' },
+    ],
+    blocks: {},
+    slotBlocks: {},
+    uploads: defaultUploads,
+    stats: { doneBase: 64, revBase: 1340, chart: [['2026-10-15', 6], ['2026-10-16', 8], ['2026-10-17', 9], ['2026-10-18', 5], ['2026-10-19', 7], ['2026-10-20', 6], ['2026-10-21', null]] },
+  },
+  {
+    id: 'g-sousse',
+    published: false,
+    garage: {
+      name: 'Raghwa Wash Sousse',
+      desc: '',
+      phone: '73 225 140',
+      address: '',
+      area: '',
+      city: 'Sousse',
+      lat: 35.8256,
+      lng: 10.6084,
+    },
+    hours: HOURS,
+    slotDur: 30,
+    capacity: 2,
+    services: SERVICES,
+    reservations: [],
+    notifs: [],
+    blocks: {},
+    slotBlocks: {},
+    uploads: { logo: false, p1: false, p2: false, p3: false },
+    stats: { doneBase: 0, revBase: 0, chart: CHART.map(([d]) => [d, d === TODAY ? null : 0]) },
+  },
+]
+
+/** Blank garage created from the garage picker; the owner fills it in through onboarding. */
+export function newGarageSeed(id: string): GarageSeed {
+  return {
+    id,
+    published: false,
+    garage: { name: '', desc: '', phone: '', address: '', area: '', city: 'Tunis', lat: 36.8065, lng: 10.1815 },
+    hours: HOURS,
+    slotDur: 30,
+    capacity: 2,
+    services: SERVICES,
+    reservations: [],
+    notifs: [],
+    blocks: {},
+    slotBlocks: {},
+    uploads: { logo: false, p1: false, p2: false, p3: false },
+    stats: { doneBase: 0, revBase: 0, chart: CHART.map(([d]) => [d, d === TODAY ? null : 0]) },
+  }
+}

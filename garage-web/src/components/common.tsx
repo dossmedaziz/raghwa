@@ -175,3 +175,15 @@ export function InfoNote({ icon = 'info', children, className }: { icon?: string
     </div>
   )
 }
+
+/** Square badge with a garage's initials (first word + last word), or a shop icon while it has no name. */
+export function GarageAvatar({ name, size = 40, className }: { name: string; size?: number; className?: string }) {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  const initials = words.length ? (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : '')).toUpperCase() : ''
+  return (
+    <span className={cn('flex shrink-0 items-center justify-center rounded-xl bg-primary font-latin text-sm font-extrabold text-white', className)}
+      style={{ width: size, height: size }}>
+      {initials || <Icon name="storefront" size={Math.round(size * 0.5)} />}
+    </span>
+  )
+}
