@@ -5,7 +5,7 @@ import {
   ApiTags, ApiTooManyRequestsResponse, ApiUnauthorizedResponse, ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../../common/dto/error.dto';
-import type { AppConfig } from '../../../config/app-config';
+import type { Env } from '../../../config/env.validation';
 import { OwnerAuthService } from '../../../core/auth/owner-auth.service';
 import { TokensService } from '../../../core/auth/tokens.service';
 import { OtpSentDto, PhoneDto, RefreshTokenDto, TokenPairDto, VerifyCodeDto } from '../../shared/auth.dto';
@@ -18,11 +18,11 @@ export class OwnerAuthController {
   constructor(
     private readonly auth: OwnerAuthService,
     private readonly tokens: TokensService,
-    private readonly config: ConfigService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   private sent(phone: string): OtpSentDto {
-    return { phone, resendAfterSeconds: (this.config as AppConfig).get('OTP_RESEND_COOLDOWN_SECONDS', { infer: true }) };
+    return { phone, resendAfterSeconds: this.config.get('OTP_RESEND_COOLDOWN_SECONDS', { infer: true }) };
   }
 
   @Post('signup')

@@ -5,7 +5,7 @@ import {
   ApiUnauthorizedResponse, ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../../common/dto/error.dto';
-import type { AppConfig } from '../../../config/app-config';
+import type { Env } from '../../../config/env.validation';
 import { CustomerAuthService } from '../../../core/auth/customer-auth.service';
 import { TokensService } from '../../../core/auth/tokens.service';
 import { OtpSentDto, PhoneDto, RefreshTokenDto, TokenPairDto, VerifyCodeDto } from '../../shared/auth.dto';
@@ -23,7 +23,7 @@ export class CustomerAuthController {
   constructor(
     private readonly auth: CustomerAuthService,
     private readonly tokens: TokensService,
-    private readonly config: ConfigService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   @Post('otp')
@@ -33,7 +33,7 @@ export class CustomerAuthController {
   @ApiTooManyRequestsResponse({ type: ErrorResponseDto, description: '`OTP_COOLDOWN` (details.retryAfterSeconds)' })
   async requestCode(@Body() dto: PhoneDto): Promise<OtpSentDto> {
     await this.auth.requestCode(dto.phone);
-    return { phone: dto.phone, resendAfterSeconds: (this.config as AppConfig).get('OTP_RESEND_COOLDOWN_SECONDS', { infer: true }) };
+    return { phone: dto.phone, resendAfterSeconds: this.config.get('OTP_RESEND_COOLDOWN_SECONDS', { infer: true }) };
   }
 
   @Post('otp/verify')

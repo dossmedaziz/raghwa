@@ -1,4 +1,4 @@
-# garage-api
+# raghwa-api
 
 Backend for **Raghwa**: the garage-owner website (`garage-web`) and the customer mobile app (`customer-app`).
 

@@ -5,7 +5,7 @@ import { IsNull, Repository } from 'typeorm';
 import { ClockService } from '../../common/clock/clock.service';
 import { randomDigits, sha256 } from '../../common/crypto/tokens';
 import { tooManyRequests, unprocessable } from '../../common/errors/domain.exception';
-import type { AppConfig } from '../../config/app-config';
+import type { Env } from '../../config/env.validation';
 import { SmsSender } from '../sms/sms-sender';
 import { OtpCode, type OtpPurpose } from './entities/otp-code.entity';
 
@@ -24,11 +24,11 @@ export class OtpService {
     @InjectRepository(OtpCode) private readonly codes: Repository<OtpCode>,
     private readonly sms: SmsSender,
     private readonly clock: ClockService,
-    private readonly config: ConfigService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   private get settings() {
-    const c = this.config as AppConfig;
+    const c = this.config;
     return {
       ttl: c.get('OTP_TTL_SECONDS', { infer: true }),
       maxAttempts: c.get('OTP_MAX_ATTEMPTS', { infer: true }),

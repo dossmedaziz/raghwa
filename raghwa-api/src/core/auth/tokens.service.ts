@@ -6,7 +6,7 @@ import { IsNull, Repository } from 'typeorm';
 import { ClockService } from '../../common/clock/clock.service';
 import { randomToken, sha256 } from '../../common/crypto/tokens';
 import { unauthorized } from '../../common/errors/domain.exception';
-import type { AppConfig } from '../../config/app-config';
+import type { Env } from '../../config/env.validation';
 import type { AccessTokenPayload, Audience } from './auth.types';
 import { RefreshToken } from './entities/refresh-token.entity';
 
@@ -29,11 +29,11 @@ export class TokensService {
     private readonly jwt: JwtService,
     @InjectRepository(RefreshToken) private readonly refreshTokens: Repository<RefreshToken>,
     private readonly clock: ClockService,
-    private readonly config: ConfigService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   private get cfg() {
-    return this.config as AppConfig;
+    return this.config;
   }
 
   private secret(aud: Audience) {
