@@ -17,6 +17,7 @@
     "@shopify/flash-list": "2.0.2",
     "@shopify/restyle": "^2.4.5",
     "expo": "~57.0.27",
+    "expo-build-properties": "~57.0.22",
     "expo-dev-client": "~57.0.19",
     "expo-font": "~57.0.4",
     "expo-location": "~57.0.20",
@@ -48,5 +49,10 @@
     "web": "expo start --web",
     "lint": "expo lint"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "expo-quick-actions": {
+      "@expo/image-utils": "^0.11.6"
+    }
+  }
 }

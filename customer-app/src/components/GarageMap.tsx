@@ -4,6 +4,9 @@ import Mapbox, { Camera, MapView, MarkerView } from '@rnmapbox/maps'
 import { colors, isDark } from '@/theme'
 import { useT } from '@/lib/i18n'
 import { GaragePin, Pin, UserDot, type GarageMapProps, type MapHandle } from '@/components/map-parts'
+import { MAPBOX_TOKEN } from '@/lib/mapbox'
+// Raster-tile map (no token needed), used as a fallback so a build without the token never crashes.
+import { GarageMap as TileGarageMap, MiniMap as TileMiniMap } from '@/components/GarageMap.web'
 
 /** Mapbox light / dark style (v11), following the app theme. */
 const mapStyle = () => (isDark() ? Mapbox.StyleURL.Dark.replace('dark-v10', 'dark-v11') : Mapbox.StyleURL.Light.replace('light-v10', 'light-v11'))
@@ -15,7 +18,7 @@ const mapStyle = () => (isDark() ? Mapbox.StyleURL.Dark.replace('dark-v10', 'dar
 const glZoom = (rasterZoom: number) => rasterZoom - 1
 
 /** Full-screen Mapbox map with garage price pins. */
-export const GarageMap = forwardRef<MapHandle, GarageMapProps>(function GarageMap({ center, zoom, pins, selected, onSelect, onMapPress, user }, ref) {
+const MapboxGarageMap = forwardRef<MapHandle, GarageMapProps>(function MapboxGarageMap({ center, zoom, pins, selected, onSelect, onMapPress, user }, ref) {
   const camera = useRef<Camera>(null)
   const { ar } = useT()
   const { height } = useWindowDimensions()
@@ -52,7 +55,7 @@ export const GarageMap = forwardRef<MapHandle, GarageMapProps>(function GarageMa
 })
 
 /** Small non-interactive map with the garage pin centred (garage + reservation details). */
-export function MiniMap({ lat, lon }: { lat: number; lon: number }) {
+function MapboxMiniMap({ lat, lon }: { lat: number; lon: number }) {
   return (
     <View style={{ height: 140, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.mapBase }}>
       <MapView style={{ flex: 1 }} styleURL={mapStyle()} scrollEnabled={false} zoomEnabled={false} rotateEnabled={false} pitchEnabled={false}
@@ -65,3 +68,10 @@ export function MiniMap({ lat, lon }: { lat: number; lon: number }) {
     </View>
   )
 }
+
+/**
+ * Mapbox throws a native exception when a MapView is created without an access token,
+ * so builds missing EXPO_PUBLIC_MAPBOX_TOKEN show the static tile map instead of crashing.
+ */
+export const GarageMap = MAPBOX_TOKEN ? MapboxGarageMap : TileGarageMap
+export const MiniMap = MAPBOX_TOKEN ? MapboxMiniMap : TileMiniMap

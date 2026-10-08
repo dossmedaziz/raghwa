@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Raghwa",
-    "slug": "raghwa-customer",
+    "slug": "raghwa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,7 +18,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "tn.raghwa.customer"
+      "package": "tn.raghwa.customer",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,8 +54,25 @@
             }
           }
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "useLegacyPackaging": true,
+            "enableBundleCompression": true
+          }
+        }
       ]
     ],
-    "scheme": "raghwa"
+    "scheme": "raghwa",
+    "extra": {
+      "eas": {
+        "projectId": "220e2a06-ac33-42f4-a78c-7e0e489bba24"
+      }
+    },
+    "owner": "dossmedaziz07"
   }
 }
