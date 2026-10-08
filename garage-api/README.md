@@ -4,39 +4,58 @@ Backend for **Raghwa**: the garage-owner website (`garage-web`) and the customer
 
 NestJS 12 · Node 24 · TypeORM 1.1 · PostgreSQL 17 + PostGIS · Jest + Supertest · Swagger
 
-## Run it
+## Run it (Docker only, nothing to install on your machine)
 
 ```bash
 cp .env.example .env
-npm install
-docker compose up -d db
-npm run migration:run
-npm run start:dev
+docker compose up -d --build
 ```
+
+This starts PostgreSQL (`db`), the test database (`db-test`) and the API. The API container runs the migrations,
+then `nest start --watch`: the source folder is mounted, so saving a file reloads the server.
 
 - API: http://localhost:3000
 - Owner API docs (garage-web): http://localhost:3000/docs/owner
 - Customer API docs (mobile app): http://localhost:3000/docs/customer
 - OpenAPI JSON for client generation: `/docs/owner/openapi.json`, `/docs/customer/openapi.json`
 
-In development, SMS (OTP codes included) are printed to the server log instead of being sent.
-
-## Tests
+In development, SMS (OTP codes included) are printed to the API log:
 
 ```bash
-npm test                                   # unit tests (pure logic, no database)
-docker compose --profile test up -d db-test
-npm run test:e2e                           # every endpoint against a real PostGIS database on port 5433
+docker compose logs -f api
+```
+
+Every npm command runs inside the container with `docker compose exec api …`:
+
+```bash
+docker compose exec api npm test            # unit tests
+docker compose exec api npm run test:e2e    # every endpoint against the db-test database
+docker compose exec api npm run migration:show
+```
+
+After changing `package.json` (adding a dependency), rebuild the image and refresh the container's `node_modules`:
+
+```bash
+docker compose up -d --build -V api
+```
+
+To write `package-lock.json` into the project folder (commit it, so builds are reproducible):
+
+```bash
+docker compose run --rm --no-deps api npm install
 ```
 
 E2E tests boot the real `AppModule` with a frozen clock (Wed 21 Oct 2026, 11:15 Tunis) and a fake SMS gateway
 that captures OTP codes. Each test starts from empty tables.
 
-## Everything in Docker
+## Production
 
 ```bash
-docker compose up -d --build   # db → migrate (one-off) → api
+docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+Builds the compiled app into a small image, runs the migrations once (`migrate` service), then starts the API.
+Use strong secrets in `.env` (`openssl rand -base64 48`) and set `SWAGGER_ENABLED=false` if the docs must not be public.
 
 ## Architecture
 
@@ -69,10 +88,10 @@ src/
 The schema only changes through migrations (`synchronize` is off).
 
 ```bash
-npm run migration:generate -- src/database/migrations/AddSomething
+docker compose exec api npm run migration:generate -- src/database/migrations/AddSomething
 ```
 
-Then add the new class to `src/database/migrations/index.ts` and run `npm run migration:run`.
+Then add the new class to `src/database/migrations/index.ts`; it is applied on the next `docker compose restart api`.
 The constraint names are deterministic (`fk_reservations_garage_id`, …), so right after `migration:run` on a fresh
 database, `migration:generate` should report no changes. Run it once to confirm the hand-written initial migration
 matches the entities.

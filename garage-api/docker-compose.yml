@@ -1,4 +1,32 @@
+# Development: everything runs in containers, nothing to install on the host except Docker.
+#   docker compose up -d --build        → db + db-test + api (migrations run on start, hot reload on save)
+#   docker compose exec api npm test    → run commands inside the api container
 services:
+  api:
+    build:
+      context: .
+      target: dev
+    # Apply pending migrations, then start Nest in watch mode.
+    command: sh -c "npm run migration:run && npm run start:dev"
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      # Used by `npm run test:e2e` inside this container.
+      TEST_DB_HOST: db-test
+      TEST_DB_PORT: 5432
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - .:/app
+      # Keeps the container's node_modules (Linux build) instead of the host folder.
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+      db-test:
+        condition: service_healthy
+
   db:
     image: postgis/postgis:17-3.5-alpine
     environment:
@@ -6,7 +34,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-raghwa}
       POSTGRES_DB: ${DB_NAME:-raghwa}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5430:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -15,7 +43,7 @@ services:
       timeout: 5s
       retries: 10
 
-  # Throwaway database for the e2e tests (no volume: data is wiped on every container restart).
+  # Throwaway database for the e2e tests (in memory: wiped whenever the container restarts).
   db-test:
     image: postgis/postgis:17-3.5-alpine
     environment:
@@ -31,33 +59,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    profiles: ["test"]
-
-  # Runs pending migrations once, then exits. The API waits for it.
-  migrate:
-    build: .
-    command: ["node", "node_modules/typeorm/cli.js", "-d", "dist/database/data-source.js", "migration:run"]
-    env_file: .env
-    environment:
-      NODE_ENV: production
-      DB_HOST: db
-      DB_PORT: 5432
-    depends_on:
-      db:
-        condition: service_healthy
-
-  api:
-    build: .
-    env_file: .env
-    environment:
-      NODE_ENV: production
-      DB_HOST: db
-      DB_PORT: 5432
-    ports:
-      - "${PORT:-3000}:3000"
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
 
 volumes:
   db-data:

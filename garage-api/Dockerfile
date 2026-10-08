@@ -1,15 +1,22 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-alpine AS deps
+# ── dev: used by docker-compose.yml. Source code is bind-mounted, `nest start --watch` reloads on save.
+FROM node:24-alpine AS dev
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+RUN chown node:node /app
+# Same uid as most Linux hosts (1000), so files written into the mounted folder stay yours.
+USER node
+COPY --chown=node:node package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+COPY --chown=node:node . .
+EXPOSE 3000
+CMD ["npm", "run", "start:dev"]
 
-FROM deps AS build
-COPY tsconfig.json tsconfig.build.json nest-cli.json ./
-COPY src ./src
+# ── build: compiles the app and drops dev dependencies.
+FROM dev AS build
 RUN npm run build && npm prune --omit=dev
 
+# ── runtime: the small production image (docker-compose.prod.yml).
 FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
