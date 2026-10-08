@@ -3,7 +3,7 @@
 import Constants from 'expo-constants'
 import { useStore } from '@/store'
 import type {
-  Availability, BookRequest, CustomerDto, CustomerSession, GarageCard, GarageDetail, OtpSent, Paged, Reservation, TokenPair,
+  Availability, BookRequest, CustomerDto, CustomerSession, GarageCard, GarageDetail, Paged, Reservation, TokenPair,
 } from '@/lib/types'
 
 /**
@@ -111,8 +111,9 @@ export interface GarageQuery { q?: string; lat?: number; lng?: number; radiusKm?
 /** Every customer endpoint used by the app. */
 export const api = {
   auth: {
-    requestCode: (phone: string) => request<OtpSent>('POST', '/v1/auth/otp', { phone }, { auth: false }),
-    verify: (phone: string, code: string) => request<CustomerSession>('POST', '/v1/auth/otp/verify', { phone, code }, { auth: false }),
+    register: (name: string, phone: string, password: string) =>
+      request<CustomerSession>('POST', '/v1/auth/register', { name, phone, password }, { auth: false }),
+    login: (phone: string, password: string) => request<CustomerSession>('POST', '/v1/auth/login', { phone, password }, { auth: false }),
     logout: (refreshToken: string) => request<void>('POST', '/v1/auth/logout', { refreshToken }, { auth: false }),
   },
   me: {

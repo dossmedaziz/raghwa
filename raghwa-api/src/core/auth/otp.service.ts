@@ -16,7 +16,6 @@ const MESSAGES: Record<OtpPurpose, (code: string) => string> = {
   owner_signup: (c) => `Raghwa Pro: كود التأكيد متاعك ${c} / Votre code de vérification : ${c}`,
   owner_reset: (c) => `Raghwa Pro: كود تبديل كلمة السر ${c} / Code de réinitialisation : ${c}`,
   owner_phone: (c) => `Raghwa Pro: كود تأكيد النومرو الجديد ${c} / Code pour confirmer le nouveau numéro : ${c}`,
-  customer_login: (c) => `Raghwa: الكود متاعك ${c} / Votre code : ${c}`,
 };
 
 @Injectable()

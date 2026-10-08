@@ -31,7 +31,7 @@ export class Reservation {
   @Column({ type: 'uuid' })
   customerId: string;
 
-  @ManyToOne(() => Customer, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => Customer, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'customer_id' })
   customer?: Relation<Customer>;
 

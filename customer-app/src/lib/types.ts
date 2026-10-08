@@ -2,15 +2,9 @@
 // times "HH:MM" in Tunis time, phones 8 local digits.
 
 export interface TokenPair { accessToken: string; refreshToken: string; expiresIn: number }
-export interface OtpSent { phone: string; resendAfterSeconds: number }
 
 export interface CustomerDto { id: string; phone: string; name: string | null }
-export interface CustomerSession {
-  customer: CustomerDto
-  /** True until the customer has set a name: show the name step. */
-  isNew: boolean
-  tokens: TokenPair
-}
+export interface CustomerSession { customer: CustomerDto; tokens: TokenPair }
 
 export interface Paged<T> { items: T[]; meta: { page: number; limit: number; total: number; totalPages: number } }
 

@@ -24,12 +24,9 @@ export interface CustomerSession {
   phone: string;
 }
 
-export async function customerSession(ctx: TestContext, phone = '22345671', name: string | null = 'Ahmed Ben Salah'): Promise<CustomerSession> {
-  await ctx.http().post('/v1/auth/otp').send({ phone }).expect(202);
-  const res = await ctx.http().post('/v1/auth/otp/verify').send({ phone, code: ctx.sms.lastCode(phone) }).expect(200);
-  const s = { customerId: res.body.customer.id, token: res.body.tokens.accessToken, refreshToken: res.body.tokens.refreshToken, phone };
-  if (name) await ctx.http().patch('/v1/me').set(bearer(s.token)).send({ name }).expect(200);
-  return s;
+export async function customerSession(ctx: TestContext, phone = '22345671', name = 'Ahmed Ben Salah', password = 'raghwa2026'): Promise<CustomerSession> {
+  const res = await ctx.http().post('/v1/auth/register').send({ name, phone, password }).expect(201);
+  return { customerId: res.body.customer.id, token: res.body.tokens.accessToken, refreshToken: res.body.tokens.refreshToken, phone };
 }
 
 export const COMPLETE_PROFILE = {

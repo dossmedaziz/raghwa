@@ -1,19 +1,38 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
-  ApiAcceptedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiProperty, ApiTags, ApiTooManyRequestsResponse,
-  ApiUnauthorizedResponse, ApiUnprocessableEntityResponse,
+  ApiConflictResponse, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiProperty, ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { IsString, Length, MaxLength } from 'class-validator';
 import { ErrorResponseDto } from '../../../common/dto/error.dto';
-import type { Env } from '../../../config/env.validation';
+import { PhoneField, Trim } from '../../../common/validation/decorators';
 import { CustomerAuthService } from '../../../core/auth/customer-auth.service';
 import { TokensService } from '../../../core/auth/tokens.service';
-import { OtpSentDto, PhoneDto, RefreshTokenDto, TokenPairDto, VerifyCodeDto } from '../../shared/auth.dto';
+import { RefreshTokenDto, TokenPairDto } from '../../shared/auth.dto';
 import { CustomerDto } from '../account/customer-account.dto';
+
+export class CustomerRegisterDto {
+  @ApiProperty({ example: 'Ahmed Ben Salah', minLength: 2, maxLength: 100 })
+  @Trim() @IsString() @Length(2, 100)
+  name: string;
+
+  @PhoneField() phone: string;
+
+  @ApiProperty({ example: 'raghwa2026', minLength: 8, maxLength: 72 })
+  @IsString() @Length(8, 72)
+  password: string;
+}
+
+export class CustomerLoginDto {
+  @PhoneField() phone: string;
+
+  @ApiProperty({ example: 'raghwa2026' })
+  @IsString() @MaxLength(72)
+  password: string;
+}
 
 export class CustomerSessionDto {
   @ApiProperty({ type: CustomerDto }) customer: CustomerDto;
-  @ApiProperty({ description: 'True until the customer has set a name: show the profile step.' }) isNew: boolean;
   @ApiProperty({ type: TokenPairDto }) tokens: TokenPairDto;
 }
 
@@ -23,28 +42,25 @@ export class CustomerAuthController {
   constructor(
     private readonly auth: CustomerAuthService,
     private readonly tokens: TokensService,
-    private readonly config: ConfigService<Env, true>,
   ) {}
 
-  @Post('otp')
-  @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Text a login code', description: 'Works for new and existing customers alike.' })
-  @ApiAcceptedResponse({ type: OtpSentDto })
-  @ApiTooManyRequestsResponse({ type: ErrorResponseDto, description: '`OTP_COOLDOWN` (details.retryAfterSeconds)' })
-  async requestCode(@Body() dto: PhoneDto): Promise<OtpSentDto> {
-    await this.auth.requestCode(dto.phone);
-    return { phone: dto.phone, resendAfterSeconds: this.config.get('OTP_RESEND_COOLDOWN_SECONDS', { infer: true }) };
+  @Post('register')
+  @ApiOperation({ summary: 'Create an account and log in', description: 'Phone + password; the phone number is not verified.' })
+  @ApiCreatedResponse({ type: CustomerSessionDto })
+  @ApiConflictResponse({ type: ErrorResponseDto, description: '`PHONE_TAKEN`' })
+  async register(@Body() dto: CustomerRegisterDto): Promise<CustomerSessionDto> {
+    const { customer, tokens } = await this.auth.register(dto.name, dto.phone, dto.password);
+    return { customer: CustomerDto.from(customer), tokens: TokenPairDto.from(tokens) };
   }
 
-  @Post('otp/verify')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Log in with the code', description: 'Creates the account on first login.' })
+  @ApiOperation({ summary: 'Log in with phone number and password' })
   @ApiOkResponse({ type: CustomerSessionDto })
-  @ApiUnprocessableEntityResponse({ type: ErrorResponseDto, description: '`OTP_INVALID`, `OTP_EXPIRED`' })
-  @ApiTooManyRequestsResponse({ type: ErrorResponseDto, description: '`OTP_TOO_MANY_ATTEMPTS`' })
-  async verify(@Body() dto: VerifyCodeDto): Promise<CustomerSessionDto> {
-    const { customer, isNew, tokens } = await this.auth.verifyCode(dto.phone, dto.code);
-    return { customer: CustomerDto.from(customer), isNew, tokens: TokenPairDto.from(tokens) };
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto, description: '`INVALID_CREDENTIALS`' })
+  async login(@Body() dto: CustomerLoginDto): Promise<CustomerSessionDto> {
+    const { customer, tokens } = await this.auth.login(dto.phone, dto.password);
+    return { customer: CustomerDto.from(customer), tokens: TokenPairDto.from(tokens) };
   }
 
   @Post('refresh')

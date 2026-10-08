@@ -1,19 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
-import { Pressable, TextInput, View } from 'react-native'
-import { colors } from '@/theme'
-import { Box, Button, Field, FieldError, Input, LinkButton, PhoneInput, Text } from '@/components/ui'
+import { useState } from 'react'
+import { View } from 'react-native'
+import { Box, Button, Field, Input, LinkButton, PasswordInput, PhoneInput, Text } from '@/components/ui'
 import { Body, Footer, Screen, Title } from '@/components/screen'
 import type { SKey } from '@/data/strings'
 import { api } from '@/lib/api'
-import { errorCode, notifyError, retryAfter } from '@/lib/errors'
+import { errorCode, notifyError } from '@/lib/errors'
 import { digits, fmtPhone } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { toast, useStore } from '@/store'
 import type { ScreenProps } from '@/navigation/types'
 
-const OTP_LENGTH = 4
-
-type Rule = 'phone' | 'name'
+type Rule = 'phone' | 'name' | 'pwreq' | 'pw' | { match: string }
 /** Validation rules; returns error string keys per field. */
 export function validate(f: Record<string, string>, rules: [string, Rule][]) {
   const err: Record<string, SKey> = {}
@@ -21,6 +18,9 @@ export function validate(f: Record<string, string>, rules: [string, Rule][]) {
     const v = f[k] || ''
     if (r === 'phone') { const d = digits(v); if (!d) err[k] = 'e_phone_req'; else if (d.length !== 8) err[k] = 'e_phone_len' }
     if (r === 'name' && v.trim().length < 2) err[k] = 'e_name_req'
+    if (r === 'pwreq' && !v) err[k] = 'e_pw_req'
+    if (r === 'pw') { if (!v) err[k] = 'e_pw_req'; else if (v.length < 8) err[k] = 'e_pw_len' }
+    if (typeof r === 'object' && v !== f[r.match]) err[k] = 'e_pw_match'
   }
   return err
 }
@@ -33,24 +33,27 @@ export function useForm<K extends string>(init: Record<K, string>) {
   return { f, err, set, setErr }
 }
 
-/** Phone number → SMS code. The account is created on the first login. */
+/** After login or sign-up: ask for the location permission, then the map. */
+const enter = (navigation: ScreenProps<'Login'>['navigation'] | ScreenProps<'Signup'>['navigation']) =>
+  navigation.reset({ index: 0, routes: [{ name: 'Location' }] })
+
 export function LoginScreen({ navigation }: ScreenProps<'Login'>) {
   const { t } = useT()
-  const lastPhone = useStore((s) => s.customer?.phone)
-  const { f, err, set, setErr } = useForm({ phone: fmtPhone(lastPhone ?? '') })
+  const lastPhone = useStore((s) => s.customer?.phone), signIn = useStore((s) => s.signIn)
+  const { f, err, set, setErr } = useForm({ phone: fmtPhone(lastPhone ?? ''), pw: '' })
+  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const submit = async () => {
-    const e = validate(f, [['phone', 'phone']])
+    const e = validate(f, [['phone', 'phone'], ['pw', 'pwreq']])
     setErr(e)
     if (Object.keys(e).length || busy) return
     setBusy(true)
     try {
-      const sent = await api.auth.requestCode(digits(f.phone))
-      navigation.navigate('Otp', { phone: f.phone, resendAfter: sent.resendAfterSeconds })
+      const s = await api.auth.login(digits(f.phone), f.pw)
+      signIn(s.tokens, s.customer)
+      enter(navigation)
     } catch (x) {
-      // A code was sent moments ago and is still valid: go and type it.
-      if (errorCode(x) === 'OTP_COOLDOWN') navigation.navigate('Otp', { phone: f.phone, resendAfter: retryAfter(x) })
-      else notifyError(x)
+      notifyError(x)
     } finally {
       setBusy(false)
     }
@@ -63,103 +66,77 @@ export function LoginScreen({ navigation }: ScreenProps<'Login'>) {
         <Field label={t.phone} error={err.phone && t[err.phone]}>
           <PhoneInput value={f.phone} onChangeText={(v) => set('phone', fmtPhone(v))} error={!!err.phone} />
         </Field>
+        <Field label={t.password} error={err.pw && t[err.pw]}>
+          <PasswordInput value={f.pw} onChangeText={(v) => set('pw', v)} placeholder="••••••••" error={!!err.pw} show={show} onToggle={() => setShow(!show)}
+            autoComplete="current-password" textContentType="password" onSubmitEditing={submit} />
+        </Field>
       </Body>
       <Footer center>
-        <Button label={t.send_code} onPress={submit} loading={busy} style={{ alignSelf: 'stretch' }} />
-        <Text fontSize={14} color="grey600" align="center">{t.new_here}</Text>
+        <Button label={t.login_btn} onPress={submit} loading={busy} style={{ alignSelf: 'stretch' }} />
+        <Box flexDirection="row" alignItems="center" gap="xs">
+          <Text fontSize={15} color="grey600">{t.no_account}</Text>
+          <LinkButton label={t.signup_link} onPress={() => navigation.navigate('Signup')} />
+        </Box>
       </Footer>
     </Screen>
   )
 }
 
-/** 4 boxes over a hidden input. */
-export function OtpScreen({ navigation, route }: ScreenProps<'Otp'>) {
-  const { t, ar } = useT()
-  const { phone, resendAfter } = route.params
+export function SignupScreen({ navigation }: ScreenProps<'Signup'>) {
+  const { t } = useT()
   const signIn = useStore((s) => s.signIn)
-  const [code, setCode] = useState('')
-  const [bad, setBad] = useState(false)
+  const { f, err, set, setErr } = useForm({ name: '', phone: '', pw: '', pw2: '' })
+  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [timer, setTimer] = useState(resendAfter)
-  const input = useRef<TextInput>(null)
-  useEffect(() => {
-    if (timer <= 0) return
-    const id = setTimeout(() => setTimer((x) => x - 1), 1000)
-    return () => clearTimeout(id)
-  }, [timer])
-  const ok = code.length === OTP_LENGTH
-  const verify = async () => {
-    if (!ok || busy) return
+  const submit = async () => {
+    const e = validate(f, [['name', 'name'], ['phone', 'phone'], ['pw', 'pw'], ['pw2', { match: 'pw' }]])
+    setErr(e)
+    if (Object.keys(e).length || busy) return
     setBusy(true)
     try {
-      const s = await api.auth.verify(digits(phone), code)
+      const s = await api.auth.register(f.name.trim(), digits(f.phone), f.pw)
       signIn(s.tokens, s.customer)
-      navigation.reset({ index: 0, routes: [s.isNew ? { name: 'Name', params: { first: true } } : { name: 'Location' }] })
+      enter(navigation)
     } catch (x) {
-      if (errorCode(x) === 'OTP_INVALID') setBad(true)
-      else {
-        notifyError(x)
-        setCode('')
-      }
+      if (errorCode(x) === 'PHONE_TAKEN') setErr({ phone: 'e_PHONE_TAKEN' })
+      else notifyError(x)
     } finally {
       setBusy(false)
     }
   }
-  const resend = async () => {
-    try {
-      setTimer((await api.auth.requestCode(digits(phone))).resendAfterSeconds)
-      setCode('')
-      setBad(false)
-      toast('code_sent')
-    } catch (x) {
-      if (errorCode(x) === 'OTP_COOLDOWN') setTimer(retryAfter(x))
-      else notifyError(x)
-    }
-  }
-  const mmss = String(Math.floor(timer / 60)).padStart(2, '0') + ':' + String(timer % 60).padStart(2, '0')
   return (
     <Screen foam back>
-      <Box flex={1} gap="l" style={{ paddingTop: 16, paddingHorizontal: 24 }}>
-        <Box gap="s">
-          <Text w={800} fontSize={32} lh={1.25}>{t.otp_t}</Text>
-          <Text fontSize={16} color="grey600" lh={1.5}>
-            {t.otp_s} <Text w={700} latin fontSize={16}>{(ar ? '⁦' : '') + '+216 ' + phone + (ar ? '⁩' : '')}</Text>
-          </Text>
+      <Body gap={20}>
+        <Title title={t.signup_t} sub={t.signup_s} />
+        <Field label={t.fullname} error={err.name && t[err.name]}>
+          <Input value={f.name} onChangeText={(v) => set('name', v)} placeholder={t.name_ph} error={!!err.name} autoComplete="name" maxLength={100} />
+        </Field>
+        <Field label={t.phone} error={err.phone && t[err.phone]}>
+          <PhoneInput value={f.phone} onChangeText={(v) => set('phone', fmtPhone(v))} error={!!err.phone} />
+        </Field>
+        <Field label={t.password} error={err.pw && t[err.pw]}>
+          <PasswordInput value={f.pw} onChangeText={(v) => set('pw', v)} placeholder={t.pw_ph} error={!!err.pw} show={show} onToggle={() => setShow(!show)}
+            autoComplete="new-password" maxLength={72} />
+        </Field>
+        <Field label={t.confirm_pw} error={err.pw2 && t[err.pw2]}>
+          <Input value={f.pw2} onChangeText={(v) => set('pw2', v)} placeholder={t.pw_ph} error={!!err.pw2} secureTextEntry={!show} latin autoCapitalize="none"
+            maxLength={72} onSubmitEditing={submit} />
+        </Field>
+      </Body>
+      <Footer center>
+        <Button label={t.signup_btn} onPress={submit} loading={busy} style={{ alignSelf: 'stretch' }} />
+        <Box flexDirection="row" alignItems="center" gap="xs">
+          <Text fontSize={15} color="grey600">{t.have_account}</Text>
+          <LinkButton label={t.login_btn} onPress={() => navigation.navigate('Login')} />
         </Box>
-        <Pressable onPress={() => input.current?.focus()} accessibilityLabel={t.otp_t}>
-          <View style={{ direction: 'ltr', flexDirection: 'row', gap: 12 }}>
-            {Array.from({ length: OTP_LENGTH }, (_, i) => (
-              <View key={i} style={{
-                width: 64, height: 72, borderRadius: 12, borderWidth: 2, alignItems: 'center', justifyContent: 'center',
-                backgroundColor: bad ? colors.negativeTint : colors.grey100,
-                borderColor: bad ? colors.negative : i === Math.min(code.length, OTP_LENGTH - 1) ? colors.primary : 'transparent',
-              }}>
-                <Text latin w={700} fontSize={28} align="center">{code[i] ?? ''}</Text>
-              </View>
-            ))}
-          </View>
-          <TextInput ref={input} value={code} autoFocus keyboardType="number-pad" maxLength={OTP_LENGTH} autoComplete="one-time-code" textContentType="oneTimeCode"
-            onChangeText={(v) => { setCode(digits(v).slice(0, OTP_LENGTH)); setBad(false) }} onSubmitEditing={verify}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.01, color: 'transparent' }} caretHidden />
-        </Pressable>
-        {bad ? <View style={{ marginTop: -12 }}><FieldError>{t.e_OTP_INVALID}</FieldError></View> : null}
-        <Box gap="s">
-          {timer > 0 ? (
-            <Text fontSize={15} color="grey600">{t.resend_in} <Text latin w={700} fontSize={15}>{mmss}</Text></Text>
-          ) : (
-            <Box alignSelf="flex-start"><LinkButton label={t.resend} onPress={resend} /></Box>
-          )}
-        </Box>
-      </Box>
-      <Footer><Button label={t.verify} onPress={verify} loading={busy} disabled={!ok} /></Footer>
+      </Footer>
     </Screen>
   )
 }
 
-/** Name step: required after the first login, editable later from the profile. */
-export function NameScreen({ navigation, route }: ScreenProps<'Name'>) {
+/** Edit the name (from the profile). */
+export function NameScreen({ navigation }: ScreenProps<'Name'>) {
   const { t } = useT()
-  const first = !!route.params?.first
   const name = useStore((s) => s.customer?.name), setCustomer = useStore((s) => s.setCustomer)
   const { f, err, set, setErr } = useForm({ name: name ?? '' })
   const [busy, setBusy] = useState(false)
@@ -170,11 +147,8 @@ export function NameScreen({ navigation, route }: ScreenProps<'Name'>) {
     setBusy(true)
     try {
       setCustomer(await api.me.update(f.name.trim()))
-      if (first) navigation.reset({ index: 0, routes: [{ name: 'Location' }] })
-      else {
-        toast('name_saved')
-        navigation.goBack()
-      }
+      toast('name_saved')
+      navigation.goBack()
     } catch (x) {
       notifyError(x)
     } finally {
@@ -182,8 +156,7 @@ export function NameScreen({ navigation, route }: ScreenProps<'Name'>) {
     }
   }
   return (
-    <Screen foam back={!first}>
-      {first && <View style={{ height: 56 }} />}
+    <Screen foam back>
       <Body>
         <Title title={t.name_t} sub={t.name_s} />
         <Field label={t.fullname} error={err.name && t[err.name]}>
@@ -191,7 +164,7 @@ export function NameScreen({ navigation, route }: ScreenProps<'Name'>) {
             maxLength={100} onSubmitEditing={save} />
         </Field>
       </Body>
-      <Footer><Button label={first ? t.continue : t.save} onPress={save} loading={busy} /></Footer>
+      <Footer><Button label={t.save} onPress={save} loading={busy} /></Footer>
     </Screen>
   )
 }

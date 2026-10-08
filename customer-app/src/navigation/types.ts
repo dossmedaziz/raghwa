@@ -12,10 +12,9 @@ export type RootParams = {
   Lang: undefined
   Intro: undefined
   Login: undefined
-  /** `resendAfter`: seconds before another code can be requested. */
-  Otp: { phone: string; resendAfter: number }
-  /** Name step: right after the first login (`first`), or from the profile. */
-  Name: { first?: boolean } | undefined
+  Signup: undefined
+  /** Edit the name (from the profile). */
+  Name: undefined
   Location: undefined
   Tabs: NavigatorScreenParams<TabParams>
   /** `km`: distance shown on the map list, when known. */

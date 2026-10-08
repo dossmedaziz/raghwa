@@ -10,9 +10,5 @@ export function errorKey(err: unknown): SKey {
 
 export const errorCode = (err: unknown) => (err instanceof ApiError ? err.code : 'GENERIC')
 
-/** Seconds to wait before asking for another SMS code (`OTP_COOLDOWN`). */
-export const retryAfter = (err: unknown) =>
-  (err instanceof ApiError && (err.details as { retryAfterSeconds?: number } | undefined)?.retryAfterSeconds) || 60
-
 /** Shows an error toast in the current language. */
 export const notifyError = (err: unknown) => toast(errorKey(err), 'error')

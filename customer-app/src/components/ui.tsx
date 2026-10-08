@@ -166,6 +166,20 @@ export function Input({ error, style, latin, ...rest }: TextInputProps & { error
   )
 }
 
+export function PasswordInput({ error, show, onToggle, ...rest }: TextInputProps & { error?: boolean; show: boolean; onToggle: () => void }) {
+  const { ar, t } = useT()
+  const s = useShell(error)
+  return (
+    <View style={[s.shell, { paddingStart: 16, paddingEnd: 6 }]}>
+      <TextInput secureTextEntry={!show} autoCapitalize="none" placeholderTextColor={colors.grey450} onFocus={s.onFocus} onBlur={s.onBlur}
+        style={{ flex: 1, height: '100%', fontSize: 16, color: colors.ink, fontFamily: 'Inter_400Regular', textAlign: ar ? 'right' : 'left' }} {...rest} />
+      <Pressable onPress={onToggle} accessibilityLabel={t.password} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={show ? 'visibility_off' : 'visibility'} size={22} color="grey600" />
+      </Pressable>
+    </View>
+  )
+}
+
 /** Simplified Tunisian flag (red field, white disc, crescent). */
 export function TnFlag() {
   return (

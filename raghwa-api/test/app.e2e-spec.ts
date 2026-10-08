@@ -18,7 +18,7 @@ describe('App: health, docs and HTTP hardening', () => {
     const customerPaths = Object.keys(customer.paths);
     expect(ownerPaths).toEqual(expect.arrayContaining(['/v1/owner/auth/login', '/v1/owner/garages/{garageId}/reservations']));
     expect(ownerPaths.every((p) => p.startsWith('/v1/owner/'))).toBe(true);
-    expect(customerPaths).toEqual(expect.arrayContaining(['/v1/auth/otp', '/v1/reservations', '/v1/garages/{garageId}/availability']));
+    expect(customerPaths).toEqual(expect.arrayContaining(['/v1/auth/register', '/v1/auth/login', '/v1/reservations', '/v1/garages/{garageId}/availability']));
     expect(customerPaths.some((p) => p.startsWith('/v1/owner/'))).toBe(false);
     expect(ownerPaths).not.toContain('/health');
 

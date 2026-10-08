@@ -44,8 +44,8 @@ API cross-origin, so add the web dev server's origin (e.g. `http://localhost:808
 
 ## Using it
 
-- Login is **phone number + SMS code** (no password): the account is created on the first login, then the app asks
-  for the customer's name. In development the code is printed in the API log: `docker compose logs -f api`.
+- **Sign up** with name, phone number and password (8+ characters), then **log in** with phone + password.
+  There is no SMS code and no password reset for customers yet.
 - The map lists published garages: within 100 km of the phone, nearest first, or all of them when location is off.
 - Booking: day + slot from the garage's real availability → services (+ optional car) → confirm. Payment is cash.
 - Reservations can be moved or cancelled until the slot starts (the API's rule).
