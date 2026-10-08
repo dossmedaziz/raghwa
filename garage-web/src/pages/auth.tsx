@@ -1,10 +1,12 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, Icon, LangSwitch, LogoMark, PasswordInput, PhoneInput } from '@/components/common'
 import { OtpField, useOtp } from '@/components/otp'
 import { digits, fx, phone, phoneLocal } from '@/lib/format'
+import { ownerApi } from '@/lib/api'
+import { errorCode, errorText, notifyError } from '@/lib/errors'
 import { notify, useT } from '@/lib/i18n'
 import { useStore } from '@/store'
 
@@ -81,32 +83,64 @@ function BackLink({ to, label }: { to: string; label: string }) {
   )
 }
 
-function Submit({ children }: { children: ReactNode }) {
-  return <Button type="submit" size="lg" className="mt-1 h-[50px] text-base">{children}</Button>
+function Submit({ children, busy }: { children: ReactNode; busy?: boolean }) {
+  return <Button type="submit" size="lg" disabled={busy} aria-busy={busy || undefined} className="mt-1 h-[50px] text-base">{children}</Button>
 }
 
 type Errors = Record<string, string | undefined>
 const hasErrors = (e: Errors) => Object.values(e).some(Boolean)
 
+/** Runs an async submit once at a time and exposes the pending state for the button. */
+function useBusy() {
+  const [busy, setBusy] = useState(false)
+  const run = async (fn: () => Promise<void>) => {
+    if (busy) return
+    setBusy(true)
+    try {
+      await fn()
+    } finally {
+      setBusy(false)
+    }
+  }
+  return { busy, run }
+}
+
 /* ───────────── Login ───────────── */
+
+// Development only: the account created by raghwa-api's seeder (`npm run seed`).
+const DEV_LOGIN = import.meta.env.DEV ? { phone: '52 226 876', password: 'testtest' } : { phone: '', password: '' }
 
 export function LoginPage() {
   const { t } = useT()
   const nav = useNavigate()
-  const login = useStore((s) => s.login)
+  const signIn = useStore((s) => s.signIn), startOtp = useStore((s) => s.startOtp)
   const prefill = (useLocation().state as { phone?: string } | null)?.phone
-  const [ph, setPh] = useState(prefill ?? '98 123 456')
-  const [pw, setPw] = useState(prefill ? '' : 'raghwa2026')
+  const [ph, setPh] = useState(prefill ? phoneLocal(prefill) : DEV_LOGIN.phone)
+  const [pw, setPw] = useState(prefill ? '' : DEV_LOGIN.password)
   const [show, setShow] = useState(false)
   const [err, setErr] = useState<Errors>({})
+  const { busy, run } = useBusy()
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const er: Errors = { phone: digits(ph).length !== 8 ? t.errPhone : undefined, pw: !pw ? t.errPassword : undefined }
     setErr(er)
     if (hasErrors(er)) return
-    login()
-    nav('/garages')
+    void run(async () => {
+      try {
+        signIn(await ownerApi.auth.login(digits(ph), pw))
+        nav('/garages')
+      } catch (error) {
+        const code = errorCode(error)
+        if (code === 'INVALID_CREDENTIALS') setErr({ pw: errorText(error, t) })
+        else if (code === 'PHONE_NOT_VERIFIED') {
+          // Sign-up never confirmed: send a fresh code and finish it.
+          await ownerApi.auth.resendSignup(digits(ph)).catch(() => undefined)
+          startOtp('signup', digits(ph))
+          nav('/verify')
+        } else notifyError(error)
+      }
+    })
   }
   return (
     <>
@@ -123,7 +157,7 @@ export function LoginPage() {
           <PasswordInput id="l-pw" autoComplete="current-password" value={pw} invalid={!!err.pw} show={show} onToggle={() => setShow(!show)}
             onChange={(v) => { setPw(v); setErr({ ...err, pw: undefined }) }} />
         </Field>
-        <Submit>{t.loginBtn}</Submit>
+        <Submit busy={busy}>{t.loginBtn}</Submit>
       </form>
       <p className="flex justify-center gap-1.5 text-muted-foreground">
         <span>{t.noAccount}</span>
@@ -142,6 +176,7 @@ export function SignupPage() {
   const [f, setF] = useState({ name: '', phone: '', pw: '', pw2: '' })
   const [show, setShow] = useState(false)
   const [err, setErr] = useState<Errors>({})
+  const { busy, run } = useBusy()
   const up = (k: keyof typeof f, v: string) => { setF({ ...f, [k]: k === 'phone' ? phoneLocal(v) : v }); setErr({ ...err, [k]: undefined }) }
 
   const submit = (e: FormEvent) => {
@@ -154,8 +189,18 @@ export function SignupPage() {
     }
     setErr(er)
     if (hasErrors(er)) return
-    startOtp('signup', f.phone)
-    nav('/verify')
+    void run(async () => {
+      try {
+        await ownerApi.auth.signup(f.name.trim(), digits(f.phone), f.pw)
+      } catch (error) {
+        const code = errorCode(error)
+        if (code === 'PHONE_TAKEN') return setErr({ phone: errorText(error, t) })
+        // A code was already sent a moment ago: it is still valid, go and type it.
+        if (code !== 'OTP_COOLDOWN') return notifyError(error)
+      }
+      startOtp('signup', digits(f.phone))
+      nav('/verify')
+    })
   }
   return (
     <>
@@ -173,7 +218,7 @@ export function SignupPage() {
         <Field id="s-pw2" label={t.confirmPw} error={err.pw2}>
           <Input id="s-pw2" type={show ? 'text' : 'password'} autoComplete="new-password" value={f.pw2} aria-invalid={!!err.pw2 || undefined} onChange={(e) => up('pw2', e.target.value)} />
         </Field>
-        <Submit>{t.signupBtn}</Submit>
+        <Submit busy={busy}>{t.signupBtn}</Submit>
       </form>
       <p className="flex justify-center gap-1.5 text-muted-foreground">
         <span>{t.haveAccount}</span>
@@ -192,11 +237,19 @@ export function ForgotPage() {
   const prefill = (useLocation().state as { phone?: string } | null)?.phone ?? ''
   const [ph, setPh] = useState(prefill)
   const [err, setErr] = useState<string>()
+  const { busy, run } = useBusy()
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (digits(ph).length !== 8) return setErr(t.errPhone)
-    startOtp('forgot', ph)
-    nav('/verify')
+    void run(async () => {
+      try {
+        await ownerApi.auth.forgot(digits(ph))
+      } catch (error) {
+        if (errorCode(error) !== 'OTP_COOLDOWN') return notifyError(error)
+      }
+      startOtp('forgot', digits(ph))
+      nav('/verify')
+    })
   }
   return (
     <>
@@ -206,7 +259,7 @@ export function ForgotPage() {
         <Field id="f-phone" label={t.phone} error={err}>
           <PhoneInput id="f-phone" value={ph} invalid={!!err} onChange={(v) => { setPh(phoneLocal(v)); setErr(undefined) }} />
         </Field>
-        <Submit>{t.sendCode}</Submit>
+        <Submit busy={busy}>{t.sendCode}</Submit>
       </form>
     </>
   )
@@ -218,18 +271,38 @@ export function VerifyPage() {
   const { t } = useT()
   const nav = useNavigate()
   const { purpose, phone: ph } = useStore((s) => s.otp)
-  const login = useStore((s) => s.login), selectGarage = useStore((s) => s.selectGarage)
-  const firstGarage = useStore((s) => s.garageIds[0])
-  const otp = useOtp()
+  const signIn = useStore((s) => s.signIn), setResetToken = useStore((s) => s.setResetToken), createGarage = useStore((s) => s.createGarage)
   const isForgot = purpose === 'forgot'
+  const otp = useOtp(async () => {
+    if (isForgot) await ownerApi.auth.forgot(ph)
+    else await ownerApi.auth.resendSignup(ph)
+  })
+  const { busy, run } = useBusy()
+
+  // The phone lives in memory only: after a reload, start the flow again.
+  if (!ph) return <Navigate to={isForgot ? '/forgot' : '/signup'} replace />
+
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!otp.validate()) return
-    if (isForgot) return nav('/reset-password')
-    login()
-    selectGarage(firstGarage)
-    notify('toastVerified')
-    nav('/onboarding')
+    void run(async () => {
+      try {
+        if (isForgot) {
+          setResetToken((await ownerApi.auth.verifyReset(ph, otp.code)).resetToken)
+          nav('/reset-password')
+          return
+        }
+        signIn(await ownerApi.auth.verifySignup(ph, otp.code))
+        notify('toastVerified')
+        // New owner: open onboarding on a fresh draft garage.
+        await createGarage()
+        nav('/onboarding')
+      } catch (error) {
+        const code = errorCode(error)
+        if (code.startsWith('OTP_') || code === 'NO_PENDING_SIGNUP') otp.fail(errorText(error, t))
+        else notifyError(error)
+      }
+    })
   }
   return (
     <>
@@ -244,8 +317,10 @@ export function VerifyPage() {
       </div>
       <form onSubmit={submit} className="flex flex-col gap-[18px]">
         <OtpField otp={otp} />
-        <Submit>{t.verify}</Submit>
-        <span className="rounded-[10px] bg-muted px-3 py-2 text-center text-[12.5px] text-muted-foreground">{t.otpDemo}</span>
+        <Submit busy={busy}>{t.verify}</Submit>
+        {import.meta.env.DEV && (
+          <span className="rounded-[10px] bg-muted px-3 py-2 text-center text-[12.5px] text-muted-foreground">{t.otpDemo}</span>
+        )}
       </form>
     </>
   )
@@ -256,17 +331,29 @@ export function VerifyPage() {
 export function NewPasswordPage() {
   const { t } = useT()
   const nav = useNavigate()
-  const ph = useStore((s) => s.otp.phone)
+  const { phone: ph, resetToken } = useStore((s) => s.otp)
   const [f, setF] = useState({ pw: '', pw2: '' })
   const [show, setShow] = useState(false)
   const [err, setErr] = useState<Errors>({})
+  const { busy, run } = useBusy()
+
+  if (!resetToken) return <Navigate to="/forgot" replace />
+
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const er: Errors = { pw: f.pw.length < 8 ? t.errPwShort : undefined, pw2: !f.pw2 || f.pw2 !== f.pw ? t.errPwMatch : undefined }
     setErr(er)
     if (hasErrors(er)) return
-    notify('toastPwReset')
-    nav('/login', { state: { phone: ph } })
+    void run(async () => {
+      try {
+        await ownerApi.auth.reset(resetToken, f.pw)
+        notify('toastPwReset')
+        nav('/login', { state: { phone: ph } })
+      } catch (error) {
+        notifyError(error)
+        if (errorCode(error) === 'INVALID_RESET_TOKEN') nav('/forgot', { state: { phone: ph } })
+      }
+    })
   }
   return (
     <>
@@ -280,7 +367,7 @@ export function NewPasswordPage() {
           <Input id="n-pw2" type={show ? 'text' : 'password'} value={f.pw2} aria-invalid={!!err.pw2 || undefined}
             onChange={(e) => { setF({ ...f, pw2: e.target.value }); setErr({ ...err, pw2: undefined }) }} />
         </Field>
-        <Submit>{t.savePw}</Submit>
+        <Submit busy={busy}>{t.savePw}</Submit>
       </form>
     </>
   )

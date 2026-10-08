@@ -7,10 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Field, Icon, SectionLabel } from '@/components/common'
 import { CapacityStepper, CopyHoursButton, HoursEditor, SlotDurationPicker, SlotStats } from '@/components/garage-editors'
 import { useResActions, useResFormat } from '@/components/reservations'
-import { NOW, TODAY, type BlockReason, type Reservation } from '@/data/mock'
+import { ownerApi } from '@/lib/api'
+import { nowTime, today } from '@/lib/clock'
+import { notifyError } from '@/lib/errors'
+import { invalidate, useQuery } from '@/lib/query'
+import type { BlockReason } from '@/lib/types'
 import { DAYS_S } from '@/data/i18n-strings'
 import { cn } from '@/lib/utils'
-import { addDays, dow, fmtDate, fx, genSlots, hash, mt, tm } from '@/lib/format'
+import { addDays, dow, fmtDate, fx, mt, tm } from '@/lib/format'
 import { notify, useT } from '@/lib/i18n'
 import { useSlotDuration, useStore } from '@/store'
 import { Page } from '@/layouts/app-layout'
@@ -18,22 +22,31 @@ import { Legend } from '@/pages/dashboard'
 
 type Cell = { d: string; t: string }
 
-/** Occupancy per slot: real bookings, plus deterministic fake load on other days so the week looks lived-in. */
-function useOccupancy() {
-  const reservations = useStore((s) => s.reservations), cap = useStore((s) => s.capacity)
-  const dur = useSlotDuration()
-  const live = reservations.filter((r) => r.status !== 'cancelled')
-  const inSlot = (r: Reservation, d: string, tt: string) => r.date === d && tm(r.time) >= tm(tt) && tm(r.time) < tm(tt) + dur
-  const occ = (d: string, tt: string) => {
-    const real = live.filter((r) => inSlot(r, d, tt)).length
-    if (d === TODAY) return Math.min(cap, real)
-    const hr = tm(tt) / 60
-    let w = (hr >= 9 && hr < 12) || (hr >= 16 && hr < 18.5) ? 0.85 : 0.45
-    if (dow(d) === 5) w += 0.25
-    if (d > addDays(TODAY, 4)) w *= 0.45
-    return Math.min(cap, Math.floor(hash(d + tt) * w * (cap + 0.99)) + real)
+/** One week of slot occupancy from the API (bookings, capacity, blocks). */
+function useWeek(ws: string) {
+  const garageId = useStore((s) => s.activeGarageId)!
+  const we = addDays(ws, 6)
+  const q = useQuery(`schedule:${garageId}:${ws}:${we}`, () => ownerApi.schedule.get(garageId, ws, we), { keepPrevious: true })
+  const byDate = new Map((q.data ?? []).map((d) => [d.date, d]))
+  const slot = (d: string, tt: string) => byDate.get(d)?.slots.find((x) => x.time === tt)
+  return {
+    ...q,
+    day: (d: string) => byDate.get(d),
+    slot,
+    occ: (d: string, tt: string) => slot(d, tt)?.booked ?? 0,
+    dayCount: (d: string) => (byDate.get(d)?.slots ?? []).reduce((a, x) => a + x.booked, 0),
   }
-  return { occ, cap, dur, list: (d: string, tt: string) => live.filter((r) => inSlot(r, d, tt)), dayCount: (d: string) => live.filter((r) => r.date === d).length }
+}
+
+/** The day's reservations starting inside one slot (slot dialog). */
+function useSlotBookings(cell: Cell | null, dur: number) {
+  const garageId = useStore((s) => s.activeGarageId)!
+  const q = useQuery(cell ? `slot-res:${garageId}:${cell.d}` : null, () =>
+    ownerApi.reservations.list(garageId, { from: cell!.d, to: cell!.d, order: 'asc', limit: 100 }),
+  )
+  if (!cell) return []
+  const start = tm(cell.t)
+  return (q.data?.items ?? []).filter((r) => r.status !== 'cancelled' && tm(r.time) >= start && tm(r.time) < start + dur)
 }
 
 const fill = (o: number, cap: number) => {
@@ -43,22 +56,35 @@ const fill = (o: number, cap: number) => {
 
 export function SchedulePage() {
   const { t, L, ic } = useT()
-  const hours = useStore((s) => s.hours), blocks = useStore((s) => s.blocks), slotBlocks = useStore((s) => s.slotBlocks)
-  const unblockDay = useStore((s) => s.unblockDay)
-  const { occ, cap, dur } = useOccupancy()
+  const garageId = useStore((s) => s.activeGarageId)!
+  const cap = useStore((s) => s.capacity)
   const [week, setWeek] = useState(0)
   const [hoursOpen, setHoursOpen] = useState(false)
   const [slot, setSlot] = useState<Cell | null>(null)
   const [blockDay, setBlockDay] = useState<string | null>(null)
-  const now = tm(NOW)
+  const td = today(), now = tm(nowTime())
+  const dur = useSlotDuration()
   const reasonL = (r: BlockReason) => ({ holiday: t.rHoliday, maintenance: t.rMaintenance, other: t.rOther })[r] ?? t.rOther
 
-  const ws = addDays(TODAY, -dow(TODAY) + week * 7)
-  const wd = [0, 1, 2, 3, 4, 5, 6].map((i) => { const d = addDays(ws, i), h = hours[i]; return { d, i, h, slots: h.open ? genSlots(h, dur) : [] } })
+  const ws = addDays(td, -dow(td) + week * 7)
+  const sched = useWeek(ws)
+  const wd = [0, 1, 2, 3, 4, 5, 6].map((i) => {
+    const d = addDays(ws, i), day = sched.day(d)
+    return { d, i, open: !!day?.isOpen, blocked: day?.blockedReason ?? null, slots: day?.slots.map((x) => x.time) ?? [] }
+  })
   const times = [...new Set(wd.flatMap((x) => x.slots))].sort((a, b) => tm(a) - tm(b))
+  const unblock = async (d: string) => {
+    try {
+      await ownerApi.schedule.unblockDay(garageId, d)
+      invalidate()
+      notify('toastUnblocked')
+    } catch (err) {
+      notifyError(err)
+    }
+  }
 
   return (
-    <Page title={t.navSchedule} sub={t.schedSub}>
+    <Page title={t.navSchedule} sub={t.schedSub} loading={sched.loading} error={sched.error} onRetry={sched.reload}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setWeek(week - 1)} aria-label="prev" className="border border-input text-ink-2"><Icon name={ic.back} /></Button>
@@ -78,20 +104,20 @@ export function SchedulePage() {
         </div>
       </div>
 
-      <Card className="max-h-[calc(100vh-250px)] gap-0 overflow-auto py-0">
+      <Card className={cn('max-h-[calc(100vh-250px)] gap-0 overflow-auto py-0 transition-opacity', sched.refreshing && 'opacity-60')}>
         <div className="min-w-[820px] px-3.5 pb-3.5">
           <div className="sticky top-0 z-2 mb-2 grid grid-cols-[58px_repeat(7,minmax(0,1fr))] gap-[5px] border-b border-line bg-white pt-3.5 pb-2">
             <span />
             {wd.map((x) => {
-              const isT = x.d === TODAY, bl = blocks[x.d], canBlock = x.h.open && !bl && x.d >= TODAY
-              const places = x.slots.length * cap, bk = x.slots.reduce((a, tt) => a + occ(x.d, tt), 0)
-              const sum = x.h.open ? bk + '/' + places : t.closed
+              const isT = x.d === td, bl = x.blocked, canBlock = x.open && !bl && x.d >= td
+              const places = x.slots.length * cap, bk = x.slots.reduce((a, tt) => a + Math.min(sched.occ(x.d, tt), cap), 0)
+              const sum = x.open ? bk + '/' + places : t.closed
               return (
                 <div key={x.d} className={cn('flex flex-col items-center gap-1 rounded-xl px-1 py-1.5', isT && 'bg-primary')}>
                   <span className={cn('text-[12.5px] font-semibold', isT ? 'text-[#C9DBF5]' : 'text-muted-foreground')}>{DAYS_S[L][x.i]}</span>
                   <span className={cn('font-latin text-lg font-bold', isT ? 'text-white' : 'text-foreground')}>{+x.d.slice(8)}</span>
                   {bl ? (
-                    <button type="button" onClick={() => { unblockDay(x.d); notify('toastUnblocked') }} title={t.unblockDay}
+                    <button type="button" onClick={() => void unblock(x.d)} title={t.unblockDay}
                       className="flex items-center gap-[3px] rounded-md bg-danger-soft px-2 py-0.5 text-[11.5px] font-bold text-danger-ink">
                       <Icon name="lock_open" size={14} />{reasonL(bl)}
                     </button>
@@ -112,11 +138,11 @@ export function SchedulePage() {
               <div key={tt} className="grid grid-cols-[58px_repeat(7,minmax(0,1fr))] gap-[5px]">
                 <span className="flex items-center font-latin text-xs font-semibold text-muted-foreground">{tt}</span>
                 {wd.map((x) => {
-                  if (!x.h.open) return <span key={x.d} title={t.closed} className="h-[34px] rounded-lg border border-dashed border-border bg-[#F7F8FA]" />
+                  if (!x.open) return <span key={x.d} title={t.closed} className="h-[34px] rounded-lg border border-dashed border-border bg-[#F7F8FA]" />
                   if (!x.slots.includes(tt)) return <span key={x.d} className="h-[34px]" />
-                  const past = x.d < TODAY || (x.d === TODAY && tm(tt) + dur <= now)
-                  const bl = blocks[x.d] || slotBlocks[x.d + '|' + tt]
-                  const o = occ(x.d, tt)
+                  const past = x.d < td || (x.d === td && tm(tt) + dur <= now)
+                  const bl = sched.slot(x.d, tt)?.blockedReason ?? null
+                  const o = sched.occ(x.d, tt)
                   return (
                     <button key={x.d} type="button" onClick={() => setSlot({ d: x.d, t: tt })}
                       title={bl ? t.blockedShort + ' · ' + reasonL(bl) : tt + ' · ' + o + '/' + cap}
@@ -134,18 +160,34 @@ export function SchedulePage() {
 
       <HoursDialog open={hoursOpen} onClose={() => setHoursOpen(false)} />
       {/* keyed so the reason picker resets for each slot/day */}
-      <SlotDialog key={slot ? 'slot-' + slot.d + slot.t : 'slot'} cell={slot} onClose={() => setSlot(null)} />
-      <BlockDayDialog key={'day-' + (blockDay ?? '')} day={blockDay} onClose={() => setBlockDay(null)} />
+      <SlotDialog key={slot ? 'slot-' + slot.d + slot.t : 'slot'} cell={slot} week={sched} onClose={() => setSlot(null)} />
+      <BlockDayDialog key={'day-' + (blockDay ?? '')} day={blockDay} bookings={blockDay ? sched.dayCount(blockDay) : 0} onClose={() => setBlockDay(null)} />
     </Page>
   )
 }
 
 function HoursDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useT()
-  const { isCustom, customDur } = useStore()
+  const { isCustom, customDur, saveHours, saveSlots, loadGarage } = useStore()
+  const [busy, setBusy] = useState(false)
   const bad = isCustom && !(+customDur >= 10 && +customDur <= 240)
+  // Closing without saving drops the edits (reload the saved values).
+  const dismiss = () => { loadGarage().catch(() => undefined); onClose() }
+  const save = async () => {
+    setBusy(true)
+    try {
+      await saveHours()
+      await saveSlots()
+      notify('toastSaved')
+      onClose()
+    } catch (err) {
+      notifyError(err)
+    } finally {
+      setBusy(false)
+    }
+  }
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => !o && dismiss()}>
       <DialogContent className="max-h-[calc(100vh-40px)] grid-rows-[auto_1fr_auto] gap-0 overflow-hidden rounded-[20px] p-0 shadow-modal sm:max-w-[880px]">
         <DialogHeader className="border-b border-line px-[22px] py-[18px]">
           <DialogTitle className="text-[17px] font-bold">{t.hoursTitle}</DialogTitle>
@@ -172,7 +214,8 @@ function HoursDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
           <SlotStats />
         </div>
         <DialogFooter className="mx-0 mb-0 rounded-none border-line bg-white px-[22px] pt-3.5 pb-[18px]">
-          <Button disabled={bad} onClick={() => { onClose(); notify('toastSaved') }}>{t.save}</Button>
+          <Button variant="outline" onClick={dismiss}>{t.cancel}</Button>
+          <Button disabled={bad || busy} onClick={() => void save()}>{t.save}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -190,17 +233,35 @@ function ReasonSelect({ value, onChange, order, id }: { value: BlockReason; onCh
   )
 }
 
-function SlotDialog({ cell, onClose }: { cell: Cell | null; onClose: () => void }) {
+function SlotDialog({ cell, week, onClose }: { cell: Cell | null; week: ReturnType<typeof useWeek>; onClose: () => void }) {
   const { t, L } = useT()
-  const { occ, cap, dur, list } = useOccupancy()
-  const blocks = useStore((s) => s.blocks), slotBlocks = useStore((s) => s.slotBlocks), toggle = useStore((s) => s.toggleSlotBlock)
+  const garageId = useStore((s) => s.activeGarageId)!
+  const cap = useStore((s) => s.capacity)
+  const dur = useSlotDuration()
+  const lst = useSlotBookings(cell, dur)
   const f = useResFormat()
   const act = useResActions()
   const [reason, setReason] = useState<BlockReason>('maintenance')
+  const [busy, setBusy] = useState(false)
   const reasonL = (r: BlockReason) => ({ holiday: t.rHoliday, maintenance: t.rMaintenance, other: t.rOther })[r]
   if (!cell) return <Dialog open={false} />
   const { d, t: tt } = cell
-  const o = occ(d, tt), lst = list(d, tt), slBl = slotBlocks[d + '|' + tt], canEdit = !blocks[d] && d >= TODAY
+  const dayBlocked = week.day(d)?.blockedReason ?? null
+  const o = week.occ(d, tt), slBl = dayBlocked ? null : (week.slot(d, tt)?.blockedReason ?? null), canEdit = !dayBlocked && d >= today()
+  const toggle = async () => {
+    setBusy(true)
+    try {
+      if (slBl) await ownerApi.schedule.unblockSlot(garageId, d, tt)
+      else await ownerApi.schedule.blockSlot(garageId, d, tt, reason)
+      invalidate()
+      notify(slBl ? 'toastUnblocked' : 'toastBlocked')
+      onClose()
+    } catch (err) {
+      notifyError(err)
+    } finally {
+      setBusy(false)
+    }
+  }
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent showCloseButton={false} className="gap-0 rounded-[20px] p-0 shadow-modal sm:max-w-[440px]">
@@ -229,14 +290,14 @@ function SlotDialog({ cell, onClose }: { cell: Cell | null; onClose: () => void 
             {slBl ? (
               <>
                 <span className="flex flex-1 items-center gap-1.5 font-semibold text-danger-ink"><Icon name="lock" size={18} />{t.blockedShort} · {reasonL(slBl)}</span>
-                <Button variant="outline" onClick={() => { toggle(d, tt, reason); notify('toastUnblocked'); onClose() }} className="text-primary">
+                <Button variant="outline" disabled={busy} onClick={() => void toggle()} className="text-primary">
                   <Icon name="lock_open" size={18} />{t.unblockSlot}
                 </Button>
               </>
             ) : (
               <>
                 <ReasonSelect value={reason} onChange={setReason} order={['maintenance', 'holiday', 'other']} />
-                <Button onClick={() => { toggle(d, tt, reason); notify('toastBlocked'); onClose() }} className="bg-ink-2 hover:bg-[#28344A]">
+                <Button disabled={busy} onClick={() => void toggle()} className="bg-ink-2 hover:bg-[#28344A]">
                   <Icon name="block" size={18} />{t.blockSlot}
                 </Button>
               </>
@@ -248,12 +309,25 @@ function SlotDialog({ cell, onClose }: { cell: Cell | null; onClose: () => void 
   )
 }
 
-function BlockDayDialog({ day, onClose }: { day: string | null; onClose: () => void }) {
+function BlockDayDialog({ day, bookings: n, onClose }: { day: string | null; bookings: number; onClose: () => void }) {
   const { t, L } = useT()
-  const block = useStore((s) => s.blockDay)
-  const { dayCount } = useOccupancy()
+  const garageId = useStore((s) => s.activeGarageId)!
   const [reason, setReason] = useState<BlockReason>('holiday')
-  const n = day ? dayCount(day) : 0
+  const [busy, setBusy] = useState(false)
+  const block = async () => {
+    if (!day) return
+    setBusy(true)
+    try {
+      await ownerApi.schedule.blockDay(garageId, day, reason)
+      invalidate()
+      notify('toastBlocked')
+      onClose()
+    } catch (err) {
+      notifyError(err)
+    } finally {
+      setBusy(false)
+    }
+  }
   return (
     <AlertDialog open={!!day} onOpenChange={(o) => !o && onClose()}>
       <AlertDialogContent className="gap-3.5 rounded-[20px] p-6 shadow-modal data-[size=default]:max-w-[420px] data-[size=default]:sm:max-w-[420px]">
@@ -272,7 +346,7 @@ function BlockDayDialog({ day, onClose }: { day: string | null; onClose: () => v
         </Field>
         <AlertDialogFooter className="mx-0 mb-0 mt-1 border-0 bg-transparent p-0">
           <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-          <Button onClick={() => { if (day) block(day, reason); notify('toastBlocked'); onClose() }} className="bg-ink-2 hover:bg-[#28344A]">{t.blockDay}</Button>
+          <Button disabled={busy} onClick={() => void block()} className="bg-ink-2 hover:bg-[#28344A]">{t.blockDay}</Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

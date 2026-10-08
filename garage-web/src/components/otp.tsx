@@ -3,15 +3,18 @@ import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import { FieldError } from '@/components/common'
 import { cn } from '@/lib/utils'
+import { notifyError } from '@/lib/errors'
 import { notify, useT } from '@/lib/i18n'
 
-const RESEND_SECONDS = 45
+// Matches the API cooldown (OTP_RESEND_COOLDOWN_SECONDS).
+const RESEND_SECONDS = 60
 
-/** 4-digit OTP state + resend countdown. */
-export function useOtp() {
+/** 4-digit OTP state + resend countdown. `onResend` asks the API for a new code. */
+export function useOtp(onResend?: () => Promise<void>) {
   const [code, setCode] = useState('')
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [timer, setTimer] = useState(RESEND_SECONDS)
+  const { t } = useT()
   useEffect(() => {
     if (timer <= 0) return
     const id = setTimeout(() => setTimer((x) => x - 1), 1000)
@@ -19,10 +22,19 @@ export function useOtp() {
   }, [timer])
   return {
     code, error, timer,
-    setCode: (v: string) => { setCode(v); setError(false) },
-    /** Returns true when the code is complete (any 4 digits pass in the demo). */
-    validate: () => { const ok = code.length === 4; setError(!ok); return ok },
-    resend: () => { setTimer(RESEND_SECONDS); setCode(''); notify('toastCodeSent') },
+    setCode: (v: string) => { setCode(v); setError(null) },
+    /** True when 4 digits were typed; the API decides whether they are right. */
+    validate: () => { const ok = code.length === 4; setError(ok ? null : t.errOtp); return ok },
+    /** Shows a message from the API (wrong or expired code) under the field. */
+    fail: (message: string) => { setError(message); setCode('') },
+    resend: async () => {
+      try {
+        await onResend?.()
+        setTimer(RESEND_SECONDS); setCode(''); setError(null); notify('toastCodeSent')
+      } catch (err) {
+        notifyError(err)
+      }
+    },
   }
 }
 
@@ -38,13 +50,13 @@ export function OtpField({ otp, large = true }: { otp: ReturnType<typeof useOtp>
         <InputOTP maxLength={4} pattern={REGEXP_ONLY_DIGITS} value={otp.code} onChange={otp.setCode} autoFocus inputMode="numeric" autoComplete="one-time-code">
           <InputOTPGroup className={large ? 'gap-3' : 'gap-2.5'}>
             {[0, 1, 2, 3].map((i) => (
-              <InputOTPSlot key={i} index={i} aria-invalid={otp.error || undefined}
+              <InputOTPSlot key={i} index={i} aria-invalid={!!otp.error || undefined}
                 className={cn(slot, otp.code[i] ? 'border-primary' : otp.error ? 'border-destructive' : 'border-input')} />
             ))}
           </InputOTPGroup>
         </InputOTP>
       </div>
-      <FieldError center>{otp.error ? t.errOtp : null}</FieldError>
+      <FieldError center>{otp.error}</FieldError>
       <div className="flex min-h-[22px] items-center justify-center gap-1.5 text-sm text-muted-foreground">
         {otp.timer > 0 ? (
           <>
@@ -52,7 +64,7 @@ export function OtpField({ otp, large = true }: { otp: ReturnType<typeof useOtp>
             <span dir="ltr" className="font-latin font-bold text-foreground">00:{String(otp.timer).padStart(2, '0')}</span>
           </>
         ) : (
-          <button type="button" onClick={otp.resend} className="font-bold text-primary underline">{t.resend}</button>
+          <button type="button" onClick={() => void otp.resend()} className="font-bold text-primary underline">{t.resend}</button>
         )}
       </div>
     </div>

@@ -5,7 +5,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { colors } from '@/theme'
 import { useT } from '@/lib/i18n'
 import { BackButton, Box, Bubbles, Icon, Text } from '@/components/ui'
-import { FOAM_A } from '@/data/mock'
+import { FOAM_A } from '@/data/constants'
 
 /** Tab bar content height (without the home-indicator inset). */
 export const TAB_H = 58

@@ -48,6 +48,18 @@ docker compose run --rm --no-deps api npm install
 E2E tests boot the real `AppModule` with a frozen clock (Wed 21 Oct 2026, 11:15 Tunis) and a fake SMS gateway
 that captures OTP codes. Each test starts from empty tables.
 
+## Development data (seeder)
+
+`docker compose up` runs `npm run seed` after the migrations. It creates a verified owner you can log in with
+from garage-web right away:
+
+| Phone | Password | Name |
+|---|---|---|
+| 52 226 876 | testtest | Mohamed Aziz Doss |
+
+The seeder is idempotent (an existing account is left as it is) and refuses to run when `NODE_ENV=production`.
+Run it by hand with `docker compose exec api npm run seed`. Seeds live in `src/database/seeds/`.
+
 ## Production
 
 ```bash

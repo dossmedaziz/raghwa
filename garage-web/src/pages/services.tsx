@@ -5,13 +5,11 @@ import { Icon } from '@/components/common'
 import { useServiceEditor, useServiceRows } from '@/components/garage-editors'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
-import { useStore } from '@/store'
 import { Page } from '@/layouts/app-layout'
 
 export function ServicesPage() {
   const { t } = useT()
-  const { services, countLabel, label } = useServiceRows()
-  const toggle = useStore((s) => s.toggleService)
+  const { services, countLabel, label, toggle } = useServiceRows()
   const ed = useServiceEditor()
   return (
     <Page title={t.navServices} sub={t.svcSub}

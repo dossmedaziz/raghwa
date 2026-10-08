@@ -60,6 +60,24 @@ export class OwnerAuthService {
     return this.tokens.signPasswordReset(owner.id);
   }
 
+  /** Texts a code to the new number. The number changes only once that code is confirmed. */
+  async requestPhoneChange(ownerId: string, newPhone: string): Promise<void> {
+    await this.assertPhoneFree(ownerId, newPhone);
+    await this.otp.send(newPhone, 'owner_phone');
+  }
+
+  async confirmPhoneChange(ownerId: string, newPhone: string, code: string): Promise<Owner> {
+    await this.assertPhoneFree(ownerId, newPhone);
+    await this.otp.verify(newPhone, 'owner_phone', code);
+    return this.owners.changePhone(ownerId, newPhone);
+  }
+
+  private async assertPhoneFree(ownerId: string, phone: string) {
+    const holder = await this.owners.findByPhone(phone);
+    if (holder?.id === ownerId) throw unprocessable('SAME_PHONE', 'This is already your phone number');
+    if (holder) throw conflict('PHONE_TAKEN', 'An account already exists for this phone number');
+  }
+
   /** Sets the new password and signs the owner out everywhere. */
   async resetPassword(resetToken: string, password: string): Promise<void> {
     const ownerId = await this.tokens.verifyPasswordReset(resetToken);

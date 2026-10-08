@@ -46,3 +46,43 @@ describe('Owner account (/v1/owner/me)', () => {
     await ctx.http().patch('/v1/owner/me/notifications').set(bearer(owner.token)).send({ newBooking: 'yes' }).expect(400);
   });
 });
+
+describe('Owner phone change (/v1/owner/me/phone)', () => {
+  let ctx: TestContext;
+  let owner: OwnerSession;
+  const newPhone = '55667788';
+
+  beforeAll(async () => (ctx = await createTestApp()));
+  beforeEach(async () => {
+    await ctx.reset();
+    owner = await ownerSession(ctx);
+  });
+  afterAll(() => ctx.close());
+
+  it('changes the number once the code sent to the new number is confirmed', async () => {
+    const sent = await ctx.http().post('/v1/owner/me/phone').set(bearer(owner.token)).send({ phone: '55 667 788' }).expect(202);
+    expect(sent.body).toEqual({ phone: newPhone, resendAfterSeconds: 60 });
+
+    const res = await ctx.http().post('/v1/owner/me/phone/verify').set(bearer(owner.token))
+      .send({ phone: newPhone, code: ctx.sms.lastCode(newPhone) }).expect(200);
+    expect(res.body.phone).toBe(newPhone);
+
+    await ctx.http().post('/v1/owner/auth/login').send({ phone: newPhone, password: owner.password }).expect(200);
+    await ctx.http().post('/v1/owner/auth/login').send({ phone: owner.phone, password: owner.password }).expect(401);
+  });
+
+  it('keeps the old number on a wrong code', async () => {
+    await ctx.http().post('/v1/owner/me/phone').set(bearer(owner.token)).send({ phone: newPhone }).expect(202);
+    const wrong = ctx.sms.lastCode(newPhone) === '0000' ? '1111' : '0000';
+    expect((await ctx.http().post('/v1/owner/me/phone/verify').set(bearer(owner.token)).send({ phone: newPhone, code: wrong }).expect(422)).body.code)
+      .toBe('OTP_INVALID');
+    expect((await ctx.http().get('/v1/owner/me').set(bearer(owner.token)).expect(200)).body.phone).toBe(owner.phone);
+  });
+
+  it('refuses a number used by another account, or the current one', async () => {
+    await ownerSession(ctx, newPhone);
+    expect((await ctx.http().post('/v1/owner/me/phone').set(bearer(owner.token)).send({ phone: newPhone }).expect(409)).body.code).toBe('PHONE_TAKEN');
+    expect((await ctx.http().post('/v1/owner/me/phone').set(bearer(owner.token)).send({ phone: owner.phone }).expect(422)).body.code).toBe('SAME_PHONE');
+    await ctx.http().post('/v1/owner/me/phone').set(bearer(owner.token)).send({ phone: '123' }).expect(400);
+  });
+});

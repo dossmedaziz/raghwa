@@ -1,62 +1,55 @@
 import { Link } from 'react-router'
 import { Card } from '@/components/ui/card'
 import { Icon, IconTile } from '@/components/common'
-import { resTotal, useResActions, useResFormat } from '@/components/reservations'
-import { NOW, OWNER, TODAY } from '@/data/mock'
+import { useResActions, useResFormat } from '@/components/reservations'
 import { MONTHS_L } from '@/data/i18n-strings'
 import { cn } from '@/lib/utils'
-import { addDays, dow, fmtDate, fx, genSlots, money, tm } from '@/lib/format'
+import { ownerApi } from '@/lib/api'
+import { nowTime, today } from '@/lib/clock'
+import { fmtDate, fx, money, tm } from '@/lib/format'
+import { useQuery } from '@/lib/query'
 import { useT } from '@/lib/i18n'
 import { useSlotDuration, useStore } from '@/store'
 import { Page } from '@/layouts/app-layout'
 
 export function DashboardPage() {
   const { t, L, ar } = useT()
-  const reservations = useStore((s) => s.reservations), stats = useStore((s) => s.stats)
-  const hours = useStore((s) => s.hours), cap = useStore((s) => s.capacity)
-  const blocks = useStore((s) => s.blocks), slotBlocks = useStore((s) => s.slotBlocks)
+  const garageId = useStore((s) => s.activeGarageId)!
+  const owner = useStore((s) => s.owner)
+  const td = today()
+  const dash = useQuery(`dashboard:${garageId}`, () => ownerApi.dashboard(garageId), { pollMs: 60_000, keepPrevious: true })
+  const sched = useQuery(`schedule:${garageId}:${td}`, () => ownerApi.schedule.get(garageId, td, td), { pollMs: 60_000, keepPrevious: true })
   const dur = useSlotDuration()
   const f = useResFormat()
   const act = useResActions()
-  const now = tm(NOW)
+  const now = tm(nowTime())
+  const d = dash.data
 
-  const live = reservations.filter((r) => r.status !== 'cancelled')
-  const todayRes = live.filter((r) => r.date === TODAY)
-  const weekEnd = addDays(TODAY, 6 - dow(TODAY))
-  const upWeek = reservations.filter((r) => r.status === 'upcoming' && r.date >= TODAY && r.date <= weekEnd).length
-  const base = reservations.length ? 1 : 0
-  const monthDone = base * stats.doneBase + reservations.filter((r) => r.status === 'done' && r.date.startsWith('2026-10')).length
-  const revenue = base * stats.revBase + live.filter((r) => r.date.startsWith('2026-10')).reduce((a, r) => a + resTotal(r), 0)
+  const kpis = d
+    ? [
+        { icon: 'today', label: t.kpiToday, value: d.todayTotal, sub: fx(t.kpiTodaySub, { n: d.todayUpcoming }), tile: 'bg-blue-wash text-primary' },
+        { icon: 'date_range', label: t.kpiWeek, value: d.upcomingThisWeek, sub: t.kpiWeekSub, tile: 'bg-cyan-wash text-teal' },
+        { icon: 'task_alt', label: t.kpiMonth, value: d.doneThisMonth, sub: MONTHS_L[L][+td.slice(5, 7) - 1] + ' ' + td.slice(0, 4), tile: 'bg-success-soft text-success' },
+        { icon: 'payments', label: t.kpiRevenue, value: money(d.revenueThisMonth, L), sub: t.kpiRevenueSub, tile: 'bg-amber-soft text-amber-ink' },
+      ]
+    : []
 
-  const kpis = [
-    { icon: 'today', label: t.kpiToday, value: todayRes.length, sub: fx(t.kpiTodaySub, { n: todayRes.filter((r) => r.status === 'upcoming').length }), tile: 'bg-blue-wash text-primary' },
-    { icon: 'date_range', label: t.kpiWeek, value: upWeek, sub: t.kpiWeekSub, tile: 'bg-cyan-wash text-teal' },
-    { icon: 'task_alt', label: t.kpiMonth, value: monthDone, sub: MONTHS_L[L][9] + ' 2026', tile: 'bg-success-soft text-success' },
-    { icon: 'payments', label: t.kpiRevenue, value: money(revenue, L), sub: t.kpiRevenueSub, tile: 'bg-amber-soft text-amber-ink' },
-  ]
-
-  // Today's timeline
-  const todayHours = hours[dow(TODAY)]
-  const timeline = genSlots(todayHours, dur).map((time) => {
-    const start = tm(time), end = start + dur
-    const n = todayRes.filter((r) => tm(r.time) >= start && tm(r.time) < end).length
-    const blocked = !!(blocks[TODAY] || slotBlocks[TODAY + '|' + time])
-    const full = n >= cap
-    return { time, n, blocked, full, isNow: now >= start && now < end, past: end <= now }
+  // Today's timeline, straight from the API's slot engine.
+  const day = sched.data?.[0]
+  const timeline = (day?.slots ?? []).map((s) => {
+    const start = tm(s.time), end = start + dur
+    return { time: s.time, n: s.booked, cap: s.capacity, blocked: !!s.blockedReason, full: s.booked >= s.capacity, isNow: now >= start && now < end, past: end <= now }
   })
+  const booked = timeline.reduce((a, s) => a + Math.min(s.n, s.cap), 0), places = timeline.reduce((a, s) => a + s.cap, 0)
 
-  const booked = timeline.reduce((a, s) => a + Math.min(s.n, cap), 0), places = timeline.length * cap
-
-  const nextRes = reservations
-    .filter((r) => r.status === 'upcoming')
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-    .slice(0, 5)
-
-  const chart = stats.chart.map(([d, v]) => [d, v ?? todayRes.length] as const)
+  const nextRes = d?.nextReservations ?? []
+  const chart = (d?.last7Days ?? []).map((x) => [x.date, x.count] as const)
   const cMax = Math.max(1, ...chart.map((x) => x[1]))
+  const firstName = owner?.name.split(' ')[0] ?? ''
 
   return (
-    <Page title={fx(t.hello, { name: ar ? OWNER.firstAr : OWNER.firstFr })} sub={fmtDate(TODAY, L, 'long')}>
+    <Page title={fx(t.hello, { name: firstName })} sub={fmtDate(td, L, 'long')} loading={dash.loading || sched.loading}
+      error={dash.error || sched.error} onRetry={() => { dash.reload(); sched.reload() }}>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
         {kpis.map((k) => (
           <Card key={k.icon} className="gap-2.5 px-5 py-[18px]">
@@ -96,11 +89,11 @@ export function DashboardPage() {
                   {s.isNow && <span className="rounded-md bg-aqua px-1.5 py-px text-[10.5px] font-bold text-[#05323B]">{t.now}</span>}
                 </div>
                 <div dir="ltr" className="flex gap-[3px]">
-                  {Array.from({ length: Math.min(cap, 8) }, (_, i) => (
+                  {Array.from({ length: Math.min(s.cap, 8) }, (_, i) => (
                     <span key={i} className={cn('h-1.5 flex-1 rounded-[3px]', i < s.n ? 'bg-aqua' : dark ? 'bg-white/28' : 'bg-border')} />
                   ))}
                 </div>
-                <span className="text-xs font-bold">{s.blocked ? t.blockedShort : s.full ? t.full : s.n + '/' + cap}</span>
+                <span className="text-xs font-bold">{s.blocked ? t.blockedShort : s.full ? t.full : s.n + '/' + s.cap}</span>
               </div>
             )
           })}
@@ -146,7 +139,7 @@ export function DashboardPage() {
           </div>
           <div className="flex min-h-[220px] flex-1 items-stretch gap-2.5 border-b pt-2">
             {chart.map(([d, v]) => {
-              const isT = d === TODAY
+              const isT = d === td
               return (
                 <div key={d} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
                   <span className={cn('font-latin text-[12.5px] font-bold', v === 0 ? 'text-subtle' : 'text-navy')}>{v === 0 ? t.closedShort : v}</span>
@@ -158,8 +151,8 @@ export function DashboardPage() {
           </div>
           <div className="-mt-1.5 flex gap-2.5">
             {chart.map(([d]) => (
-              <span key={d} className={cn('min-w-0 flex-1 text-center text-xs', d === TODAY ? 'font-bold text-teal' : 'font-medium text-muted-foreground')}>
-                {d === TODAY ? t.today : fmtDate(d, L, 'dshort')}
+              <span key={d} className={cn('min-w-0 flex-1 text-center text-xs', d === td ? 'font-bold text-teal' : 'font-medium text-muted-foreground')}>
+                {d === td ? t.today : fmtDate(d, L, 'dshort')}
               </span>
             ))}
           </div>

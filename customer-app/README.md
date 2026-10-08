@@ -1,7 +1,8 @@
 # Raghwa — customer app
 
 React Native + Expo (SDK 57, TypeScript) implementation of the Claude Design prototype
-(`../raghwa-customer-app-prototype/project/RaghwaApp.dc.html`). Frontend only: all data is fake.
+(`../raghwa-customer-app-prototype/project/RaghwaApp.dc.html`), backed by `../raghwa-api` (customer endpoints,
+docs at <http://localhost:3002/docs/customer>).
 
 **Stack:** React Navigation (native stack + bottom tabs) · Shopify Restyle (theme, `Box` / `Text`) ·
 FlashList (garage list, reservations) · Mapbox (`@rnmapbox/maps`) · Reanimated · Zustand + AsyncStorage.
@@ -16,6 +17,10 @@ Mapbox uses native code, so the app **does not run in Expo Go**: it runs in its 
    EXPO_PUBLIC_MAPBOX_TOKEN=pk.xxxxxxxx
    ```
    (`.env.example` shows the format; `.env.local` is git-ignored.)
+   **API** — start `raghwa-api` (`docker compose up -d` in `../raghwa-api`). In development the app calls
+   `http://<the machine running Metro>:3002`, which works from an emulator and from a phone on the same Wi-Fi.
+   Set `EXPO_PUBLIC_API_URL` in `.env.local` to use another address (required for preview/production builds,
+   which need HTTPS: Android blocks plain HTTP outside debug builds).
 2. **Android tooling (once)** — install Android Studio (it brings the Android SDK and a JDK 17), then:
    ```bash
    export ANDROID_HOME=$HOME/Android/Sdk
@@ -34,15 +39,21 @@ Mapbox uses native code, so the app **does not run in Expo Go**: it runs in its 
    and open the Raghwa app on the phone (not Expo Go). Rebuild with `npx expo run:android` only after
    adding native libraries or changing `app.json` plugins.
 
-Press `w` in `npx expo start` for the web version (static raster map, for quick UI checks).
+Press `w` in `npx expo start` for the web version (static raster map, for quick UI checks). The browser calls the
+API cross-origin, so add the web dev server's origin (e.g. `http://localhost:8081`) to `CORS_ORIGINS` in the API's `.env`.
 
-## Demo
+## Using it
 
-- Splash → language → intro → login (phone pre-filled, any password).
-- **OTP code: `1234`** (any other code shows the "wrong code" state).
-- "Not now" on the location screen shows the map's location-denied banner.
-- The demo clock is frozen on **Saturday 3 Oct 2026, 10:15**, so slot availability and the "< 2 h" lock look the same every time.
-- Language, onboarding and login are saved; bookings, cars and filters reset when the app restarts.
+- Login is **phone number + SMS code** (no password): the account is created on the first login, then the app asks
+  for the customer's name. In development the code is printed in the API log: `docker compose logs -f api`.
+- The map lists published garages: within 100 km of the phone, nearest first, or all of them when location is off.
+- Booking: day + slot from the garage's real availability → services (+ optional car) → confirm. Payment is cash.
+- Reservations can be moved or cancelled until the slot starts (the API's rule).
+- Dates and times are Tunis time (UTC+1, no DST), whatever the phone's time zone.
+- Saved on the phone: language, theme, session, cars, notification toggles. Cars have no API yet; the chosen car is
+  sent with each booking (brand, model, plate as `215 TU 4521`).
+- Not backed by the API yet, so not shown: ratings/reviews, garage photos, open/closed status on map cards,
+  service durations, changing phone number.
 - Turn off Wi-Fi/data to see the "No internet" screen on the Map and Reservations tabs.
 
 ## Right-to-left
@@ -69,8 +80,10 @@ App.tsx                    fonts, providers, navigators, start screen
 src/theme.ts               Restyle theme (colors, spacing, radii, type scale)
 src/store.ts               Zustand store + toast
 src/data/strings.ts        Derja + French text (verbatim from the design)
-src/data/mock.ts           garages, services, reservations, cars, reviews
-src/lib/                   i18n hook, formatting, garage helpers
+src/data/constants.ts      calendar names, fallback map centre, decorative bubbles
+src/lib/api.ts             raghwa-api client (tokens, refresh on 401, ApiError with the API's error code)
+src/lib/query.ts           useQuery (fetch + cache + invalidate after changes)
+src/lib/                   types, Tunis clock, errors → strings, location, i18n hook, formatting, garage helpers
 src/components/ui.tsx      Text, Icon, Button, inputs, chips, plate, sheet, dialog, toast
 src/components/screen.tsx  page layout, headers, bottom bars, tab bar
 src/components/GarageMap*  Mapbox map + web fallback

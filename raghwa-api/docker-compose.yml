@@ -6,10 +6,12 @@ services:
     build:
       context: .
       target: dev
-    # Apply pending migrations, then start Nest in watch mode.
-    command: sh -c "npm run migration:run && npm run start:dev"
+    # Apply pending migrations, seed the development data (idempotent), then start Nest in watch mode.
+    command: sh -c "npm run migration:run && npm run seed && npm run start:dev"
     env_file: .env
     environment:
+      # Inside the container the API always listens on 3000; PORT in .env only picks the host port below.
+      PORT: 3000
       DB_HOST: db
       DB_PORT: 5432
       # Used by `npm run test:e2e` inside this container.

@@ -4,7 +4,7 @@ import { useT } from '@/lib/i18n'
 import { useStore } from '@/store'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { Status } from '@/data/mock'
+import type { Status } from '@/lib/types'
 
 /** Material Symbols Rounded glyph (the design's icon set). */
 export function Icon({ name, size = 20, fill, className, style }: { name: string; size?: number; fill?: boolean; className?: string; style?: React.CSSProperties }) {

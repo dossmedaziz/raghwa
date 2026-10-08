@@ -44,6 +44,12 @@ export class OwnersService {
     return this.owners.save(owner);
   }
 
+  async changePhone(id: string, phone: string): Promise<Owner> {
+    const owner = await this.get(id);
+    owner.phone = phone;
+    return this.owners.save(owner);
+  }
+
   async setPassword(id: string, password: string): Promise<void> {
     await this.owners.update({ id }, { passwordHash: await hashPassword(password) });
   }

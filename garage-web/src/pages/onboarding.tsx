@@ -11,13 +11,18 @@ import {
   coordsLabel, useServiceEditor, useServiceRows, useSlotPreview,
 } from '@/components/garage-editors'
 import { DAYS } from '@/data/i18n-strings'
-import type { DayHours } from '@/data/mock'
+import { ApiError } from '@/lib/api'
+import { notifyError } from '@/lib/errors'
+import type { DayHours, MissingForPublish } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { digits, fx, iso, phoneLocal } from '@/lib/format'
 import { notify, useT } from '@/lib/i18n'
 import { useStore } from '@/store'
 
 type Errors = Partial<Record<'gName' | 'gPhone' | 'gAddress' | 'gArea' | 'customDur', string>>
+
+/** Onboarding step where each missing publish requirement is filled in. */
+const MISSING_STEP: Record<MissingForPublish, number> = { name: 1, phone: 1, address: 2, area: 2, location: 2, hours: 3, services: 5 }
 
 export function OnboardingPage() {
   const { t, ic } = useT()
@@ -26,11 +31,19 @@ export function OnboardingPage() {
   const [max, setMax] = useState(1)
   const [err, setErr] = useState<Errors>({})
   const g = useStore((s) => s.garage)
-  const { isCustom, customDur, publishGarage } = useStore()
-  const garageCount = useStore((s) => s.garageIds.length)
+  const { isCustom, customDur, saveProfile, saveHours, saveSlots, publish } = useStore()
+  const garageCount = useStore((s) => s.garages?.length ?? 0)
+  const activeServices = useStore((s) => s.services.filter((x) => x.active).length)
+  const [busy, setBusy] = useState(false)
 
   const go = (n: number) => { setStep(n); setErr({}); window.scrollTo(0, 0) }
-  const next = () => {
+  // Each step is saved to the API before moving on, so a draft can be finished later.
+  const saveStep = async (n: number) => {
+    if (n === 1 || n === 2) await saveProfile()
+    if (n === 3) await saveHours()
+    if (n === 4) await saveSlots()
+  }
+  const next = async () => {
     const e: Errors = {}
     if (step === 1) {
       if (!g.name.trim()) e.gName = t.errRequired
@@ -43,13 +56,25 @@ export function OnboardingPage() {
     if (step === 4 && isCustom && !(+customDur >= 10 && +customDur <= 240)) e.customDur = t.errDur
     setErr(e)
     if (Object.keys(e).length) return
-    if (step === 6) {
-      publishGarage()
-      notify('toastPublished')
-      return nav('/dashboard')
+    if (step === 5 && !activeServices) return notifyError(new ApiError(422, 'LAST_ACTIVE_SERVICE', ''))
+    setBusy(true)
+    try {
+      if (step === 6) {
+        await publish()
+        notify('toastPublished')
+        return nav('/dashboard')
+      }
+      await saveStep(step)
+      setMax(Math.max(max, step + 1))
+      go(step + 1)
+    } catch (error) {
+      notifyError(error)
+      // Publishing refused: jump to the first step that still misses something.
+      const missing = error instanceof ApiError ? (error.details as { missing?: MissingForPublish[] } | undefined)?.missing : undefined
+      if (missing?.length) go(Math.min(...missing.map((m) => MISSING_STEP[m])))
+    } finally {
+      setBusy(false)
     }
-    setMax(Math.max(max, step + 1))
-    go(step + 1)
   }
 
   return (
@@ -112,7 +137,7 @@ export function OnboardingPage() {
                 </Button>
               )}
             </div>
-            <Button size="lg" onClick={next} className={cn('px-[22px] text-[15px] shadow-[0_6px_16px_rgba(14,59,140,.22)]', step === 6 && 'bg-teal hover:bg-[#086C7D]')}>
+            <Button size="lg" disabled={busy} onClick={() => void next()} className={cn('px-[22px] text-[15px] shadow-[0_6px_16px_rgba(14,59,140,.22)]', step === 6 && 'bg-teal hover:bg-[#086C7D]')}>
               {step === 6 ? t.publish : t.next}
               <Icon name={step === 6 ? 'rocket_launch' : ic.next} />
             </Button>
@@ -212,8 +237,7 @@ function StepSlots({ err }: { err: Errors }) {
 
 function StepServices() {
   const { t } = useT()
-  const { services, countLabel, label } = useServiceRows()
-  const toggle = useStore((s) => s.toggleService)
+  const { services, countLabel, label, toggle } = useServiceRows()
   const ed = useServiceEditor()
   return (
     <>

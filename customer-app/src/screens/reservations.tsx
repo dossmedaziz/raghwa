@@ -1,18 +1,22 @@
-import { useEffect, useState } from 'react'
-import { Pressable, ScrollView, TextInput, View } from 'react-native'
+import { useState } from 'react'
+import { ScrollView, Pressable, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from '@/theme'
-import { Badge, BackButton, Box, Button, Chip, Icon, InfoRow, Notice, Segmented, Sheet, Skeleton, Text, Thumb } from '@/components/ui'
+import { Badge, BackButton, Box, Button, Icon, InfoRow, Notice, Plate, Segmented, Sheet, Skeleton, Text, Thumb } from '@/components/ui'
 import { MiniMap } from '@/components/GarageMap'
 import { OfflineView, useOnline } from '@/components/offline'
 import { useGarageActions } from '@/screens/garage'
-import { CARS0, NOWM, SVM, gById, svcPrice, type Reservation } from '@/data/mock'
-import type { SKey } from '@/data/strings'
-import { dLong, price, range } from '@/lib/format'
+import { api } from '@/lib/api'
+import { minutesUntil, today } from '@/lib/clock'
+import { errorKey, notifyError } from '@/lib/errors'
+import { dLong, iso, price } from '@/lib/format'
+import { svcName } from '@/lib/garage'
 import { useT } from '@/lib/i18n'
-import { toast, useStore } from '@/store'
+import { invalidate, useQuery } from '@/lib/query'
+import { carPlate, parsePlate, toast, useStore } from '@/store'
+import type { Reservation } from '@/lib/types'
 import type { ScreenProps, TabParams } from '@/navigation/types'
 import type { Color } from '@/theme'
 
@@ -20,30 +24,28 @@ type Seg = 'up' | 'past' | 'cancelled'
 
 /** Display model for a reservation. */
 function useResView() {
-  const { t, tr, li, L } = useT()
-  const cars = useStore((s) => s.cars)
+  const { t, tr, L } = useT()
   return (r: Reservation) => {
-    const g = gById(r.g)
-    const total = r.svc.reduce((a, id) => a + svcPrice(g, id), 0)
-    const mins = r.di * 1440 + r.m - NOWM
-    const badge: Record<Reservation['st'], [Color, Color, string, string]> = {
-      up: ['positiveTint', 'positiveInk', t.st_up, 'check_circle'],
-      done: ['positiveTint', 'positiveInk', t.st_done, 'task_alt'],
-      cancelled: ['negativeTint', 'negativeInk', t.st_cancelled, 'cancel'],
-    }
-    const car = cars.find((x) => x.id === r.car) ?? CARS0[0]
+    const mins = minutesUntil(r.date, r.time)
+    const upcoming = r.status === 'upcoming'
+    // Bookings from an earlier day that the garage never marked done: the API lists them under `past`.
+    const passed = upcoming && r.date < today()
+    const badge: [Color, Color, string, string] =
+      r.status === 'done' ? ['positiveTint', 'positiveInk', t.st_done, 'task_alt']
+        : r.status === 'cancelled' ? ['negativeTint', 'negativeInk', t.st_cancelled, 'cancel']
+          : passed ? ['grey100', 'grey600', t.past, 'history']
+            : ['positiveTint', 'positiveInk', t.st_up, 'check_circle']
     return {
-      ref: r.ref, g, name: g.n[li], addr: g.a[li], date: dLong(r.di, L), time: range(r.m, L), total: price(total, L),
-      chips: r.svc.map((id) => SVM[id].n[li]), lines: r.svc.map((id) => ({ id, name: SVM[id].n[li], price: price(svcPrice(g, id), L) })),
-      badge: badge[r.st], car: car.b + ' ' + car.m,
-      soon: r.st === 'up' && mins > 0 && mins < 24 * 60, soonText: tr('in_time', { h: Math.floor(mins / 60), m: String(mins % 60).padStart(2, '0') }),
-      // Changes are allowed until 2 h before the slot.
-      up: r.st === 'up' && mins >= 120, locked: r.st === 'up' && mins < 120, done: r.st === 'done', cancelled: r.st === 'cancelled', rating: r.rating ?? 0,
+      id: r.id, ref: r.ref, name: r.garage.name, addr: r.garage.address, date: dLong(r.date, L), time: iso(r.time, L), total: price(r.total, L),
+      chips: r.lines.map((l) => svcName(l, L)), lines: r.lines.map((l, i) => ({ key: (l.serviceId ?? '') + i, name: svcName(l, L), price: price(l.price, L) })),
+      badge, car: r.car ? [r.car.brand, r.car.model].filter(Boolean).join(' ') || '—' : '—', plate: parsePlate(r.car?.plate ?? null),
+      soon: upcoming && mins > 0 && mins < 24 * 60, soonText: tr('in_time', { h: Math.floor(mins / 60), m: String(mins % 60).padStart(2, '0') }),
+      // Changes are allowed until the slot starts.
+      up: upcoming && mins > 0, locked: upcoming && !passed && mins <= 0, ended: r.status === 'done' || passed,
+      cancelled: r.status === 'cancelled', byGarage: r.cancelledBy === 'garage',
     }
   }
 }
-
-let resSeen = false
 
 export function ReservationsScreen() {
   const { t } = useT()
@@ -51,7 +53,6 @@ export function ReservationsScreen() {
   const nav = useNavigation()
   const route = useRoute<RouteProp<TabParams, 'Reservations'>>()
   const online = useOnline()
-  const res = useStore((s) => s.res)
   const rv = useResView()
   const [seg, setSeg] = useState<Seg>(route.params?.seg ?? 'up')
   // Follow a segment passed by navigation (e.g. "My reservations" after booking).
@@ -61,18 +62,17 @@ export function ReservationsScreen() {
     setLastParam(paramSeg)
     if (paramSeg) setSeg(paramSeg)
   }
-  const [loading, setLoading] = useState(!resSeen)
-  useEffect(() => {
-    if (resSeen) return
-    resSeen = true
-    const id = setTimeout(() => setLoading(false), 1000)
-    return () => clearTimeout(id)
-  }, [])
+  const scope = seg === 'up' ? 'upcoming' : 'past'
+  const q = useQuery('res|' + scope, () => api.reservations.list(scope))
+  const [pulling, setPulling] = useState(false)
+  const refresh = async () => {
+    setPulling(true)
+    await q.reload()
+    setPulling(false)
+  }
 
-  const key = (r: Reservation) => r.di * 1440 + r.m
-  const list = res
-    .filter((r) => (seg === 'up' ? r.st === 'up' : seg === 'past' ? r.st === 'done' : r.st === 'cancelled'))
-    .sort((a, b) => (seg === 'up' ? key(a) - key(b) : key(b) - key(a)))
+  const items = q.data?.items ?? []
+  const list = seg === 'up' ? items : items.filter((r) => (seg === 'cancelled') === (r.status === 'cancelled'))
   const empty = { up: ['event_available', t.empty_up_t, t.empty_up_s], past: ['history', t.empty_past_t, t.empty_past_s], cancelled: ['event_busy', t.empty_can_t, t.empty_can_s] }[seg]
 
   if (!online) return <OfflineView />
@@ -83,10 +83,16 @@ export function ReservationsScreen() {
       <View style={{ marginHorizontal: 16 }}>
         <Segmented<Seg> value={seg} onChange={setSeg} items={[['up', t.upcoming], ['past', t.past_seg], ['cancelled', t.cancelled_seg]]} />
       </View>
-      {loading ? (
+      {q.loading ? (
         <Box gap="sm" padding="m">{[1, 2, 3, 4].map((k) => <CardSkeleton key={k} />)}</Box>
-      ) : list.length === 0 ? (
+      ) : q.error && !q.data ? (
         <Box flex={1} alignItems="center" justifyContent="center" gap="sm" style={{ padding: 24, paddingBottom: 48 }}>
+          <Icon name="cloud_off" size={56} color="grey400" />
+          <Text w={800} fontSize={20} align="center">{t[errorKey(q.error)]}</Text>
+          <Button label={t.retry} icon="refresh" height={48} fontSize={16} px={28} onPress={() => void q.reload()} />
+        </Box>
+      ) : list.length === 0 ? (
+        <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, paddingBottom: 48 }}>
           <View style={{ width: 150, height: 150, borderRadius: 75, backgroundColor: colors.skyTint, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
             <View style={{ position: 'absolute', top: 6, end: 10, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.decorA }} />
             <View style={{ position: 'absolute', bottom: 14, start: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: colors.decorB }} />
@@ -95,11 +101,12 @@ export function ReservationsScreen() {
           <Text w={800} fontSize={22} align="center">{empty[1]}</Text>
           <Text fontSize={15} color="grey600" lh={1.5} align="center" style={{ maxWidth: 280 }}>{empty[2]}</Text>
           <Button label={t.find_garage} icon="search" height={52} fontSize={16} px={28} style={{ marginTop: 8 }} onPress={() => nav.navigate('Tabs', { screen: 'Map' })} />
-        </Box>
+        </ScrollView>
       ) : (
-        <FlashList data={list} keyExtractor={(r) => r.ref} contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}
+        <FlashList data={list} keyExtractor={(r) => r.id} contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}
+          refreshing={pulling} onRefresh={refresh}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          renderItem={({ item }) => <ResCard v={rv(item)} onPress={() => nav.navigate('ResDetail', { ref: item.ref })} />} />
+          renderItem={({ item }) => <ResCard v={rv(item)} onPress={() => nav.navigate('ResDetail', { id: item.id })} />} />
       )}
     </View>
   )
@@ -125,7 +132,7 @@ function ResCard({ v, onPress }: { v: ReturnType<ReturnType<typeof useResView>>;
         <Box alignSelf="flex-start"><Badge label={v.soonText} bg="warningTint" fg="warningInk" icon="timer" /></Box>
       )}
       <Box flexDirection="row" flexWrap="wrap" gap="xs">
-        {v.chips.map((c) => <Box key={c} backgroundColor="grey100" borderRadius="pill" style={{ paddingHorizontal: 10, paddingVertical: 4 }}><Text w={600} fontSize={13}>{c}</Text></Box>)}
+        {v.chips.map((c, i) => <Box key={c + i} backgroundColor="grey100" borderRadius="pill" style={{ paddingHorizontal: 10, paddingVertical: 4 }}><Text w={600} fontSize={13}>{c}</Text></Box>)}
       </Box>
       <Box flexDirection="row" justifyContent="space-between" style={{ borderTopWidth: 1, borderTopColor: colors.grey120, paddingTop: 12 }}>
         <Text fontSize={15} color="grey600">{t.total}</Text>
@@ -148,92 +155,119 @@ function CardSkeleton() {
   )
 }
 
-const REASONS: SKey[] = ['r1', 'r2', 'r3', 'r4', 'r5']
-
 export function ResDetailScreen({ navigation, route }: ScreenProps<'ResDetail'>) {
-  const { t, tr, li } = useT()
+  const { t } = useT()
   const insets = useSafeAreaInsets()
-  const s = useStore()
-  const r = s.res.find((x) => x.ref === route.params.ref) ?? s.res[0]
-  const v = useResView()(r)
-  const act = useGarageActions(v.g)
+  const { id } = route.params
+  const q = useQuery('res|' + id, () => api.reservations.get(id))
+  const r = q.data
+  const v = useResView()
+  const act = useGarageActions(r?.garage)
+  const cars = useStore((s) => s.cars), startBooking = useStore((s) => s.startBooking), startResched = useStore((s) => s.startResched)
   const [cancelOpen, setCancelOpen] = useState(false)
-  const [reasons, setReasons] = useState<SKey[]>([])
-  const [rateOpen, setRateOpen] = useState(false)
-  const [stars, setStars] = useState(0)
-  const [comment, setComment] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  const bookAgain = () => { s.startBooking(r.g, { svc: [...r.svc], car: r.car }); navigation.navigate('Book1') }
+  const header = (
+    <Box flexDirection="row" alignItems="center" gap="sm" height={56} paddingHorizontal="m">
+      <BackButton />
+      <Text w={800} fontSize={18} style={{ flex: 1 }}>{t.res_detail}</Text>
+    </Box>
+  )
+  if (!r) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
+        {header}
+        {q.error ? (
+          <Box alignItems="center" gap="s" style={{ padding: 24 }}>
+            <Text w={700} fontSize={17} align="center">{t[errorKey(q.error)]}</Text>
+            <Button label={t.retry} icon="refresh" variant="secondary" height={44} fontSize={15} px={20} onPress={() => void q.reload()} />
+          </Box>
+        ) : (
+          <Box gap="sm" padding="m"><CardSkeleton /><CardSkeleton /></Box>
+        )}
+      </View>
+    )
+  }
+
+  const d = v(r)
+  const bookAgain = () => {
+    const sameCar = cars.find((c) => r.car?.plate && carPlate(c) === r.car.plate)
+    startBooking(r.garage.id, { svc: r.lines.flatMap((l) => (l.serviceId ? [l.serviceId] : [])), ...(sameCar ? { car: sameCar.id } : {}) })
+    navigation.navigate('Book1')
+  }
+  const cancel = async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      await api.reservations.cancel(r.id)
+      setCancelOpen(false)
+      invalidate()
+      toast('cancelled_toast')
+    } catch (x) {
+      setCancelOpen(false)
+      notifyError(x)
+      invalidate()
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
-      <Box flexDirection="row" alignItems="center" gap="sm" height={56} paddingHorizontal="m">
-        <BackButton />
-        <Text w={800} fontSize={18} style={{ flex: 1 }}>{t.res_detail}</Text>
-      </Box>
+      {header}
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: insets.bottom + 40, gap: 20 }} showsVerticalScrollIndicator={false}>
         <Box flexDirection="row" alignItems="center" justifyContent="space-between">
-          <Badge label={v.badge[2]} bg={v.badge[0]} fg={v.badge[1]} icon={v.badge[3]} size={14} />
-          <Text latin w={700} fontSize={14} color="grey600">{v.ref}</Text>
+          <Badge label={d.badge[2]} bg={d.badge[0]} fg={d.badge[1]} icon={d.badge[3]} size={14} />
+          <Text latin w={700} fontSize={14} color="grey600">{d.ref}</Text>
         </Box>
         <Box flexDirection="row" alignItems="center" gap="sm">
           <Thumb size={64} radius={14} icon={28} />
           <Box flex={1} minWidth={0}>
-            <Text w={800} fontSize={20} lh={1.3}>{v.name}</Text>
-            <Text fontSize={14} color="grey600" style={{ marginTop: 2 }}>{v.addr}</Text>
+            <Text w={800} fontSize={20} lh={1.3}>{d.name}</Text>
+            <Text fontSize={14} color="grey600" style={{ marginTop: 2 }}>{d.addr}</Text>
           </Box>
         </Box>
         <View style={{ borderRadius: 16, borderWidth: 1, borderColor: colors.grey150 }}>
-          <InfoRow icon="calendar_today" label={t.date} value={v.date} />
-          <InfoRow icon="schedule" label={t.time} value={v.time} />
-          <InfoRow icon="directions_car" label={t.car} value={v.car} />
+          <InfoRow icon="calendar_today" label={t.date} value={d.date} />
+          <InfoRow icon="schedule" label={t.time} value={d.time} />
+          <InfoRow icon="directions_car" label={t.car} value={d.car} />
           <InfoRow icon="payments" label={t.payment} value={t.cash} last />
         </View>
+        {d.plate && <Box alignSelf="flex-start"><Plate ps={d.plate.ps} pn={d.plate.pn} /></Box>}
         <Box gap="s">
-          {v.lines.map((l) => (
-            <Box key={l.id} flexDirection="row" justifyContent="space-between"><Text fontSize={15}>{l.name}</Text><Text w={600} fontSize={15}>{l.price}</Text></Box>
+          {d.lines.map((l) => (
+            <Box key={l.key} flexDirection="row" justifyContent="space-between" gap="s"><Text fontSize={15} style={{ flexShrink: 1 }}>{l.name}</Text><Text w={600} fontSize={15}>{l.price}</Text></Box>
           ))}
           <View style={{ height: 1, backgroundColor: colors.grey150 }} />
           <Box flexDirection="row" justifyContent="space-between" alignItems="baseline">
             <Text w={800} fontSize={17}>{t.total}</Text>
-            <Text w={800} fontSize={22}>{v.total}</Text>
+            <Text w={800} fontSize={22}>{d.total}</Text>
           </Box>
         </Box>
-        <MiniMap lat={v.g.lat} lon={v.g.lon} />
+        {r.garage.location && <MiniMap lat={r.garage.location.latitude} lon={r.garage.location.longitude} />}
         <Box flexDirection="row" gap="sm">
           <Button label={t.directions} icon="directions" variant="secondary" height={48} fontSize={15} flex={1} onPress={act.directions} />
-          <Button label={t.call} icon="call" variant="secondary" height={48} fontSize={15} flex={1} onPress={act.call} />
+          {act.canCall && <Button label={t.call} icon="call" variant="secondary" height={48} fontSize={15} flex={1} onPress={act.call} />}
         </Box>
 
-        {v.up && (
+        {d.up && (
           <Box gap="s">
-            <Button label={t.reschedule} icon="edit_calendar" onPress={() => { s.startResched(r.ref); navigation.navigate('Book1') }} />
-            <Button label={t.cancel} variant="destructiveSoft" onPress={() => { setReasons([]); setCancelOpen(true) }} />
+            <Button label={t.reschedule} icon="edit_calendar" onPress={() => { startResched(r); navigation.navigate('Book1') }} />
+            <Button label={t.cancel} variant="destructiveSoft" onPress={() => setCancelOpen(true)} />
             <Text fontSize={13} color="grey600" align="center" style={{ marginTop: 4 }}>{t.cancel_note}</Text>
           </Box>
         )}
-        {v.locked && (
+        {d.locked && (
           <Box gap="s">
             <Notice icon="lock_clock" tone="warning">{t.locked}</Notice>
             <Button label={t.reschedule} disabled />
             <Button label={t.cancel} disabled />
           </Box>
         )}
-        {v.done && (
+        {d.ended && <Button label={t.book_again} icon="replay" onPress={bookAgain} />}
+        {d.cancelled && (
           <Box gap="s">
-            {v.rating > 0 && (
-              <Box flexDirection="row" alignItems="center" justifyContent="space-between" borderRadius="card" backgroundColor="grey50" style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-                <Text w={600} fontSize={15}>{t.your_rating}</Text>
-                <Box flexDirection="row" gap="xxs">{[1, 2, 3, 4, 5].map((i) => <Icon key={i} name="star" size={20} color={i <= v.rating ? 'ink' : 'grey300'} />)}</Box>
-              </Box>
-            )}
-            <Button label={t.book_again} icon="replay" onPress={bookAgain} />
-            {v.rating === 0 && <Button label={t.rate} icon="star" variant="secondary" onPress={() => { setStars(0); setComment(''); setRateOpen(true) }} />}
-          </Box>
-        )}
-        {v.cancelled && (
-          <Box gap="s">
-            <Notice icon="event_busy" tone="negative" align="center">{t.cancelled_on}</Notice>
+            <Notice icon="event_busy" tone="negative" align="center">{d.byGarage ? t.cancelled_by_garage : t.cancelled_on}</Notice>
             <Button label={t.book_again} onPress={bookAgain} />
           </Box>
         )}
@@ -243,40 +277,12 @@ export function ResDetailScreen({ navigation, route }: ScreenProps<'ResDetail'>)
         <Box gap="ml" style={{ paddingHorizontal: 16, paddingTop: 10 }}>
           <Box>
             <Text w={800} fontSize={24}>{t.cancel_t}</Text>
-            <Text fontSize={15} color="grey600" style={{ marginTop: 6 }}>{v.date} · {v.time}</Text>
+            <Text fontSize={15} color="grey600" style={{ marginTop: 6 }}>{d.date} · {d.time}</Text>
           </Box>
           <Box gap="s">
-            <Text w={700} fontSize={15}>{t.cancel_s}</Text>
-            <Box flexDirection="row" flexWrap="wrap" gap="s">
-              {REASONS.map((k) => {
-                const on = reasons.includes(k)
-                return <Chip key={k} label={t[k]} on={on} icon={on ? 'check' : undefined} onPress={() => setReasons(on ? reasons.filter((x) => x !== k) : [...reasons, k])} />
-              })}
-            </Box>
-          </Box>
-          <Box gap="s">
-            <Button label={t.yes_cancel} variant="destructive" onPress={() => { s.cancelRes(r.ref); setCancelOpen(false); toast('cancelled_toast') }} />
+            <Button label={t.yes_cancel} variant="destructive" loading={busy} onPress={cancel} />
             <Button label={t.keep} variant="secondary" onPress={() => setCancelOpen(false)} />
           </Box>
-        </Box>
-      </Sheet>
-
-      <Sheet visible={rateOpen} onClose={() => setRateOpen(false)}>
-        <Box gap="ml" style={{ paddingHorizontal: 16, paddingTop: 10 }}>
-          <Box alignItems="center">
-            <Text w={800} fontSize={24} align="center">{t.rate_t}</Text>
-            <Text fontSize={15} color="grey600" align="center" style={{ marginTop: 6 }}>{v.g.n[li]}</Text>
-          </Box>
-          <Box flexDirection="row" justifyContent="center" gap="s" style={{ direction: 'ltr' }}>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Pressable key={i} onPress={() => setStars(i)} accessibilityLabel={tr('plus', { r: i })} style={{ width: 52, height: 52, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={i <= stars ? 'star' : 'star_border'} size={48} color={i <= stars ? 'warning' : 'grey300'} />
-              </Pressable>
-            ))}
-          </Box>
-          <TextInput value={comment} onChangeText={setComment} placeholder={t.comment_ph} placeholderTextColor={colors.grey450} multiline numberOfLines={3}
-            style={{ minHeight: 90, borderRadius: 12, backgroundColor: colors.grey100, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, textAlignVertical: 'top', fontFamily: li === 0 ? 'Cairo_400Regular' : 'Inter_400Regular', textAlign: li === 0 ? 'right' : 'left' }} />
-          <Button label={t.send} disabled={stars === 0} onPress={() => { s.rateRes(r.ref, stars); setRateOpen(false); toast('thanks_toast') }} />
         </Box>
       </Sheet>
     </View>

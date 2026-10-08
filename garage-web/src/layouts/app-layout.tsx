@@ -1,16 +1,20 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router'
+import { useEffect, type ReactNode } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { GarageAvatar, Icon, LangSwitch, LogoMark } from '@/components/common'
 import { CancelReservationDialog, ReservationDrawer } from '@/components/reservations'
-import { OWNER } from '@/data/mock'
 import { cn } from '@/lib/utils'
-import { phone } from '@/lib/format'
+import { fmtDate, fx, phone } from '@/lib/format'
+import { ownerApi } from '@/lib/api'
+import { localDateTime, today } from '@/lib/clock'
+import { notifyError } from '@/lib/errors'
+import { useQuery } from '@/lib/query'
+import type { NotificationDto } from '@/lib/types'
 import { notify, useT } from '@/lib/i18n'
-import { listGarages, useStore } from '@/store'
+import { useStore } from '@/store'
 
 const NAV = [
   ['/dashboard', 'space_dashboard', 'navDashboard'],
@@ -23,13 +27,8 @@ const NAV = [
 
 export function AppLayout() {
   const { pathname } = useLocation()
-  // Brief skeleton on every page change, as in the prototype: loading until the timer marks this path as shown.
-  const [shown, setShown] = useState<string | null>(null)
-  const loading = shown !== pathname
   useEffect(() => {
     window.scrollTo(0, 0)
-    const id = setTimeout(() => setShown(pathname), 600)
-    return () => clearTimeout(id)
   }, [pathname])
 
   return (
@@ -38,7 +37,7 @@ export function AppLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
         <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-[22px] px-[clamp(16px,2.4vw,32px)] pt-7 pb-12">
-          <Outlet context={{ loading }} />
+          <Outlet />
         </main>
       </div>
       <ReservationDrawer />
@@ -49,7 +48,7 @@ export function AppLayout() {
 
 function useLogout() {
   const nav = useNavigate(), logout = useStore((s) => s.logout)
-  return () => { logout(); nav('/login') }
+  return () => { void logout(); nav('/login') }
 }
 
 function Sidebar() {
@@ -91,10 +90,21 @@ function TopBar() {
   const { t, ar } = useT()
   const nav = useNavigate()
   const logout = useLogout()
-  const garage = useStore((s) => s.garage), published = useStore((s) => s.published), ownerPhone = useStore((s) => s.ownerPhone)
-  const notifs = useStore((s) => s.notifs), markAllRead = useStore((s) => s.markAllRead)
-  const unread = notifs.filter((n) => n.unread).length
-  const ownerName = ar ? OWNER.ar : OWNER.fr
+  const garage = useStore((s) => s.garage), published = useStore((s) => s.published), owner = useStore((s) => s.owner)
+  const garageId = useStore((s) => s.activeGarageId)
+  // Polled so new bookings show up without reloading the page.
+  const notifs = useQuery(garageId && 'notifs:' + garageId, () => ownerApi.notifications.list(garageId!), { pollMs: 60_000, keepPrevious: true })
+  const unread = notifs.data?.unread ?? 0
+  const ownerName = owner?.name ?? ''
+  const markAllRead = async () => {
+    try {
+      await ownerApi.notifications.readAll(garageId!)
+      notifs.reload()
+      notify('toastRead')
+    } catch (err) {
+      notifyError(err)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-20 flex h-[68px] items-center gap-3.5 border-b bg-white px-6">
@@ -131,25 +141,21 @@ function TopBar() {
         <PopoverContent align="end" sideOffset={8} className="w-[360px] max-w-[calc(100vw-32px)] gap-0 overflow-hidden rounded-2xl p-0 shadow-pop">
           <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
             <span className="text-[15px] font-bold">{t.notifications}</span>
-            <button type="button" onClick={() => { markAllRead(); notify('toastRead') }} className="text-[13px] font-semibold text-primary">{t.markAllRead}</button>
+            {unread > 0 && <button type="button" onClick={() => void markAllRead()} className="text-[13px] font-semibold text-primary">{t.markAllRead}</button>}
           </div>
-          {notifs.map((n, i) => (
-            <div key={i} className={cn('flex gap-3 border-b border-line-soft px-4 py-3 last:border-b-0', n.unread ? 'bg-[#F5F9FE]' : 'bg-white')}>
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-teal-soft text-teal"><Icon name={n.icon} /></span>
-              <div className="flex flex-1 flex-col gap-0.5">
-                <span className={cn('text-[13.5px] leading-snug', n.unread ? 'font-bold' : 'font-medium')}>{ar ? n.ar : n.fr}</span>
-                <span className="text-xs text-muted-foreground">{ar ? n.tAr : n.tFr}</span>
-              </div>
-              {n.unread && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />}
-            </div>
-          ))}
+          <div className="max-h-[420px] overflow-y-auto">
+            {notifs.data?.items.map((n) => <NotificationRow key={n.id} n={n} />)}
+            {notifs.data && !notifs.data.items.length && (
+              <div className="px-4 py-8 text-center text-[13.5px] text-muted-foreground">{t.noNotifs}</div>
+            )}
+          </div>
         </PopoverContent>
       </Popover>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" aria-label={ownerName} className="flex items-center gap-2 rounded-xl p-1 hover:bg-muted">
-            <span className="flex size-[38px] items-center justify-center rounded-full bg-cyan-wash text-sm font-bold text-teal-ink">{ar ? 'ك' : 'K'}</span>
+            <span className="flex size-[38px] items-center justify-center rounded-full bg-cyan-wash text-sm font-bold text-teal-ink">{ownerName.trim().charAt(0).toUpperCase()}</span>
             <Icon name="expand_more" className="hidden text-muted-foreground min-[980px]:inline-block" />
           </button>
         </DropdownMenuTrigger>
@@ -157,7 +163,7 @@ function TopBar() {
           <div className="flex flex-col gap-0.5 px-3 pt-2.5 pb-3">
             <span className="font-bold">{ownerName}</span>
             <span className="text-[12.5px] text-muted-foreground">{t.owner}</span>
-            <span dir="ltr" className="text-start font-latin text-[12.5px] text-muted-foreground">{phone(ownerPhone)}</span>
+            {owner && <span dir="ltr" className="text-start font-latin text-[12.5px] text-muted-foreground">{phone(owner.phone)}</span>}
           </div>
           <DropdownMenuSeparator className="mb-1.5" />
           <DropdownMenuItem onSelect={() => nav('/garages')} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
@@ -178,36 +184,61 @@ function TopBar() {
   )
 }
 
+const NOTIF_ICON = { reservation_created: 'event_available', reservation_cancelled: 'event_busy', reservation_rescheduled: 'update' } as const
+
+function NotificationRow({ n }: { n: NotificationDto }) {
+  const { t, L } = useT()
+  const day = (d: string) => (d === today() ? t.today : fmtDate(d, L, 'dm'))
+  const vars = { name: n.data.customerName ?? t.someone, d: day(n.data.date), t: n.data.time }
+  const text = fx({ reservation_created: t.nfCreated, reservation_cancelled: t.nfCancelled, reservation_rescheduled: t.nfRescheduled }[n.type], vars)
+  const at = localDateTime(n.createdAt)
+  return (
+    <div className={cn('flex gap-3 border-b border-line-soft px-4 py-3 last:border-b-0', n.unread ? 'bg-[#F5F9FE]' : 'bg-white')}>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-teal-soft text-teal"><Icon name={NOTIF_ICON[n.type]} /></span>
+      <div className="flex flex-1 flex-col gap-0.5">
+        <span className={cn('text-[13.5px] leading-snug', n.unread ? 'font-bold' : 'font-medium')}>{text}</span>
+        <span className="text-xs text-muted-foreground">{day(at.date)} · {at.time}</span>
+      </div>
+      {n.unread && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />}
+    </div>
+  )
+}
+
 /** Dropdown on the garage name: jump straight to another garage, or open the full picker. */
 function GarageSwitcher({ children }: { children: ReactNode }) {
   const { t } = useT()
   const nav = useNavigate()
-  const state = useStore()
-  const garages = listGarages(state)
+  const garages = useStore((s) => s.garages) ?? []
+  const activeGarageId = useStore((s) => s.activeGarageId)
+  const loadGarages = useStore((s) => s.loadGarages), selectGarage = useStore((s) => s.selectGarage), createGarage = useStore((s) => s.createGarage)
+  useEffect(() => {
+    loadGarages().catch(() => undefined)
+  }, [loadGarages])
   const pick = (id: string, published: boolean) => {
-    if (id !== state.activeGarageId) state.selectGarage(id)
+    if (id !== activeGarageId) selectGarage(id).catch(notifyError)
     nav(published ? '/dashboard' : '/onboarding')
   }
+  const add = () => createGarage().then(() => nav('/onboarding'), notifyError)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align="start" sideOffset={8} className="w-[300px] rounded-2xl p-2 shadow-pop">
         <span className="block px-3 pt-2 pb-1.5 text-xs font-bold text-muted-foreground">{t.switchGarage}</span>
         {garages.map((g) => (
-          <DropdownMenuItem key={g.id} onSelect={() => pick(g.id, g.published)} className="gap-3 rounded-[10px] px-3 py-2.5">
-            <GarageAvatar name={g.garage.name} size={32} className="rounded-lg text-xs" />
+          <DropdownMenuItem key={g.id} onSelect={() => pick(g.id, g.status === 'published')} className="gap-3 rounded-[10px] px-3 py-2.5">
+            <GarageAvatar name={g.name} size={32} className="rounded-lg text-xs" />
             <span className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="truncate text-sm font-semibold">{g.garage.name || t.untitledGarage}</span>
-              <span className="truncate text-xs text-muted-foreground">{g.published ? g.garage.area : t.draft}</span>
+              <span className="truncate text-sm font-semibold">{g.name || t.untitledGarage}</span>
+              <span className="truncate text-xs text-muted-foreground">{g.status === 'published' ? g.area : t.draft}</span>
             </span>
-            {g.id === state.activeGarageId && <Icon name="check" className="text-primary" />}
+            {g.id === activeGarageId && <Icon name="check" className="text-primary" />}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator className="my-1.5" />
         <DropdownMenuItem onSelect={() => nav('/garages')} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
           <Icon name="garage_home" className="text-muted-foreground" />{t.allGarages}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => { state.addGarage(); nav('/onboarding') }} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
+        <DropdownMenuItem onSelect={() => void add()} className="gap-2.5 rounded-[10px] px-3 py-2.5 text-sm">
           <Icon name="add" className="text-muted-foreground" />{t.addGarage}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -215,9 +246,11 @@ function GarageSwitcher({ children }: { children: ReactNode }) {
   )
 }
 
-/** Page title + optional action, then a skeleton or the page body. */
-export function Page({ title, sub, action, children }: { title: string; sub: string; action?: ReactNode; children: ReactNode }) {
-  const { loading } = useOutletContext<{ loading: boolean }>()
+/** Page title + optional action, then a skeleton while `loading`, an error with retry, or the page body. */
+export function Page({ title, sub, action, loading, error, onRetry, children }: {
+  title: string; sub: string; action?: ReactNode; loading?: boolean; error?: unknown; onRetry?: () => void; children: ReactNode
+}) {
+  const { t } = useT()
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -227,7 +260,13 @@ export function Page({ title, sub, action, children }: { title: string; sub: str
         </div>
         {action}
       </div>
-      {loading ? <PageSkeleton /> : children}
+      {error ? (
+        <div className="flex flex-col items-center gap-3 rounded-[18px] border bg-white px-5 py-14 text-center">
+          <Icon name="cloud_off" size={34} className="text-[#9FB0C8]" />
+          <span className="font-semibold">{t.loadError}</span>
+          {onRetry && <Button variant="outline" size="sm" onClick={onRetry}>{t.retry}</Button>}
+        </div>
+      ) : loading ? <PageSkeleton /> : children}
     </>
   )
 }

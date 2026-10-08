@@ -7,24 +7,29 @@ import BottomSheet, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { colors, elevation } from '@/theme'
-import { Box, Button, Chip, Icon, IconButton, Skeleton, Text, Thumb, Toggle } from '@/components/ui'
+import { Box, Button, Chip, Icon, IconButton, Skeleton, Text, Thumb } from '@/components/ui'
 import { TAB_H } from '@/components/screen'
 import { GarageMap } from '@/components/GarageMap'
 import type { MapHandle } from '@/components/map-parts'
 import { OfflineView, useOnline } from '@/components/offline'
-import { G, SV, TUNIS, USER, gById, type Garage } from '@/data/mock'
-import { num, price } from '@/lib/format'
+import { TUNIS } from '@/data/constants'
+import { api } from '@/lib/api'
+import { price } from '@/lib/format'
 import { filterCount, passes, useGarageView } from '@/lib/garage'
 import { useT } from '@/lib/i18n'
+import { useUserPosition } from '@/lib/location'
+import { useQuery } from '@/lib/query'
+import type { GarageCard } from '@/lib/types'
 import { F0, useStore, type Filters } from '@/store'
 
 type SheetPos = 'collapsed' | 'half' | 'expanded'
 const ORDER: SheetPos[] = ['collapsed', 'half', 'expanded']
 
-let mapSeen = false
+/** Garages are searched within this radius of the phone (the API maximum), then filtered on the phone. */
+const RADIUS_KM = 100
 
 export function MapScreen() {
-  const { t, tr, ar, dir } = useT()
+  const { t, tr, L, ar, dir } = useT()
   const nav = useNavigation()
   const insets = useSafeAreaInsets()
   const { height } = useWindowDimensions()
@@ -38,14 +43,23 @@ export function MapScreen() {
   const [sel, setSel] = useState<string | null>(null)
   const [pos, setPos] = useState<SheetPos>('collapsed')
   const [fOpen, setFOpen] = useState(false)
-  // First visit shows the list skeleton, as in the prototype.
-  const [loading, setLoading] = useState(!mapSeen)
+
+  const me = useUserPosition(!denied)
+  // Search as the user types, once they pause.
+  const [dq, setDq] = useState('')
   useEffect(() => {
-    if (mapSeen) return
-    mapSeen = true
-    const id = setTimeout(() => setLoading(false), 1200)
+    const id = setTimeout(() => setDq(q.trim()), 300)
     return () => clearTimeout(id)
-  }, [])
+  }, [q])
+  const near = me ? me.lat.toFixed(3) + ',' + me.lon.toFixed(3) : ''
+  const garages = useQuery(`garages|${dq}|${near}`, () =>
+    api.garages.search({ q: dq || undefined, lat: me?.lat, lng: me?.lon, radiusKm: me ? RADIUS_KM : undefined, limit: 100 }), { keepPrevious: true })
+  const all = useMemo(() => garages.data?.items ?? [], [garages.data])
+  // Centre on the phone once its position is known.
+  const located = !!me
+  useEffect(() => {
+    if (located) map.current?.recenter()
+  }, [located])
 
   // Sheet snaps: 176 / 440 / below the search bar (design values on an 844px frame).
   const body = height - insets.bottom - TAB_H
@@ -57,22 +71,23 @@ export function MapScreen() {
   const mapH = useSharedValue(body)
   const recStyle = useAnimatedStyle(() => ({ bottom: (sel ? 236 : Math.max(0, mapH.value - sheetY.value)) + 12 }))
 
-  const query = q.trim().toLowerCase()
-  const shown = useMemo(() => G.filter((g) => passes(g, flt) && (!query || (g.n.join(' ') + ' ' + g.ar.join(' ')).toLowerCase().includes(query))), [flt, query])
-  const list = useMemo(() => shown.slice().sort((a, b) => a.d - b.d), [shown])
+  // The API returns them nearest first when the position is known.
+  const shown = useMemo(() => all.filter((g) => passes(g, flt)), [all, flt])
   const nF = filterCount(flt)
 
-  const openGarage = (id: string) => nav.navigate('Garage', { gid: id })
+  const openGarage = (g: GarageCard) => nav.navigate('Garage', { gid: g.id, km: g.distanceKm })
 
   if (!online) return <OfflineView />
 
-  const sg = sel ? gById(sel) : null
+  const sg = sel ? (shown.find((g) => g.id === sel) ?? null) : null
   const selV = sg ? gv(sg) : null
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.mapBase }} onLayout={(e) => { mapH.value = e.nativeEvent.layout.height }}>
-      <GarageMap ref={map} center={denied ? TUNIS : USER} zoom={denied ? 12 : 13} user={denied ? undefined : USER} selected={sel}
-        pins={shown.map((g) => ({ id: g.id, lat: g.lat, lon: g.lon, open: g.open, label: tr('from', { p: price(g.from, ar ? 'ar' : 'fr') }) }))}
+      <GarageMap ref={map} center={me ?? TUNIS} zoom={me ? 13 : 12} user={me ?? undefined} selected={sel}
+        pins={shown.flatMap((g) => (g.location
+          ? [{ id: g.id, lat: g.location.latitude, lon: g.location.longitude, open: true, label: g.fromPrice === null ? g.name : tr('from', { p: price(g.fromPrice, L) }) }]
+          : []))}
         onSelect={setSel} onMapPress={() => sel && setSel(null)} />
 
       {/* Search + filters */}
@@ -106,7 +121,7 @@ export function MapScreen() {
 
       {(pos !== 'expanded' || sel) && (
         <Animated.View style={[{ position: 'absolute', end: 16 }, recStyle]}>
-          <IconButton icon="near_me" size={48} floating label="recenter" onPress={() => (denied ? nav.navigate('Location') : map.current?.recenter())} />
+          <IconButton icon="near_me" size={48} floating label="recenter" onPress={() => (denied || !me ? nav.navigate('Location') : map.current?.recenter())} />
         </Animated.View>
       )}
 
@@ -115,21 +130,28 @@ export function MapScreen() {
         <BottomSheet ref={sheet} index={ORDER.indexOf(pos)} snapPoints={snapPoints} enableDynamicSizing={false}
           animatedPosition={sheetY} onChange={(i) => i >= 0 && setPos(ORDER[i])}
           enablePanDownToClose={false} enableOverDrag={false}
-          handleComponent={() => <ListHeader count={shown.length} />}
+          handleComponent={() => <ListHeader count={shown.length} byDistance={!!me} />}
           backgroundStyle={{ backgroundColor: colors.bg, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderRadius: 0 }}
           style={{ shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 16 }}>
-          {loading ? (
+          {garages.loading ? (
             <View style={{ paddingHorizontal: 16, direction: dir }}>{[1, 2, 3, 4].map((k) => <GarageRowSkeleton key={k} />)}</View>
-          ) : list.length === 0 ? (
+          ) : garages.error && !garages.data ? (
+            <Box alignItems="center" gap="s" style={{ padding: 24 }}>
+              <Icon name="cloud_off" size={40} color="grey400" />
+              <Text w={700} fontSize={17} align="center">{t.load_err_t}</Text>
+              <Text fontSize={14} color="grey600" align="center">{t.load_err_s}</Text>
+              <Button label={t.retry} icon="refresh" variant="secondary" height={44} fontSize={15} px={20} onPress={() => void garages.reload()} />
+            </Box>
+          ) : shown.length === 0 ? (
             <Box alignItems="center" gap="s" style={{ padding: 24 }}>
               <Icon name="search_off" size={40} color="grey400" />
               <Text w={700} fontSize={17} align="center">{t.no_results}</Text>
               <Text fontSize={14} color="grey600" align="center">{t.no_results_s}</Text>
             </Box>
           ) : (
-            <BottomSheetFlatList data={list} keyExtractor={(g: Garage) => g.id} showsVerticalScrollIndicator={false}
+            <BottomSheetFlatList data={shown} keyExtractor={(g: GarageCard) => g.id} showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-              renderItem={({ item }: { item: Garage }) => <GarageRow g={item} onPress={() => openGarage(item.id)} />} />
+              renderItem={({ item }: { item: GarageCard }) => <GarageRow g={item} onPress={() => openGarage(item)} />} />
           )}
         </BottomSheet>
       )}
@@ -137,16 +159,13 @@ export function MapScreen() {
       {/* Selected garage preview */}
       {sg && selV && (
         <View style={[{ position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: colors.bg, borderRadius: 20, padding: 12, gap: 12, direction: dir }, elevation.sheet]}>
-          <Pressable onPress={() => openGarage(sg.id)} style={{ flexDirection: 'row', gap: 12 }}>
+          <Pressable onPress={() => openGarage(sg)} style={{ flexDirection: 'row', gap: 12 }}>
             <Thumb size={96} radius={14} icon={32} />
             <Box flex={1} minWidth={0} gap="s" style={{ paddingTop: 2 }}>
               <Text w={800} fontSize={17} lh={1.3}>{selV.name}</Text>
-              <Box flexDirection="row" alignItems="center" gap="xs">
-                <Icon name="star" size={15} />
-                <Text w={700} fontSize={13}>{selV.rating}</Text>
-                <Text fontSize={13} color="grey600">({selV.reviews}) · {selV.dist}</Text>
-              </Box>
-              <Text fontSize={13} color="grey600"><Text w={700} fontSize={13} color={selV.sFg}>{selV.status}</Text> · {selV.hours}</Text>
+              <Text fontSize={13} color="grey600" numberOfLines={1}>{[selV.dist, selV.area].filter(Boolean).join(' · ')}</Text>
+              <Text fontSize={13} color="grey600" numberOfLines={2}>{selV.addr}</Text>
+              {selV.from ? <Text w={700} fontSize={13}>{selV.from}</Text> : null}
             </Box>
             <IconButton icon="close" size={32} iconSize={18} label="close" onPress={() => setSel(null)} />
           </Pressable>
@@ -154,14 +173,14 @@ export function MapScreen() {
         </View>
       )}
 
-      <FiltersSheet visible={fOpen} onClose={() => setFOpen(false)} current={flt}
+      <FiltersSheet visible={fOpen} onClose={() => setFOpen(false)} current={flt} garages={all} located={!!me}
         onApply={(f) => { setFilters(f); setFOpen(false); setSel(null); if (pos === 'collapsed') snapTo('half') }} />
     </View>
   )
 }
 
 /** Grabber + title row; it is the sheet's handle, so dragging it moves the sheet. */
-function ListHeader({ count }: { count: number }) {
+function ListHeader({ count, byDistance }: { count: number; byDistance: boolean }) {
   const { t, tr } = useT()
   return (
     <View accessibilityRole="adjustable" accessibilityLabel={t.nearest}>
@@ -169,7 +188,7 @@ function ListHeader({ count }: { count: number }) {
       <Box flexDirection="row" alignItems="flex-end" justifyContent="space-between" style={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 8 }}>
         <Box>
           <Text w={800} fontSize={20}>{t.nearest}</Text>
-          <Text fontSize={13} color="grey600" style={{ marginTop: 2 }}>{t.by_dist}</Text>
+          {byDistance ? <Text fontSize={13} color="grey600" style={{ marginTop: 2 }}>{t.by_dist}</Text> : null}
         </Box>
         <Box backgroundColor="grey100" borderRadius="pill" style={{ paddingHorizontal: 10, paddingVertical: 4 }}>
           <Text w={600} fontSize={13} color="grey600">{tr('n_garages', { n: count })}</Text>
@@ -179,26 +198,17 @@ function ListHeader({ count }: { count: number }) {
   )
 }
 
-function GarageRow({ g, onPress }: { g: Garage; onPress: () => void }) {
+function GarageRow({ g, onPress }: { g: GarageCard; onPress: () => void }) {
   const v = useGarageView()(g)
   return (
     <Pressable onPress={onPress} style={({ pressed }) => ({ flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.grey120, opacity: pressed ? 0.6 : 1 })}>
       <Thumb size={64} />
       <Box flex={1} minWidth={0} gap="xs">
         <Text w={700} fontSize={16} numberOfLines={1}>{v.name}</Text>
-        <Box flexDirection="row" alignItems="center" gap="xs">
-          <Icon name="star" size={15} />
-          <Text w={700} fontSize={13}>{v.rating}</Text>
-          <Text fontSize={13} color="grey600" numberOfLines={1} style={{ flexShrink: 1 }}>· {v.dist} · {v.area}</Text>
-        </Box>
-        <Box flexDirection="row" alignItems="center" gap="s">
-          <Box backgroundColor={v.sBg} borderRadius="pill" style={{ paddingHorizontal: 8, paddingVertical: 2 }}>
-            <Text w={700} fontSize={12} color={v.sFg}>{v.status}</Text>
-          </Box>
-          <Text fontSize={13} color="grey600">{v.hours}</Text>
-        </Box>
+        <Text fontSize={13} color="grey600" numberOfLines={1}>{[v.dist, v.area].filter(Boolean).join(' · ')}</Text>
+        <Text fontSize={13} color="grey600" numberOfLines={1}>{v.addr}</Text>
       </Box>
-      <Text w={700} fontSize={14}>{v.from}</Text>
+      {v.from ? <Text w={700} fontSize={14}>{v.from}</Text> : null}
     </Pressable>
   )
 }
@@ -220,8 +230,10 @@ function GarageRowSkeleton() {
  * Filters as a gorhom sheet on the map screen (same kind as the stations list): closed until the filter
  * button opens it, fixed height, sticky "Show N" footer; backdrop tap, swipe down and Android back close it.
  */
-function FiltersSheet({ visible, onClose, current, onApply }: { visible: boolean; onClose: () => void; current: Filters; onApply: (f: Filters) => void }) {
-  const { t, tr, li, L } = useT()
+function FiltersSheet({ visible, onClose, current, onApply, garages, located }: {
+  visible: boolean; onClose: () => void; current: Filters; onApply: (f: Filters) => void; garages: GarageCard[]; located: boolean
+}) {
+  const { t, tr, L } = useT()
   const { height } = useWindowDimensions()
   const insets = useSafeAreaInsets()
   const ref = useRef<BottomSheet>(null)
@@ -229,13 +241,13 @@ function FiltersSheet({ visible, onClose, current, onApply }: { visible: boolean
   const snapPoints = useMemo(() => [Math.min(720, height - insets.bottom - TAB_H - insets.top - 24)], [height, insets.bottom, insets.top])
   const [fd, setFd] = useState<Filters>(current)
   const up = (p: Partial<Filters>) => setFd((x) => ({ ...x, ...p }))
-  const count = G.filter((g) => passes(g, fd)).length
+  const count = garages.filter((g) => passes(g, fd)).length
 
   // Each opening starts the draft from the applied filters.
   const [wasVisible, setWasVisible] = useState(visible)
   if (visible !== wasVisible) {
     setWasVisible(visible)
-    if (visible) setFd({ ...current, svc: [...current.svc] })
+    if (visible) setFd({ ...current })
   }
 
   useEffect(() => {
@@ -271,30 +283,16 @@ function FiltersSheet({ visible, onClose, current, onApply }: { visible: boolean
         <Box flexDirection="row" alignItems="center" justifyContent="space-between" style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
           <IconButton icon="close" size={40} iconSize={22} label="close" onPress={onClose} />
           <Text w={800} fontSize={18}>{t.filters}</Text>
-          <Pressable onPress={() => setFd({ ...F0, svc: [] })} hitSlop={8}><Text w={700} fontSize={15} color="primary">{t.reset}</Text></Pressable>
+          <Pressable onPress={() => setFd({ ...F0 })} hitSlop={8}><Text w={700} fontSize={15} color="primary">{t.reset}</Text></Pressable>
         </Box>
         <Box gap="l" style={{ paddingHorizontal: 16, paddingTop: 4 }}>
-          <Box flexDirection="row" alignItems="center" gap="sm">
-            <Box flex={1}>
-              <Text w={700} fontSize={16}>{t.open_now}</Text>
-              <Text fontSize={13} color="grey600" style={{ marginTop: 2 }}>{t.open_now_s}</Text>
-            </Box>
-            <Toggle value={fd.open} onChange={() => up({ open: !fd.open })} label={t.open_now} />
-          </Box>
-          <ChipGroup title={t.distance}>
-            {[0, 2, 5, 10].map((d) => <Chip key={d} label={d ? tr('less', { d: tr('km', { d }) }) : t.any} on={fd.dist === d} onPress={() => up({ dist: d })} />)}
-          </ChipGroup>
-          <ChipGroup title={t.rating}>
-            {[0, 4, 4.5].map((r) => <Chip key={r} label={r ? tr('plus', { r: num(r) }) : t.any} icon={r ? 'star' : undefined} on={fd.rating === r} onPress={() => up({ rating: r })} />)}
-          </ChipGroup>
+          {located && (
+            <ChipGroup title={t.distance}>
+              {[0, 2, 5, 10, 25].map((d) => <Chip key={d} label={d ? tr('less', { d: tr('km', { d }) }) : t.any} on={fd.dist === d} onPress={() => up({ dist: d })} />)}
+            </ChipGroup>
+          )}
           <ChipGroup title={t.price}>
-            {[0, 10, 15].map((p) => <Chip key={p} label={p ? tr('max_p', { p: price(p, L) }) : t.any} on={fd.price === p} onPress={() => up({ price: p })} />)}
-          </ChipGroup>
-          <ChipGroup title={t.services}>
-            {SV.map((x) => {
-              const on = fd.svc.includes(x.id)
-              return <Chip key={x.id} label={x.n[li]} icon={on ? 'check' : 'add'} on={on} onPress={() => up({ svc: on ? fd.svc.filter((y) => y !== x.id) : [...fd.svc, x.id] })} />
-            })}
+            {[0, 10, 15, 20].map((p) => <Chip key={p} label={p ? tr('max_p', { p: price(p, L) }) : t.any} on={fd.price === p} onPress={() => up({ price: p })} />)}
           </ChipGroup>
         </Box>
       </BottomSheetScrollView>

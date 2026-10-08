@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Field, Icon, PhoneInput } from '@/components/common'
 import { CitySelect, LocationMap, PhotoSlots, useServiceRows } from '@/components/garage-editors'
-import { TODAY } from '@/data/mock'
 import { digits, dow, fx, money, phoneLocal } from '@/lib/format'
+import { today } from '@/lib/clock'
+import { notifyError } from '@/lib/errors'
 import { notify, useT } from '@/lib/i18n'
 import { useStore } from '@/store'
 import { Page } from '@/layouts/app-layout'
@@ -15,8 +16,9 @@ type Errors = Partial<Record<'name' | 'phone' | 'address', string>>
 
 export function ProfilePage() {
   const { t } = useT()
-  const g = useStore((s) => s.garage), update = useStore((s) => s.updateGarage)
+  const g = useStore((s) => s.garage), update = useStore((s) => s.updateGarage), saveProfile = useStore((s) => s.saveProfile)
   const [err, setErr] = useState<Errors>({})
+  const [busy, setBusy] = useState(false)
   const save = () => {
     const e: Errors = {
       name: !g.name.trim() ? t.errRequired : undefined,
@@ -24,11 +26,13 @@ export function ProfilePage() {
       address: !g.address.trim() ? t.errRequired : undefined,
     }
     setErr(e)
-    if (!Object.values(e).some(Boolean)) notify('toastSaved')
+    if (Object.values(e).some(Boolean)) return
+    setBusy(true)
+    saveProfile().then(() => notify('toastSaved'), notifyError).finally(() => setBusy(false))
   }
   return (
     <Page title={t.navProfile} sub={t.profileSub}
-      action={<Button onClick={save} className="shrink-0 text-[14.5px]"><Icon name="check" />{t.saveChanges}</Button>}>
+      action={<Button onClick={save} disabled={busy} className="shrink-0 text-[14.5px]"><Icon name="check" />{t.saveChanges}</Button>}>
       <div className="flex flex-wrap items-start gap-5">
         <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-4">
           <Card className="gap-4 px-[22px]">
@@ -94,7 +98,7 @@ function CustomerPreview() {
               <div className="bg-photo relative flex h-[110px] items-center justify-center">
                 <span className="font-mono text-[11px] text-muted-foreground">garage-cover.jpg</span>
                 <span className="absolute start-2.5 top-2.5 flex items-center gap-[5px] rounded-full bg-white px-[9px] py-[3px] text-[11.5px] font-bold text-success">
-                  <span className="size-1.5 rounded-full bg-success-dot" />{t.openNow} · {fx(t.closesAt, { t: hours[dow(TODAY)].to })}
+                  <span className="size-1.5 rounded-full bg-success-dot" />{t.openNow} · {fx(t.closesAt, { t: hours[dow(today())].to })}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5 px-3.5 py-3">

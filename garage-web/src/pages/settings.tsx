@@ -9,7 +9,10 @@ import { OtpField, useOtp } from '@/components/otp'
 import { cn } from '@/lib/utils'
 import { digits, phone, phoneLocal } from '@/lib/format'
 import { notify, useT } from '@/lib/i18n'
-import { useStore, type PrefKey } from '@/store'
+import { ownerApi } from '@/lib/api'
+import { errorCode, errorText, notifyError } from '@/lib/errors'
+import type { OwnerDto } from '@/lib/types'
+import { PREF_FIELDS, useStore, type PrefKey } from '@/store'
 import type { TKey } from '@/data/i18n-strings'
 import { Page } from '@/layouts/app-layout'
 
@@ -17,58 +20,84 @@ type Errors = Record<string, string | undefined>
 
 export function SettingsPage() {
   const { t, ar } = useT()
-  const ownerPhone = useStore((s) => s.ownerPhone), setOwnerPhone = useStore((s) => s.setOwnerPhone)
+  const owner = useStore((s) => s.owner), setOwner = useStore((s) => s.setOwner)
   const setLang = useStore((s) => s.setLang)
-  const prefs = useStore((s) => s.prefs), togglePref = useStore((s) => s.togglePref)
+  const togglePref = useStore((s) => s.togglePref)
   const [pw, setPw] = useState({ cur: '', next: '', next2: '' })
   const [newPhone, setNewPhone] = useState('')
   const [err, setErr] = useState<Errors>({})
-  const [otpFor, setOtpFor] = useState<'password' | 'phone' | null>(null)
+  const [otpOpen, setOtpOpen] = useState(false)
+  const [busy, setBusy] = useState<'password' | 'phone' | null>(null)
 
-  const sendPwOtp = () => {
+  const savePassword = async () => {
     const e: Errors = {
       cur: !pw.cur ? t.errPassword : undefined,
       next: pw.next.length < 8 ? t.errPwShort : undefined,
       next2: !pw.next2 || pw.next2 !== pw.next ? t.errPwMatch : undefined,
     }
     setErr(e)
-    if (!Object.values(e).some(Boolean)) setOtpFor('password')
+    if (Object.values(e).some(Boolean)) return
+    setBusy('password')
+    try {
+      await ownerApi.me.changePassword(pw.cur, pw.next)
+      setPw({ cur: '', next: '', next2: '' })
+      notify('toastPwChanged')
+    } catch (error) {
+      if (errorCode(error) === 'WRONG_PASSWORD') setErr({ cur: errorText(error, t) })
+      else notifyError(error)
+    } finally {
+      setBusy(null)
+    }
   }
-  const sendPhoneOtp = () => {
-    const bad = digits(newPhone).length !== 8
-    setErr({ phone: bad ? t.errPhone : undefined })
-    if (!bad) setOtpFor('phone')
+  const sendPhoneOtp = async () => {
+    if (digits(newPhone).length !== 8) return setErr({ phone: t.errPhone })
+    setBusy('phone')
+    try {
+      await ownerApi.me.requestPhoneChange(digits(newPhone))
+      setOtpOpen(true)
+    } catch (error) {
+      const code = errorCode(error)
+      if (code === 'OTP_COOLDOWN') setOtpOpen(true) // a code was sent moments ago: still valid
+      else if (code === 'PHONE_TAKEN' || code === 'SAME_PHONE') setErr({ phone: errorText(error, t) })
+      else notifyError(error)
+    } finally {
+      setBusy(null)
+    }
   }
-  const verified = () => {
-    if (otpFor === 'phone') { setOwnerPhone(digits(newPhone)); setNewPhone(''); notify('toastPhoneChanged') }
-    else { setPw({ cur: '', next: '', next2: '' }); notify('toastPwChanged') }
-    setOtpFor(null)
+  const phoneChanged = (o: OwnerDto) => {
+    setOwner(o)
+    setNewPhone('')
+    setOtpOpen(false)
+    notify('toastPhoneChanged')
   }
-  const pwField = (k: keyof typeof pw, id: string, label: string) => (
+  const pwField = (k: keyof typeof pw, id: string, label: string, autoComplete: string) => (
     <Field id={id} label={label} error={err[k]}>
-      <Input id={id} type="password" value={pw[k]} aria-invalid={!!err[k] || undefined} onChange={(e) => { setPw({ ...pw, [k]: e.target.value }); setErr({ ...err, [k]: undefined }) }} />
+      <Input id={id} type="password" autoComplete={autoComplete} value={pw[k]} aria-invalid={!!err[k] || undefined}
+        onChange={(e) => { setPw({ ...pw, [k]: e.target.value }); setErr({ ...err, [k]: undefined }) }} />
     </Field>
   )
 
   return (
-    <Page title={t.navSettings} sub={t.settingsSub}>
+    <Page title={t.navSettings} sub={t.settingsSub} loading={!owner}>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] items-start gap-4">
         <Section icon="lock" title={t.secPassword}>
-          {pwField('cur', 'st-cur', t.currentPw)}
-          {pwField('next', 'st-new', t.newPw)}
-          {pwField('next2', 'st-new2', t.confirmPw)}
-          <OtpFooter onSend={sendPwOtp} />
+          {pwField('cur', 'st-cur', t.currentPw, 'current-password')}
+          {pwField('next', 'st-new', t.newPw, 'new-password')}
+          {pwField('next2', 'st-new2', t.confirmPw, 'new-password')}
+          <div className="flex justify-end">
+            <Button onClick={() => void savePassword()} disabled={busy === 'password'} className="h-10 text-sm">{t.savePw}</Button>
+          </div>
         </Section>
 
         <Section icon="smartphone" title={t.secPhone}>
           <div className="flex items-center justify-between rounded-xl bg-muted px-3.5 py-3">
             <span className="text-[13px] text-muted-foreground">{t.currentPhone}</span>
-            <span dir="ltr" className="font-latin font-bold">{phone(ownerPhone)}</span>
+            <span dir="ltr" className="font-latin font-bold">{owner ? phone(owner.phone) : ''}</span>
           </div>
           <Field id="st-ph" label={t.newPhone} error={err.phone}>
             <PhoneInput id="st-ph" value={newPhone} invalid={!!err.phone} onChange={(v) => { setNewPhone(phoneLocal(v)); setErr({}) }} />
           </Field>
-          <OtpFooter onSend={sendPhoneOtp} />
+          <OtpFooter onSend={() => void sendPhoneOtp()} busy={busy === 'phone'} />
         </Section>
 
         <Section icon="translate" title={t.secLang}>
@@ -86,13 +115,14 @@ export function SettingsPage() {
                 <span className="font-semibold">{t[k as TKey]}</span>
                 <span className="text-[12.5px] text-muted-foreground">{t[(k + 'd') as TKey]}</span>
               </div>
-              <Switch checked={prefs[k]} onCheckedChange={() => { togglePref(k); notify('toastSaved') }} aria-label={t[k as TKey]} />
+              <Switch checked={!!owner?.notifications[PREF_FIELDS[k]]} aria-label={t[k as TKey]}
+                onCheckedChange={() => togglePref(k).then(() => notify('toastSaved'), notifyError)} />
             </div>
           ))}
         </Section>
       </div>
 
-      <OtpDialog purpose={otpFor} phoneDigits={otpFor === 'phone' ? newPhone : ownerPhone} onClose={() => setOtpFor(null)} onVerified={verified} />
+      <OtpDialog open={otpOpen} phoneDigits={digits(newPhone)} onClose={() => setOtpOpen(false)} onVerified={phoneChanged} />
     </Page>
   )
 }
@@ -109,12 +139,12 @@ function Section({ icon, title, children, gap = 'gap-3.5' }: { icon: string; tit
   )
 }
 
-function OtpFooter({ onSend }: { onSend: () => void }) {
+function OtpFooter({ onSend, busy }: { onSend: () => void; busy?: boolean }) {
   const { t } = useT()
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <span className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground"><Icon name="sms" size={16} />{t.otpNeeded}</span>
-      <Button onClick={onSend} className="h-10 text-sm">{t.sendOtp}</Button>
+      <Button onClick={onSend} disabled={busy} className="h-10 text-sm">{t.sendOtp}</Button>
     </div>
   )
 }
@@ -134,22 +164,36 @@ function LangOption({ on, onClick, label, sub, className }: { on: boolean; onCli
   )
 }
 
-function OtpDialog({ purpose, phoneDigits, onClose, onVerified }: { purpose: 'password' | 'phone' | null; phoneDigits: string; onClose: () => void; onVerified: () => void }) {
+/** Code sent to the new phone number; confirming it switches the account to that number. */
+function OtpDialog({ open, phoneDigits, onClose, onVerified }: { open: boolean; phoneDigits: string; onClose: () => void; onVerified: (o: OwnerDto) => void }) {
   return (
-    <Dialog open={!!purpose} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       {/* Remount the body each time so the code and timer start fresh. */}
-      {purpose && <OtpDialogBody key={purpose} phoneDigits={phoneDigits} onClose={onClose} onVerified={onVerified} />}
+      {open && <OtpDialogBody key={phoneDigits} phoneDigits={phoneDigits} onClose={onClose} onVerified={onVerified} />}
     </Dialog>
   )
 }
 
-function OtpDialogBody({ phoneDigits, onClose, onVerified }: { phoneDigits: string; onClose: () => void; onVerified: () => void }) {
+function OtpDialogBody({ phoneDigits, onClose, onVerified }: { phoneDigits: string; onClose: () => void; onVerified: (o: OwnerDto) => void }) {
   const { t } = useT()
-  const otp = useOtp()
-  const submit = (e: FormEvent) => { e.preventDefault(); if (otp.validate()) onVerified() }
+  const otp = useOtp(async () => { await ownerApi.me.requestPhoneChange(phoneDigits) })
+  const [busy, setBusy] = useState(false)
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!otp.validate()) return
+    setBusy(true)
+    try {
+      onVerified(await ownerApi.me.confirmPhoneChange(phoneDigits, otp.code))
+    } catch (error) {
+      if (errorCode(error).startsWith('OTP_')) otp.fail(errorText(error, t))
+      else notifyError(error)
+    } finally {
+      setBusy(false)
+    }
+  }
   return (
     <DialogContent showCloseButton={false} className="rounded-[20px] p-6 shadow-modal sm:max-w-[420px]">
-      <form onSubmit={submit} className="flex flex-col gap-4">
+      <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4">
         <div className="flex items-start justify-between">
           <span className="flex size-12 items-center justify-center rounded-[14px] bg-teal-soft text-teal"><Icon name="sms" size={26} /></span>
           <Button type="button" variant="secondary" size="icon" onClick={onClose} aria-label={t.close}><Icon name="close" /></Button>
@@ -161,8 +205,8 @@ function OtpDialogBody({ phoneDigits, onClose, onVerified }: { phoneDigits: stri
           </DialogDescription>
         </div>
         <OtpField otp={otp} large={false} />
-        <Button type="submit" size="lg" className="text-[15px]">{t.verify}</Button>
-        <span className="text-center text-xs text-muted-foreground">{t.otpDemo}</span>
+        <Button type="submit" size="lg" disabled={busy} className="text-[15px]">{t.verify}</Button>
+        {import.meta.env.DEV && <span className="text-center text-xs text-muted-foreground">{t.otpDemo}</span>}
       </form>
     </DialogContent>
   )

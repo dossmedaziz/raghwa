@@ -18,18 +18,19 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { applyScheme, colors, themes, type Scheme } from '@/theme'
 import { initMapbox } from '@/lib/mapbox'
 import { useT } from '@/lib/i18n'
-import { useStore } from '@/store'
+import { onSessionExpired } from '@/lib/api'
+import { toast, useStore } from '@/store'
 import { ToastHost } from '@/components/ui'
 import { TAB_H, TabBar } from '@/components/screen'
 import type { RootParams, TabParams } from '@/navigation/types'
 import { IntroScreen, LangScreen, LocationScreen, SplashScreen as Splash } from '@/screens/onboarding'
-import { ForgotScreen, LoginScreen, NewPassScreen, OtpScreen, SignupScreen } from '@/screens/auth'
+import { LoginScreen, NameScreen, OtpScreen } from '@/screens/auth'
 import { MapScreen } from '@/screens/map'
 import { GarageScreen } from '@/screens/garage'
 import { Book1Screen, Book2Screen, Book3Screen, Resched2Screen, SuccessScreen } from '@/screens/booking'
 import { ResDetailScreen, ReservationsScreen } from '@/screens/reservations'
 import {
-  CarFormScreen, CarsScreen, ChangePhoneScreen, ChangePwScreen, AppearanceScreen, HelpScreen, LanguageScreen, NotifScreen, ProfileScreen, TermsScreen,
+  CarFormScreen, CarsScreen, AppearanceScreen, HelpScreen, LanguageScreen, NotifScreen, ProfileScreen, TermsScreen,
 } from '@/screens/profile'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
@@ -55,7 +56,7 @@ function useReservationsShortcut() {
   const pending = useRef(false)
   const open = useCallback(() => {
     // Signed-out users stay on the login flow.
-    if (!useStore.getState().authed) return
+    if (!useStore.getState().tokens) return
     if (!navRef.isReady()) { pending.current = true; return }
     pending.current = false
     navRef.navigate('Tabs', { screen: 'Reservations', params: { seg: 'up' } })
@@ -92,13 +93,18 @@ function useScheme(): Scheme {
 function Root({ scheme }: { scheme: Scheme }) {
   const { dir, ar } = useT()
   const insets = useSafeAreaInsets()
-  const authed = useStore((s) => s.authed), onboarded = useStore((s) => s.onboarded)
+  const authed = useStore((s) => !!s.tokens), onboarded = useStore((s) => s.onboarded)
   // Decided once at start-up; later changes navigate explicitly.
   const [initial] = useState<keyof RootParams>(authed ? 'Tabs' : onboarded ? 'Login' : 'Splash')
   // Switching theme remounts the tree (key below); the navigation state is kept so the user stays put.
   const navState = useRef<NavigationState | undefined>(undefined)
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme
   const shortcut = useReservationsShortcut()
+  // The refresh token was revoked or expired: back to login.
+  useEffect(() => onSessionExpired(() => {
+    toast('session_expired', 'error')
+    if (navRef.isReady()) navRef.reset({ index: 0, routes: [{ name: 'Login' }] })
+  }), [])
   return (
     // RTL via the `direction` layout style: instant language switching, and it works in Expo Go
     // (I18nManager.forceRTL needs a reload and is reset by Expo Go).
@@ -114,10 +120,8 @@ function Root({ scheme }: { scheme: Scheme }) {
             <Stack.Screen name="Lang" component={LangScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Intro" component={IntroScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Login" component={LoginScreen} options={{ animation: 'fade' }} />
-            <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="Otp" component={OtpScreen} />
-            <Stack.Screen name="Forgot" component={ForgotScreen} />
-            <Stack.Screen name="NewPass" component={NewPassScreen} />
+            <Stack.Screen name="Name" component={NameScreen} />
             <Stack.Screen name="Location" component={LocationScreen} options={{ animation: 'fade' }} />
             <Stack.Screen name="Tabs" component={Tabs} options={{ animation: 'fade' }} />
             <Stack.Screen name="Garage" component={GarageScreen} />
@@ -132,8 +136,6 @@ function Root({ scheme }: { scheme: Scheme }) {
             <Stack.Screen name="Language" component={LanguageScreen} />
             <Stack.Screen name="Appearance" component={AppearanceScreen} />
             <Stack.Screen name="Notif" component={NotifScreen} />
-            <Stack.Screen name="ChangePw" component={ChangePwScreen} />
-            <Stack.Screen name="ChangePhone" component={ChangePhoneScreen} />
             <Stack.Screen name="Help" component={HelpScreen} />
             <Stack.Screen name="Terms" component={TermsScreen} />
           </Stack.Navigator>

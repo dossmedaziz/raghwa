@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
+import { Button } from '@/components/ui/button'
+import { LogoMark } from '@/components/common'
 import { DirectionProvider } from '@/components/ui/direction'
 import { Toaster } from '@/components/ui/sonner'
 import { useT } from '@/lib/i18n'
@@ -17,13 +19,38 @@ import { SettingsPage } from '@/pages/settings'
 
 function RequireAuth() {
   const authed = useStore((s) => s.authed)
+  const owner = useStore((s) => s.owner), loadOwner = useStore((s) => s.loadOwner)
+  // After a reload the tokens are still there but the profile is not: fetch it once.
+  useEffect(() => {
+    if (authed && !owner) loadOwner().catch(() => undefined)
+  }, [authed, owner, loadOwner])
   return authed ? <Outlet /> : <Navigate to="/login" replace />
 }
 
-/** The garage screens need a garage picked first (owners can have several). */
+/** The garage screens need a garage picked first (owners can have several), loaded from the API. */
 function RequireGarage() {
+  const { t } = useT()
   const active = useStore((s) => s.activeGarageId)
-  return active ? <Outlet /> : <Navigate to="/garages" replace />
+  const status = useStore((s) => s.garageStatus), loadGarage = useStore((s) => s.loadGarage)
+  useEffect(() => {
+    if (active && status === 'idle') loadGarage().catch(() => undefined)
+  }, [active, status, loadGarage])
+
+  if (!active) return <Navigate to="/garages" replace />
+  if (status === 'ready') return <Outlet />
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+      <LogoMark size={40} />
+      {status === 'error' ? (
+        <>
+          <span className="text-muted-foreground">{t.loadError}</span>
+          <Button variant="outline" onClick={() => loadGarage().catch(() => undefined)}>{t.retry}</Button>
+        </>
+      ) : (
+        <span aria-busy="true" className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      )}
+    </div>
+  )
 }
 
 export default function App() {

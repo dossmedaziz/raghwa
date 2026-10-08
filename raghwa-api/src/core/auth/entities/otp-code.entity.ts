@@ -1,6 +1,6 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
-export type OtpPurpose = 'owner_signup' | 'owner_reset' | 'customer_login';
+export type OtpPurpose = 'owner_signup' | 'owner_reset' | 'owner_phone' | 'customer_login';
 
 /** A one-time SMS code. Only its SHA-256 hash is stored. */
 @Entity('otp_codes')

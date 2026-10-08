@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
@@ -76,6 +76,7 @@ export class OwnerGaragesController {
   }
 
   @Post(':garageId/publish')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(GarageOwnershipGuard)
   @ApiOperation({ summary: 'Make the garage visible to customers' })
   @ApiOkResponse({ type: OwnerGarageDto })
@@ -86,6 +87,7 @@ export class OwnerGaragesController {
   }
 
   @Post(':garageId/unpublish')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(GarageOwnershipGuard)
   @ApiOperation({ summary: 'Hide the garage from customers', description: 'Existing bookings are kept.' })
   @ApiOkResponse({ type: OwnerGarageDto })

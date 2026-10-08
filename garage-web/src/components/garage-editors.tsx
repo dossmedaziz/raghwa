@@ -10,7 +10,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Field, FieldError, Icon, SuffixInput } from '@/components/common'
-import { CITIES, type Service } from '@/data/mock'
+import { CITIES, DEFAULT_POSITION } from '@/data/cities'
+import { notifyError } from '@/lib/errors'
+import type { Service } from '@/lib/types'
 import { DAYS } from '@/data/i18n-strings'
 import { cn } from '@/lib/utils'
 import { currency, fx, genSlots, money } from '@/lib/format'
@@ -158,11 +160,13 @@ export function SlotStats() {
 
 export function useServiceRows() {
   const { ar, L, t } = useT()
-  const services = useStore((s) => s.services)
+  const services = useStore((s) => s.services), toggleService = useStore((s) => s.toggleService)
   const active = services.filter((x) => x.active)
   return {
     services,
     active,
+    /** Switches a service on/off through the API (a published garage must keep one active). */
+    toggle: (id: string) => { toggleService(id).catch(notifyError) },
     countLabel: fx(t.svcCount, { n: active.length, m: services.length }),
     label: (sv: Service) => ({ name: ar ? sv.nameAr : sv.nameFr, other: ar ? sv.nameFr : sv.nameAr, desc: ar ? sv.descAr : sv.descFr, price: money(sv.price, L) }),
   }
@@ -195,6 +199,7 @@ function ServiceDialog({ service, onClose }: { service: Service | null; onClose:
   const { t, L } = useT()
   const save = useStore((s) => s.saveService)
   const [f, setF] = useState<SvcForm>(service ? { ...service, price: String(service.price) } : emptySvc)
+  const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<Partial<Record<'nameAr' | 'nameFr' | 'price', string>>>({})
   const up = (k: keyof SvcForm, v: string | boolean) => { setF((x) => ({ ...x, [k]: v })); setErr((e) => ({ ...e, [k]: undefined })) }
   const submit = () => {
@@ -204,9 +209,10 @@ function ServiceDialog({ service, onClose }: { service: Service | null; onClose:
     if (!(+f.price > 0)) e.price = t.errPrice
     setErr(e)
     if (Object.keys(e).length) return
-    save(service?.id ?? null, { nameAr: f.nameAr.trim(), nameFr: f.nameFr.trim(), price: +f.price, descAr: f.descAr, descFr: f.descFr, active: f.active })
-    notify('toastSvcSaved')
-    onClose()
+    setBusy(true)
+    save(service?.id ?? null, { nameAr: f.nameAr.trim(), nameFr: f.nameFr.trim(), price: +f.price, descAr: f.descAr.trim(), descFr: f.descFr.trim(), active: f.active })
+      .then(() => { notify('toastSvcSaved'); onClose() }, notifyError)
+      .finally(() => setBusy(false))
   }
   return (
       <DialogContent className="gap-0 overflow-hidden rounded-[20px] p-0 shadow-modal sm:max-w-[560px]">
@@ -238,7 +244,7 @@ function ServiceDialog({ service, onClose }: { service: Service | null; onClose:
         </div>
         <DialogFooter className="mx-0 mb-0 border-0 bg-transparent px-[22px] pt-3.5 pb-5">
           <Button variant="outline" onClick={onClose}>{t.cancel}</Button>
-          <Button onClick={submit}>{t.save}</Button>
+          <Button disabled={busy} onClick={submit}>{t.save}</Button>
         </DialogFooter>
       </DialogContent>
   )
@@ -249,7 +255,7 @@ function DeleteServiceDialog({ service, onClose }: { service: Service | null; on
   const del = useStore((s) => s.deleteService)
   return (
     <ConfirmDialog open={!!service} onClose={onClose} icon="delete" title={t.delSvcTitle} body={t.delSvcBody} yes={t.confirmDelete} no={t.keep}
-      onYes={() => { if (service) del(service.id); notify('toastSvcDeleted') }} />
+      onYes={() => { if (service) del(service.id).then(() => notify('toastSvcDeleted'), notifyError) }} />
   )
 }
 
@@ -325,11 +331,13 @@ function ClickToMove({ onPick }: { onPick: (lat: number, lng: number) => void })
   return null
 }
 
-export const coordsLabel = (lat: number, lng: number) => lat.toFixed(4) + ', ' + lng.toFixed(4)
+export const coordsLabel = (lat: number | null, lng: number | null) => (lat === null || lng === null ? '—' : lat.toFixed(4) + ', ' + lng.toFixed(4))
 
 /** Draggable garage pin on Carto/OpenStreetMap tiles. */
 export function LocationMap({ height = 360 }: { height?: number }) {
-  const { lat, lng } = useStore((s) => s.garage), update = useStore((s) => s.updateGarage)
+  const g = useStore((s) => s.garage), update = useStore((s) => s.updateGarage)
+  // A new garage has no pin yet: show it at the default position until the owner moves it.
+  const lat = g.lat ?? DEFAULT_POSITION.lat, lng = g.lng ?? DEFAULT_POSITION.lng
   const pick = (a: number, b: number) => update({ lat: +a.toFixed(5), lng: +b.toFixed(5) })
   return (
     <div className="relative overflow-hidden rounded-[14px] border border-input">

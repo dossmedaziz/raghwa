@@ -1,6 +1,6 @@
 // Date, time, money and phone helpers ported from the prototype.
 import { DAYS, DAYS_S, MONTHS, MONTHS_L, type Lang } from '@/data/i18n-strings'
-import type { DayHours } from '@/data/mock'
+import type { DayHours } from '@/lib/types'
 
 /** "HH:MM" → minutes since midnight */
 export const tm = (s: string) => {

@@ -1,31 +1,44 @@
-import type { Color } from '@/theme'
-import type { Garage } from '@/data/mock'
 import type { Filters } from '@/store'
-import { num, price } from '@/lib/format'
+import type { Lang } from '@/data/constants'
+import { apiWeekday, nowTime, today } from '@/lib/clock'
+import { iso, num, price, toM } from '@/lib/format'
 import { useT } from '@/lib/i18n'
+import type { DayHours, GarageCard } from '@/lib/types'
 
-/** Display fields for a garage in the current language. */
+/** Display fields for a garage card in the current language. */
 export function useGarageView() {
-  const { t, tr, li, L } = useT()
-  return (g: Garage) => ({
+  const { tr, L } = useT()
+  return (g: GarageCard) => ({
     id: g.id,
-    name: g.n[li],
-    area: g.ar[li],
-    addr: g.a[li],
-    rating: num(g.r.toFixed(1)),
-    reviews: tr('reviews_n', { n: g.rc }),
-    dist: tr('km', { d: num(g.d) }),
-    from: tr('from', { p: price(g.from, L) }),
-    status: g.open ? t.open : t.closed,
-    sBg: (g.open ? 'positiveTint' : 'negativeTint') as Color,
-    sFg: (g.open ? 'positiveInk' : 'negativeInk') as Color,
-    hours: g.open ? tr('closes_at', { t: g.close }) : tr('opens_at', { t: g.opens ?? '' }),
-    tel: g.tel ?? '+216 71 000 000',
+    name: g.name,
+    area: [g.area, g.city].filter(Boolean).join(', '),
+    addr: g.address,
+    dist: g.distanceKm === null ? null : tr('km', { d: num(g.distanceKm) }),
+    from: g.fromPrice === null ? null : tr('from', { p: price(g.fromPrice, L) }),
   })
 }
 
-/** Does a garage pass the map filters? */
-export const passes = (g: Garage, F: Filters) =>
-  (!F.open || g.open) && (!F.dist || g.d <= F.dist) && (!F.rating || g.r >= F.rating) && (!F.price || g.from <= F.price) && F.svc.every((x) => g.svc.includes(x))
+/** Name / description of a service in the current language. */
+export const svcName = (s: { nameAr: string; nameFr: string }, L: Lang) => (L === 'ar' ? s.nameAr : s.nameFr) || s.nameAr || s.nameFr
+export const svcDesc = (s: { descriptionAr: string; descriptionFr: string }, L: Lang) => (L === 'ar' ? s.descriptionAr : s.descriptionFr)
 
-export const filterCount = (F: Filters) => Number(F.open) + Number(!!F.dist) + Number(!!F.rating) + Number(!!F.price) + F.svc.length
+/** Opening hours of one weekday as text ("08:00 – 13:00, 14:00 – 19:00"), or null when closed. */
+export const dayHoursText = (h: DayHours | undefined, L: Lang) =>
+  !h?.isOpen ? null : iso(h.hasBreak ? `${h.opensAt} – ${h.breakStart}, ${h.breakEnd} – ${h.closesAt}` : `${h.opensAt} – ${h.closesAt}`, L)
+
+/** Is the garage open right now (Tunis time), and when does that change today? */
+export function openState(hours: DayHours[], date = today(), now = nowTime()): { open: boolean; closes?: string; opens?: string } {
+  const h = hours.find((x) => x.dayOfWeek === apiWeekday(date))
+  if (!h?.isOpen) return { open: false }
+  const n = toM(now)
+  if (n < toM(h.opensAt)) return { open: false, opens: h.opensAt }
+  if (n >= toM(h.closesAt)) return { open: false }
+  if (h.hasBreak && n >= toM(h.breakStart) && n < toM(h.breakEnd)) return { open: false, opens: h.breakEnd }
+  return { open: true, closes: h.hasBreak && n < toM(h.breakStart) ? h.breakStart : h.closesAt }
+}
+
+/** Does a garage pass the map filters? (Distance is only known when the phone's position is.) */
+export const passes = (g: GarageCard, F: Filters) =>
+  (!F.dist || g.distanceKm === null || g.distanceKm <= F.dist) && (!F.price || (g.fromPrice !== null && g.fromPrice <= F.price))
+
+export const filterCount = (F: Filters) => Number(!!F.dist) + Number(!!F.price)

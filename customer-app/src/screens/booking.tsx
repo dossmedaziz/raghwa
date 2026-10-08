@@ -1,23 +1,39 @@
-import { useEffect, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native'
 import { colors, elevation } from '@/theme'
 import { Box, Bubbles, Button, Icon, InfoRow, Notice, Plate, Skeleton, Text, Thumb } from '@/components/ui'
 import { BottomBar, Footer, NavHeader, Screen } from '@/components/screen'
-import { DOW, FOAM_S, MON, MONS, SVM, avail, dayAt, gById, svcPrice } from '@/data/mock'
-import { dLong, hm, price, range, toM } from '@/lib/format'
-import { useGarageView } from '@/lib/garage'
+import { DOW, FOAM_S, MON, MONS } from '@/data/constants'
+import { api } from '@/lib/api'
+import { addDays, apiWeekday, dateParts, nowTime, today } from '@/lib/clock'
+import { errorCode, notifyError } from '@/lib/errors'
+import { dLong, iso, price, range } from '@/lib/format'
+import { svcDesc, svcName } from '@/lib/garage'
 import { useT } from '@/lib/i18n'
-import { toast, useStore } from '@/store'
+import { invalidate, useQuery } from '@/lib/query'
+import { carPlate, toast, useStore } from '@/store'
+import type { GarageDetail } from '@/lib/types'
 import type { ScreenProps } from '@/navigation/types'
 
-/** Garage + current reservation for the booking / reschedule flow. */
+/** The booking window shown in the date strip. */
+const DAYS = 14
+/** Errors that mean "pick another slot". */
+const SLOT_ERRORS = ['SLOT_FULL', 'SLOT_IN_PAST', 'SLOT_BLOCKED', 'NOT_A_SLOT', 'DAY_BLOCKED', 'GARAGE_CLOSED', 'BOOKING_TOO_FAR', 'DUPLICATE_BOOKING', 'SAME_SLOT']
+
+/** Garage (cached from its page) + the reservation being moved, for the booking / reschedule flow. */
 function useFlow() {
   const s = useStore()
-  const isR = s.mode === 'resched'
-  const rr = s.res.find((r) => r.ref === s.rid) ?? s.res[0]
-  const g = gById(isR ? rr.g : s.gid)
-  return { s, isR, rr, g }
+  const gq = useQuery('garage|' + s.gid, () => api.garages.get(s.gid))
+  return { s, isR: s.mode === 'resched', rr: s.rr, g: gq.data }
 }
+
+const isClosed = (g: GarageDetail | undefined, date: string) => !!g && !g.hours.find((h) => h.dayOfWeek === apiWeekday(date))?.isOpen
+/** No slot left today: closed, or past closing time. */
+const doneToday = (g: GarageDetail | undefined, date: string) =>
+  isClosed(g, date) || (!!g && nowTime() >= (g.hours.find((h) => h.dayOfWeek === apiWeekday(date))?.closesAt ?? '24:00'))
+
+/** Selected services that the garage still offers. */
+const chosenServices = (g: GarageDetail | undefined, ids: string[]) => (g ? g.services.filter((x) => ids.includes(x.id)) : [])
 
 function Steps({ idx }: { idx: number }) {
   const { t } = useT()
@@ -42,38 +58,35 @@ function Legend({ color, label }: { color: string; label: string }) {
   )
 }
 
-/** Step 1 (and reschedule): 14-day date strip + 30-min slot grid. */
+/** Step 1 (and reschedule): 14-day date strip + the garage's slot grid for the picked day. */
 export function Book1Screen({ navigation }: ScreenProps<'Book1'>) {
-  const { t, L, ar } = useT()
+  const { t, tr, L, ar } = useT()
   const { width } = useWindowDimensions()
   const { s, isR, rr, g } = useFlow()
-  const gv = useGarageView()
   const sel = isR ? s.rs : s.bk
-  const pick = (p: { di?: number; m?: number | null }) => (isR ? s.setRs(p) : s.setBk(p))
-  const [loading, setLoading] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  useEffect(() => () => clearTimeout(timer.current), [])
-  const pickDate = (i: number) => {
-    pick({ di: i, m: null })
-    setLoading(true)
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => setLoading(false), 550)
-  }
+  const pick = (p: { date?: string; time?: string | null }) => (isR ? s.setRs(p) : s.setBk(p))
   const strip = useRef<ScrollView>(null)
 
-  const times: number[] = []
-  for (let m = 480; m + 30 <= toM(g.close); m += 30) times.push(m)
+  const first = today()
+  const days = useMemo(() => Array.from({ length: DAYS }, (_, i) => addDays(first, i)), [first])
+  // Until a day is picked: the first day the garage still takes bookings.
+  const date = sel.date ?? days.find((d) => (d === first ? !doneToday(g, d) : !isClosed(g, d))) ?? first
+  const avq = useQuery(`avail|${s.gid}|${date}`, () => api.garages.availability(s.gid, date))
+  const slots = avq.data?.slots ?? []
+  const dur = g?.slotDurationMinutes ?? 30
+  const dp = dateParts(date)
+
   const col = (width - 32 - 16) / 3
-  const slot = (m: number) => {
-    const old = isR && sel.di === rr.di && m === rr.m
-    const a = old ? 0 : avail(g.id, sel.di, m)
-    const on = sel.m === m, dis = a <= 0
-    const sub = old ? (ar ? 'وقتك' : 'Actuel') : a < 0 ? t.past : a === 0 ? t.full : t[`left${a}` as 'left1']
+  const slot = ({ time, available }: { time: string; available: number }) => {
+    const old = isR && !!rr && date === rr.date && time === rr.time
+    const a = old ? 0 : available
+    const on = sel.time === time, dis = a <= 0
+    const sub = old ? (ar ? 'وقتك' : 'Actuel') : a === 0 ? t.full : a === 1 ? t.left1 : a === 2 ? t.left2 : tr('left_n', { n: a })
     return (
-      <Pressable key={m} disabled={dis} onPress={() => pick({ m })} accessibilityState={{ selected: on, disabled: dis }}
+      <Pressable key={time} disabled={dis} onPress={() => pick({ date, time })} accessibilityState={{ selected: on, disabled: dis }}
         style={{ width: col, height: 60, borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', gap: 3,
           backgroundColor: on ? colors.primary : dis ? colors.grey50 : colors.bg, borderColor: on ? colors.primary : dis ? colors.grey50 : colors.grey200 }}>
-        <Text latin w={700} fontSize={16} align="center" color={on ? 'white' : dis ? 'grey400' : 'ink'} style={a < 0 ? { textDecorationLine: 'line-through' } : undefined}>{hm(m)}</Text>
+        <Text latin w={700} fontSize={16} align="center" color={on ? 'white' : dis ? 'grey400' : 'ink'}>{time}</Text>
         <Box flexDirection="row" alignItems="center" gap="xs">
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: on ? colors.aqua : dis ? colors.grey300 : a === 1 ? colors.warning : colors.positive }} />
           <Text w={600} fontSize={12} style={{ color: on ? '#DCE7FF' : dis ? colors.grey450 : a === 1 ? colors.warningInk : colors.positiveInk }}>{sub}</Text>
@@ -81,8 +94,9 @@ export function Book1Screen({ navigation }: ScreenProps<'Book1'>) {
       </Pressable>
     )
   }
-  const group = (list: number[], icon: string, label: string) => {
-    const free = list.filter((m) => avail(g.id, sel.di, m) > 0).length
+  const group = (list: typeof slots, icon: string, label: string) => {
+    if (!list.length) return null
+    const free = list.filter((x) => x.available > 0).length
     return (
       <Box gap="sm">
         <Box flexDirection="row" alignItems="center" gap="s">
@@ -94,28 +108,28 @@ export function Book1Screen({ navigation }: ScreenProps<'Book1'>) {
       </Box>
     )
   }
-  const has = sel.m != null
+  const has = sel.time != null && sel.date === date
 
   return (
     <Screen bottom={false}>
-      <NavHeader title={isR ? t.resch_title : t.booking} sub={gv(g).name} />
+      <NavHeader title={isR ? t.resch_title : t.booking} sub={g?.name} />
       {!isR && <Steps idx={0} />}
       <ScrollView contentContainerStyle={{ paddingTop: 20, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <Text w={800} fontSize={24} style={{ paddingHorizontal: 16 }}>{t.pick_time}</Text>
-        <Text w={600} fontSize={14} color="grey600" style={{ paddingHorizontal: 16, paddingTop: 4 }}>{MON[L][dayAt(sel.di).getMonth()] + ' 2026'}</Text>
+        <Text w={600} fontSize={14} color="grey600" style={{ paddingHorizontal: 16, paddingTop: 4 }}>{MON[L][dp.month] + ' ' + dp.year}</Text>
         <ScrollView ref={strip} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}
           // With `direction: rtl` the strip is laid out from the right; start the scroll there too.
           onContentSizeChange={() => ar && strip.current?.scrollToEnd({ animated: false })}>
-          {Array.from({ length: 14 }, (_, i) => {
-            const d = dayAt(i), closed = d.getDay() === 0, on = sel.di === i
+          {days.map((d, i) => {
+            const p = dateParts(d), closed = isClosed(g, d), on = date === d
             const sub = on ? '#CFE0FF' : closed ? colors.grey400 : colors.grey500
             return (
-              <Pressable key={i} disabled={closed} onPress={() => pickDate(i)} accessibilityState={{ selected: on, disabled: closed }}
+              <Pressable key={d} disabled={closed} onPress={() => pick({ date: d, time: null })} accessibilityState={{ selected: on, disabled: closed }}
                 style={{ width: 60, height: 80, borderRadius: 14, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', gap: 2,
                   backgroundColor: on ? colors.primary : closed ? colors.grey50 : colors.bg, borderColor: on ? colors.primary : closed ? colors.grey50 : colors.grey200 }}>
-                <Text w={600} fontSize={12} align="center" style={{ color: sub }}>{i === 0 ? t.today_s : DOW[L][d.getDay()]}</Text>
-                <Text latin w={800} fontSize={22} align="center" color={on ? 'white' : closed ? 'grey400' : 'ink'} style={closed ? { textDecorationLine: 'line-through' } : undefined}>{d.getDate()}</Text>
-                <Text w={600} fontSize={11} align="center" style={{ color: sub }}>{MONS[L][d.getMonth()]}</Text>
+                <Text w={600} fontSize={12} align="center" style={{ color: sub }}>{i === 0 ? t.today_s : DOW[L][p.dow]}</Text>
+                <Text latin w={800} fontSize={22} align="center" color={on ? 'white' : closed ? 'grey400' : 'ink'} style={closed ? { textDecorationLine: 'line-through' } : undefined}>{p.day}</Text>
+                <Text w={600} fontSize={11} align="center" style={{ color: sub }}>{MONS[L][p.month]}</Text>
               </Pressable>
             )
           })}
@@ -125,22 +139,32 @@ export function Book1Screen({ navigation }: ScreenProps<'Book1'>) {
           <Legend color={colors.warning} label={t.few} />
           <Legend color={colors.grey300} label={t.full} />
         </Box>
-        {loading ? (
+        {avq.loading ? (
           <Box flexDirection="row" flexWrap="wrap" gap="s" style={{ paddingHorizontal: 16, paddingTop: 24 }}>
             {Array.from({ length: 9 }, (_, i) => <Skeleton key={i} w={col} h={60} r={12} />)}
           </Box>
+        ) : avq.error && !avq.data ? (
+          <Box alignItems="center" gap="s" style={{ padding: 24 }}>
+            <Text w={700} fontSize={16} align="center">{t.load_err_t}</Text>
+            <Button label={t.retry} icon="refresh" variant="secondary" height={44} fontSize={15} px={20} onPress={() => void avq.reload()} />
+          </Box>
+        ) : !slots.length ? (
+          <Box alignItems="center" gap="s" style={{ padding: 32 }}>
+            <Icon name="event_busy" size={40} color="grey400" />
+            <Text w={700} fontSize={16} color="grey600" align="center">{avq.data?.isOpen === false ? t.closed_day : t.no_slots}</Text>
+          </Box>
         ) : (
           <Box gap="sm" style={{ paddingHorizontal: 16, paddingTop: 20 }}>
-            {group(times.filter((m) => m < 720), 'wb_sunny', t.morning)}
+            {group(slots.filter((x) => x.time < '12:00'), 'wb_sunny', t.morning)}
             <View style={{ height: 12 }} />
-            {group(times.filter((m) => m >= 720), 'wb_twilight', t.afternoon)}
+            {group(slots.filter((x) => x.time >= '12:00'), 'wb_twilight', t.afternoon)}
           </Box>
         )}
       </ScrollView>
       <BottomBar shadow>
         <Box flex={1} minWidth={0}>
-          <Text w={700} fontSize={15} numberOfLines={1}>{has ? dLong(sel.di, L) : t.pick_slot}</Text>
-          {has ? <Text fontSize={14} color="grey600">{range(sel.m!, L)}</Text> : null}
+          <Text w={700} fontSize={15} numberOfLines={1}>{has ? dLong(date, L) : t.pick_slot}</Text>
+          {has ? <Text fontSize={14} color="grey600">{range(sel.time!, dur, L)}</Text> : null}
         </Box>
         <Button label={t.continue} px={32} disabled={!has} onPress={() => navigation.navigate(isR ? 'Resched2' : 'Book2')} />
       </BottomBar>
@@ -150,35 +174,35 @@ export function Book1Screen({ navigation }: ScreenProps<'Book1'>) {
 
 /** Step 2: services (all in the same slot) + car. */
 export function Book2Screen({ navigation }: ScreenProps<'Book2'>) {
-  const { t, tr, li, L } = useT()
+  const { t, tr, L } = useT()
   const { s, g } = useFlow()
-  const gv = useGarageView()
   const [err, setErr] = useState(false)
-  const total = s.bk.svc.reduce((a, id) => a + svcPrice(g, id), 0)
-  const has = s.bk.svc.length > 0
+  const chosen = chosenServices(g, s.bk.svc)
+  const total = chosen.reduce((a, x) => a + x.price, 0)
+  const has = chosen.length > 0
   return (
     <Screen bottom={false}>
-      <NavHeader title={t.booking} sub={gv(g).name} />
+      <NavHeader title={t.booking} sub={g?.name} />
       <Steps idx={1} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 24, gap: 12 }} showsVerticalScrollIndicator={false}>
         <Text w={800} fontSize={24}>{t.pick_services}</Text>
         <Notice icon="info">{t.same_slot}</Notice>
         {err && <Notice icon="error" tone="negative" align="center">{t.e_services}</Notice>}
-        {g.svc.map((id) => {
-          const x = SVM[id], on = s.bk.svc.includes(id)
+        {(g?.services ?? []).map((x) => {
+          const on = s.bk.svc.includes(x.id)
           return (
-            <Pressable key={id} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
-              onPress={() => { setErr(false); s.setBk({ svc: on ? s.bk.svc.filter((y) => y !== id) : [...s.bk.svc, id] }) }}
+            <Pressable key={x.id} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
+              onPress={() => { setErr(false); s.setBk({ svc: on ? s.bk.svc.filter((y) => y !== x.id) : [...s.bk.svc, x.id] }) }}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 16, borderWidth: 1.5,
                 borderColor: on ? colors.primary : colors.grey200, backgroundColor: on ? colors.primarySoft : colors.bg }}>
               <View style={{ width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: on ? colors.primary : colors.grey400, backgroundColor: on ? colors.primary : colors.bg, alignItems: 'center', justifyContent: 'center' }}>
                 {on && <Icon name="check" size={18} color="white" />}
               </View>
               <Box flex={1} minWidth={0}>
-                <Text w={700} fontSize={16}>{x.n[li]}</Text>
-                <Text fontSize={13} color="grey600" lh={1.4} style={{ marginTop: 2 }}>{x.d[li]} · {tr('min', { n: x.dur })}</Text>
+                <Text w={700} fontSize={16}>{svcName(x, L)}</Text>
+                {svcDesc(x, L) ? <Text fontSize={13} color="grey600" lh={1.4} style={{ marginTop: 2 }}>{svcDesc(x, L)}</Text> : null}
               </Box>
-              <Text w={700} fontSize={16}>{price(svcPrice(g, id), L)}</Text>
+              <Text w={700} fontSize={16}>{price(x.price, L)}</Text>
             </Pressable>
           )
         })}
@@ -187,7 +211,7 @@ export function Book2Screen({ navigation }: ScreenProps<'Book2'>) {
           {s.cars.map((c) => {
             const on = s.bk.car === c.id
             return (
-              <Pressable key={c.id} onPress={() => s.setBk({ car: c.id })} accessibilityState={{ selected: on }}
+              <Pressable key={c.id} onPress={() => s.setBk({ car: on ? null : c.id })} accessibilityState={{ selected: on }}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 48, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5,
                   borderColor: on ? colors.primary : colors.grey200, backgroundColor: on ? colors.primaryTint : colors.bg }}>
                 <Icon name="directions_car" size={20} />
@@ -205,10 +229,11 @@ export function Book2Screen({ navigation }: ScreenProps<'Book2'>) {
       </ScrollView>
       <BottomBar shadow>
         <Box flex={1}>
-          <Text fontSize={13} color="grey600">{t.total} · {s.bk.svc.length === 1 ? t.one_service : tr('n_services', { n: s.bk.svc.length })}</Text>
+          <Text fontSize={13} color="grey600">{t.total} · {chosen.length === 1 ? t.one_service : tr('n_services', { n: chosen.length })}</Text>
           <Text w={800} fontSize={22}>{price(total, L)}</Text>
         </Box>
-        <Button label={t.continue} px={32} variant={has ? 'primary' : 'disabled'} onPress={() => (has ? navigation.navigate('Book3') : setErr(true))} />
+        <Button label={t.continue} px={32} variant={has ? 'primary' : 'disabled'}
+          onPress={() => { if (!has) return setErr(true); s.setBk({ svc: chosen.map((x) => x.id) }); navigation.navigate('Book3') }} />
       </BottomBar>
     </Screen>
   )
@@ -216,44 +241,62 @@ export function Book2Screen({ navigation }: ScreenProps<'Book2'>) {
 
 /** Step 3: summary, cash payment, confirm. */
 export function Book3Screen({ navigation }: ScreenProps<'Book3'>) {
-  const { t, li, L } = useT()
+  const { t, L } = useT()
   const { s, g } = useFlow()
-  const gd = useGarageView()(g)
   const [busy, setBusy] = useState(false)
-  const total = s.bk.svc.reduce((a, id) => a + svcPrice(g, id), 0)
-  const car = s.cars.find((x) => x.id === s.bk.car) ?? s.cars[0]
-  const confirm = () => {
-    if (busy) return
+  const chosen = chosenServices(g, s.bk.svc)
+  const total = chosen.reduce((a, x) => a + x.price, 0)
+  const car = s.cars.find((x) => x.id === s.bk.car)
+  const { date, time } = s.bk
+  const confirm = async () => {
+    if (busy || !g || !date || !time) return
     setBusy(true)
-    setTimeout(() => {
-      s.confirmBooking()
+    try {
+      const r = await api.reservations.book({
+        garageId: g.id, date, time, serviceIds: chosen.map((x) => x.id), car: car ? { brand: car.b, model: car.m, plate: carPlate(car) } : undefined,
+      })
+      s.setLast(r)
+      invalidate()
       navigation.reset({ index: 1, routes: [{ name: 'Tabs', params: { screen: 'Map' } }, { name: 'Success' }] })
-    }, 1100)
+    } catch (x) {
+      notifyError(x)
+      const code = errorCode(x)
+      if (SLOT_ERRORS.includes(code)) {
+        s.setBk({ time: null })
+        invalidate()
+        navigation.popTo('Book1')
+      } else if (code === 'INVALID_SERVICES') {
+        invalidate()
+        navigation.popTo('Book2')
+      }
+    } finally {
+      setBusy(false)
+    }
   }
   return (
     <Screen bottom={false}>
-      <NavHeader title={t.booking} sub={gd.name} />
+      <NavHeader title={t.booking} sub={g?.name} />
       <Steps idx={2} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 24, gap: 20 }} showsVerticalScrollIndicator={false}>
         <Text w={800} fontSize={24}>{t.summary_t}</Text>
         <Box flexDirection="row" alignItems="center" gap="sm">
           <Thumb size={56} icon={24} />
           <Box flex={1} minWidth={0}>
-            <Text w={700} fontSize={17}>{gd.name}</Text>
-            <Text fontSize={14} color="grey600" style={{ marginTop: 2 }}>{gd.addr}</Text>
+            <Text w={700} fontSize={17}>{g?.name}</Text>
+            <Text fontSize={14} color="grey600" style={{ marginTop: 2 }}>{g?.address}</Text>
           </Box>
         </Box>
         <View style={{ borderRadius: 16, borderWidth: 1, borderColor: colors.grey150 }}>
-          <InfoRow icon="calendar_today" label={t.date} value={dLong(s.bk.di, L)} />
-          <InfoRow icon="schedule" label={t.time} value={s.bk.m != null ? range(s.bk.m, L) : ''} />
+          <InfoRow icon="calendar_today" label={t.date} value={date ? dLong(date, L) : ''} />
+          <InfoRow icon="schedule" label={t.time} value={time ? range(time, g?.slotDurationMinutes ?? 30, L) : ''} />
           <InfoRow icon="directions_car" label={t.car} value={car ? car.b + ' ' + car.m : '—'} last />
         </View>
         <Box gap="s">
           <Text w={800} fontSize={18}>{t.services}</Text>
-          {s.bk.svc.map((id) => (
-            <Box key={id} flexDirection="row" justifyContent="space-between">
-              <Text fontSize={15}>{SVM[id].n[li]}</Text>
-              <Text w={600} fontSize={15}>{price(svcPrice(g, id), L)}</Text>
+          {chosen.map((x) => (
+            <Box key={x.id} flexDirection="row" justifyContent="space-between" gap="s">
+              <Text fontSize={15} style={{ flexShrink: 1 }}>{svcName(x, L)}</Text>
+              <Text w={600} fontSize={15}>{price(x.price, L)}</Text>
             </Box>
           ))}
           <View style={{ height: 1, backgroundColor: colors.grey150, marginVertical: 4 }} />
@@ -286,18 +329,17 @@ export function Book3Screen({ navigation }: ScreenProps<'Book3'>) {
         </Box>
       </ScrollView>
       <BottomBar>
-        <Button label={busy ? t.confirming : t.confirm_res + ' · ' + price(total, L)} loading={busy} flex={1} onPress={confirm} />
+        <Button label={busy ? t.confirming : t.confirm_res + ' · ' + price(total, L)} loading={busy} disabled={!g || !chosen.length} flex={1} onPress={confirm} />
       </BottomBar>
     </Screen>
   )
 }
 
 export function SuccessScreen({ navigation }: ScreenProps<'Success'>) {
-  const { t, li, L } = useT()
-  const s = useStore()
-  const r = s.res.find((x) => x.ref === s.lastRef) ?? { g: 'marsa', di: 0, m: 660, svc: ['full', 'pol'] }
-  const g = gById(r.g)
-  const total = r.svc.reduce((a, id) => a + svcPrice(g, id), 0)
+  const { t, L } = useT()
+  const r = useStore((s) => s.last)
+  // The garage page is cached, so the slot length is known without waiting.
+  const gq = useQuery(r ? 'garage|' + r.garage.id : null, () => api.garages.get(r!.garage.id))
   const toTabs = (screen: 'Map' | 'Reservations') => navigation.reset({ index: 0, routes: [{ name: 'Tabs', params: { screen, params: screen === 'Reservations' ? { seg: 'up' } : undefined } }] })
   return (
     <Screen>
@@ -312,18 +354,22 @@ export function SuccessScreen({ navigation }: ScreenProps<'Success'>) {
         </View>
         <Text w={800} fontSize={30} align="center" style={{ marginTop: 8 }}>{t.success_t}</Text>
         <Text fontSize={16} color="grey600" lh={1.5} align="center" style={{ maxWidth: 300 }}>{t.success_s}</Text>
-        <View style={[{ alignSelf: 'stretch', marginTop: 8, borderRadius: 20, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.grey150, padding: 16, gap: 12 }, elevation.float, { shadowOpacity: 0.06 }]}>
-          <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-            <Text fontSize={14} color="grey600">{t.ref}</Text>
-            <Text latin w={800} fontSize={18} style={{ fontFamily: 'Inter_800ExtraBold', letterSpacing: 0.7 }}>{s.lastRef}</Text>
-          </Box>
-          <View style={{ height: 1, backgroundColor: colors.grey120 }} />
-          <Box flexDirection="row" alignItems="center" gap="s"><Icon name="local_car_wash" size={20} /><Text w={700} fontSize={15}>{g.n[li]}</Text></Box>
-          <Box flexDirection="row" alignItems="center" gap="s"><Icon name="calendar_today" size={20} /><Text fontSize={15}>{dLong(r.di, L)}</Text></Box>
-          <Box flexDirection="row" alignItems="center" gap="s">
-            <Icon name="schedule" size={20} /><Text fontSize={15} style={{ flex: 1 }}>{range(r.m, L)}</Text><Text w={800} fontSize={15}>{price(total, L)}</Text>
-          </Box>
-        </View>
+        {r && (
+          <View style={[{ alignSelf: 'stretch', marginTop: 8, borderRadius: 20, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.grey150, padding: 16, gap: 12 }, elevation.float, { shadowOpacity: 0.06 }]}>
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+              <Text fontSize={14} color="grey600">{t.ref}</Text>
+              <Text latin w={800} fontSize={18} style={{ fontFamily: 'Inter_800ExtraBold', letterSpacing: 0.7 }}>{r.ref}</Text>
+            </Box>
+            <View style={{ height: 1, backgroundColor: colors.grey120 }} />
+            <Box flexDirection="row" alignItems="center" gap="s"><Icon name="local_car_wash" size={20} /><Text w={700} fontSize={15}>{r.garage.name}</Text></Box>
+            <Box flexDirection="row" alignItems="center" gap="s"><Icon name="calendar_today" size={20} /><Text fontSize={15}>{dLong(r.date, L)}</Text></Box>
+            <Box flexDirection="row" alignItems="center" gap="s">
+              <Icon name="schedule" size={20} />
+              <Text fontSize={15} style={{ flex: 1 }}>{gq.data ? range(r.time, gq.data.slotDurationMinutes, L) : iso(r.time, L)}</Text>
+              <Text w={800} fontSize={15}>{price(r.total, L)}</Text>
+            </Box>
+          </View>
+        )}
       </ScrollView>
       <Footer gap={8}>
         <Button label={t.add_cal} icon="event" variant="secondary" height={52} fontSize={16} onPress={() => toast('cal_added')} />
@@ -336,25 +382,43 @@ export function SuccessScreen({ navigation }: ScreenProps<'Success'>) {
 
 /** Reschedule: old slot (struck through) → new slot. */
 export function Resched2Screen({ navigation }: ScreenProps<'Resched2'>) {
-  const { t, li, L } = useT()
+  const { t, L } = useT()
   const { s, rr, g } = useFlow()
-  const confirm = () => {
-    s.confirmResched()
-    toast('resched_toast')
-    navigation.popTo('ResDetail', { ref: rr.ref })
+  const [busy, setBusy] = useState(false)
+  const dur = g?.slotDurationMinutes ?? 30
+  const { date, time } = s.rs
+  const confirm = async () => {
+    if (busy || !rr || !date || !time) return
+    setBusy(true)
+    try {
+      const r = await api.reservations.reschedule(rr.id, date, time)
+      invalidate()
+      toast('resched_toast')
+      navigation.popTo('ResDetail', { id: r.id })
+    } catch (x) {
+      notifyError(x)
+      if (SLOT_ERRORS.includes(errorCode(x))) {
+        s.setRs({ time: null })
+        invalidate()
+        navigation.popTo('Book1')
+      }
+    } finally {
+      setBusy(false)
+    }
   }
+  if (!rr) return <Screen back>{null}</Screen>
   return (
     <Screen back>
       <Box flex={1} gap="ml" style={{ paddingTop: 16, paddingHorizontal: 16 }}>
         <Box>
           <Text w={800} fontSize={28} lh={1.3}>{t.resch_t}</Text>
-          <Text fontSize={15} color="grey600" style={{ marginTop: 6 }}>{g.n[li]}</Text>
+          <Text fontSize={15} color="grey600" style={{ marginTop: 6 }}>{rr.garage.name}</Text>
         </Box>
         <View>
           <Box padding="m" borderRadius="card" backgroundColor="grey50" gap="xs">
             <Text w={600} fontSize={13} color="grey600">{t.old_time}</Text>
-            <Text w={700} fontSize={17} color="grey500" style={{ textDecorationLine: 'line-through' }}>{dLong(rr.di, L)}</Text>
-            <Text fontSize={15} color="grey500" style={{ textDecorationLine: 'line-through' }}>{range(rr.m, L)}</Text>
+            <Text w={700} fontSize={17} color="grey500" style={{ textDecorationLine: 'line-through' }}>{dLong(rr.date, L)}</Text>
+            <Text fontSize={15} color="grey500" style={{ textDecorationLine: 'line-through' }}>{range(rr.time, dur, L)}</Text>
           </Box>
           <Box alignItems="center" style={{ marginVertical: -10, zIndex: 1 }}>
             <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.grey200, alignItems: 'center', justifyContent: 'center' }}>
@@ -363,8 +427,8 @@ export function Resched2Screen({ navigation }: ScreenProps<'Resched2'>) {
           </Box>
           <Box padding="m" borderRadius="card" gap="xs" style={{ borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.primarySoft }}>
             <Text w={700} fontSize={13} color="primary">{t.new_time}</Text>
-            <Text w={800} fontSize={17}>{dLong(s.rs.di, L)}</Text>
-            <Text w={600} fontSize={15}>{s.rs.m != null ? range(s.rs.m, L) : ''}</Text>
+            <Text w={800} fontSize={17}>{date ? dLong(date, L) : ''}</Text>
+            <Text w={600} fontSize={15}>{time ? range(time, dur, L) : ''}</Text>
           </Box>
         </View>
         <Box flexDirection="row" alignItems="center" gap="s">
@@ -372,7 +436,7 @@ export function Resched2Screen({ navigation }: ScreenProps<'Resched2'>) {
           <Text fontSize={14} color="grey600" style={{ flex: 1 }}>{t.resch_note}</Text>
         </Box>
       </Box>
-      <Footer px={16}><Button label={t.confirm_change} onPress={confirm} /></Footer>
+      <Footer px={16}><Button label={t.confirm_change} onPress={confirm} loading={busy} /></Footer>
     </Screen>
   )
 }

@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable, ScrollView, TextInput, View } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from '@/theme'
-import { Box, Button, Dialog, Field, FieldError, Icon, Input, PasswordInput, PhoneInput, Plate, Text, Toggle } from '@/components/ui'
+import { Box, Button, Dialog, Field, FieldError, Icon, Input, Plate, Text, Toggle } from '@/components/ui'
 import { Body, Footer, Screen } from '@/components/screen'
 import { LangOptions } from '@/screens/onboarding'
-import { useForm, validate } from '@/screens/auth'
-import { digits, fmtPhone, iso } from '@/lib/format'
+import { useForm } from '@/screens/auth'
+import { api, logout } from '@/lib/api'
+import { digits, fmtPhone, initials, iso } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { toast, useStore, type Appearance } from '@/store'
 import type { ScreenProps } from '@/navigation/types'
@@ -42,25 +43,30 @@ export function ProfileScreen() {
   const { t, tr, L } = useT()
   const nav = useNavigation()
   const insets = useSafeAreaInsets()
-  const cars = useStore((s) => s.cars), phone = useStore((s) => s.phone), logout = useStore((s) => s.logout)
+  const cars = useStore((s) => s.cars), customer = useStore((s) => s.customer), setCustomer = useStore((s) => s.setCustomer)
   const appearance = useStore((s) => s.appearance)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  // Pick up changes made on another device.
+  useEffect(() => {
+    api.me.get().then(setCustomer, () => {})
+  }, [setCustomer])
+  const phone = fmtPhone(customer?.phone ?? '')
+  const name = customer?.name?.trim()
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 24 }} showsVerticalScrollIndicator={false}>
         <Box flexDirection="row" alignItems="center" gap="m" style={{ paddingTop: 8 }}>
           <Box flex={1} minWidth={0}>
-            <Text w={800} fontSize={30} lh={1.25}>{t.user_name}</Text>
+            <Text w={800} fontSize={30} lh={1.25} numberOfLines={2}>{name || iso('+216 ' + phone, L)}</Text>
             <Text latin fontSize={15} color="grey600" style={{ marginTop: 4 }}>{iso('+216 ' + phone, L)}</Text>
           </Box>
           <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: colors.aquaTint }}>
-            <Text w={800} fontSize={24} color="white" align="center">{t.initials}</Text>
+            {name ? <Text w={800} fontSize={24} color="white" align="center">{initials(name)}</Text> : <Icon name="person" size={36} color="white" />}
           </View>
         </Box>
         <Section title={t.account}>
           <MenuRow icon="directions_car" label={t.my_cars} value={tr('n_cars', { n: cars.length })} onPress={() => nav.navigate('Cars')} />
-          <MenuRow icon="lock" label={t.change_pw} onPress={() => nav.navigate('ChangePw')} />
-          <MenuRow icon="smartphone" label={t.change_phone} onPress={() => nav.navigate('ChangePhone')} />
+          <MenuRow icon="badge" label={t.edit_name} value={name} onPress={() => nav.navigate('Name')} />
         </Section>
         <Section title={t.settings}>
           <MenuRow icon="translate" label={t.language} value={t.lang_name} onPress={() => nav.navigate('Language')} />
@@ -246,60 +252,6 @@ export function NotifScreen() {
           </Box>
         ))}
       </Box>
-    </Screen>
-  )
-}
-
-export function ChangePwScreen({ navigation }: ScreenProps<'ChangePw'>) {
-  const { t } = useT()
-  const { f, err, set, setErr } = useForm({ cpw: '', npw: '', npw2: '' })
-  const [show, setShow] = useState(false)
-  const save = () => {
-    const e = validate(f, [['cpw', 'pwreq'], ['npw', 'pw'], ['npw2', { match: 'npw' }]])
-    setErr(e)
-    if (Object.keys(e).length) return
-    toast('pw_changed')
-    navigation.goBack()
-  }
-  return (
-    <Screen back>
-      <Body gap={20} pt={8}>
-        <Text w={800} fontSize={30}>{t.change_pw}</Text>
-        <Field label={t.current_pw} error={err.cpw && t[err.cpw]}>
-          <PasswordInput value={f.cpw} onChangeText={(v) => set('cpw', v)} error={!!err.cpw} show={show} onToggle={() => setShow(!show)} />
-        </Field>
-        <Field label={t.new_pw} error={err.npw && t[err.npw]}>
-          <Input value={f.npw} onChangeText={(v) => set('npw', v)} placeholder={t.pw_ph} error={!!err.npw} secureTextEntry={!show} latin autoCapitalize="none" />
-        </Field>
-        <Field label={t.confirm_pw} error={err.npw2 && t[err.npw2]}>
-          <Input value={f.npw2} onChangeText={(v) => set('npw2', v)} placeholder={t.pw_ph} error={!!err.npw2} secureTextEntry={!show} latin autoCapitalize="none" />
-        </Field>
-      </Body>
-      <Footer><Button label={t.save} onPress={save} /></Footer>
-    </Screen>
-  )
-}
-
-export function ChangePhoneScreen({ navigation }: ScreenProps<'ChangePhone'>) {
-  const { t } = useT()
-  const { f, err, set, setErr } = useForm({ phone: '' })
-  const send = () => {
-    const e = validate(f, [['phone', 'phone']])
-    setErr(e)
-    if (!Object.keys(e).length) navigation.navigate('Otp', { ctx: 'phone', phone: f.phone })
-  }
-  return (
-    <Screen back>
-      <Box flex={1} gap="ml" style={{ paddingHorizontal: 24, paddingTop: 8 }}>
-        <Box>
-          <Text w={800} fontSize={30}>{t.change_phone}</Text>
-          <Text fontSize={15} color="grey600" lh={1.5} style={{ marginTop: 8 }}>{t.phone_s}</Text>
-        </Box>
-        <Field label={t.new_phone} error={err.phone && t[err.phone]}>
-          <PhoneInput value={f.phone} onChangeText={(v) => set('phone', fmtPhone(v))} error={!!err.phone} />
-        </Field>
-      </Box>
-      <Footer><Button label={t.send_code} onPress={send} /></Footer>
     </Screen>
   )
 }

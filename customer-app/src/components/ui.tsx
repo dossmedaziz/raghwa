@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, elevation, isDark, type Color, type Theme } from '@/theme'
 import { useT } from '@/lib/i18n'
 import { useToast } from '@/store'
-import type { Bub } from '@/data/mock'
+import type { Bub } from '@/data/constants'
 
 export const Box = createBox<Theme>()
 const RText = createText<Theme>()
@@ -162,20 +162,6 @@ export function Input({ error, style, latin, ...rest }: TextInputProps & { error
       <TextInput placeholderTextColor={colors.grey450} onFocus={s.onFocus} onBlur={s.onBlur}
         style={[{ flex: 1, height: '100%', fontSize: 16, color: colors.ink, fontFamily: ar && !latin ? 'Cairo_400Regular' : 'Inter_400Regular', textAlign: ar ? 'right' : 'left' }, style]}
         {...rest} />
-    </View>
-  )
-}
-
-export function PasswordInput({ error, show, onToggle, ...rest }: TextInputProps & { error?: boolean; show: boolean; onToggle: () => void }) {
-  const { ar, t } = useT()
-  const s = useShell(error)
-  return (
-    <View style={[s.shell, { paddingStart: 16, paddingEnd: 6 }]}>
-      <TextInput secureTextEntry={!show} autoCapitalize="none" placeholderTextColor={colors.grey450} onFocus={s.onFocus} onBlur={s.onBlur}
-        style={{ flex: 1, height: '100%', fontSize: 16, color: colors.ink, fontFamily: 'Inter_400Regular', textAlign: ar ? 'right' : 'left' }} {...rest} />
-      <Pressable onPress={onToggle} accessibilityLabel={t.password} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
-        <Icon name={show ? 'visibility_off' : 'visibility'} size={22} color="grey600" />
-      </Pressable>
     </View>
   )
 }
@@ -398,15 +384,15 @@ export function Dialog({ visible, onClose, children }: { visible: boolean; onClo
 
 /** Global toast (dark pill with an aqua check), shown above the tab bar. */
 export function ToastHost({ bottom }: { bottom: number }) {
-  const key = useToast((s) => s.key)
+  const key = useToast((s) => s.key), tone = useToast((s) => s.tone)
   const { t, dir } = useT()
   if (!key) return null
   return (
     <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(160)} pointerEvents="none"
       style={{ position: 'absolute', left: 16, right: 16, bottom, alignItems: 'center', zIndex: 70, direction: dir }}>
       <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 14, backgroundColor: colors.inverse }, elevation.sheet]}>
-        <Icon name="check_circle" size={22} color="aqua" />
-        <Text w={600} fontSize={15} color="white">{t[key]}</Text>
+        <Icon name={tone === 'error' ? 'error' : 'check_circle'} size={22} color={tone === 'error' ? 'warning' : 'aqua'} />
+        <Text w={600} fontSize={15} color="white" style={{ flexShrink: 1 }}>{t[key]}</Text>
       </View>
     </Animated.View>
   )
