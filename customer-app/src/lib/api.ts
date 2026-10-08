@@ -3,7 +3,7 @@
 import Constants from 'expo-constants'
 import { useStore } from '@/store'
 import type {
-  Availability, BookRequest, CustomerDto, CustomerSession, GarageCard, GarageDetail, Paged, Reservation, TokenPair,
+  Availability, BookRequest, CustomerDto, CustomerSession, GarageCard, GarageDetail, Paged, Reservation, SavedCar, TokenPair,
 } from '@/lib/types'
 
 /**
@@ -68,7 +68,7 @@ function refreshTokens(): Promise<boolean> {
   return refreshing
 }
 
-type Method = 'GET' | 'POST' | 'PATCH'
+type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 
 export async function request<T>(method: Method, path: string, body?: unknown, opts: { auth?: boolean } = {}): Promise<T> {
   const auth = opts.auth ?? true
@@ -119,6 +119,12 @@ export const api = {
   me: {
     get: () => request<CustomerDto>('GET', '/v1/me'),
     update: (name: string) => request<CustomerDto>('PATCH', '/v1/me', { name }),
+  },
+  cars: {
+    list: () => request<SavedCar[]>('GET', '/v1/me/cars'),
+    create: (car: Omit<SavedCar, 'id' | 'isDefault'> & { isDefault?: boolean }) => request<SavedCar>('POST', '/v1/me/cars', car),
+    update: (id: string, car: Partial<Omit<SavedCar, 'id'>>) => request<SavedCar>('PATCH', '/v1/me/cars/' + id, car),
+    remove: (id: string) => request<void>('DELETE', '/v1/me/cars/' + id),
   },
   garages: {
     search: (q: GarageQuery) => request<Paged<GarageCard>>('GET', '/v1/garages' + qs({ ...q }), undefined, { auth: false }),

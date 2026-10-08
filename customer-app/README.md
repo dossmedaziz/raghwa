@@ -50,8 +50,10 @@ API cross-origin, so add the web dev server's origin (e.g. `http://localhost:808
 - Booking: day + slot from the garage's real availability → services (+ optional car) → confirm. Payment is cash.
 - Reservations can be moved or cancelled until the slot starts (the API's rule).
 - Dates and times are Tunis time (UTC+1, no DST), whatever the phone's time zone.
-- Saved on the phone: language, theme, session, cars, notification toggles. Cars have no API yet; the chosen car is
-  sent with each booking (brand, model, plate as `215 TU 4521`).
+- Saved on the phone: language, theme, session, notification toggles.
+- Cars are saved in the account (`/v1/me/cars`, table `customer_cars`). The chosen car's brand, model and plate
+  (`215 TU 4521`) are also copied into each booking, so editing or deleting a car leaves past bookings unchanged.
+  Cars saved on the phone by an earlier version are uploaded once, the first time the list is loaded.
 - Not backed by the API yet, so not shown: ratings/reviews, garage photos, open/closed status on map cards,
   service durations, changing phone number.
 - Turn off Wi-Fi/data to see the "No internet" screen on the Map and Reservations tabs.

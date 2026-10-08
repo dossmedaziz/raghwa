@@ -19,6 +19,7 @@ import { applyScheme, colors, themes, type Scheme } from '@/theme'
 import { initMapbox } from '@/lib/mapbox'
 import { useT } from '@/lib/i18n'
 import { onSessionExpired } from '@/lib/api'
+import { loadCars } from '@/lib/cars'
 import { toast, useStore } from '@/store'
 import { ToastHost } from '@/components/ui'
 import { TAB_H, TabBar } from '@/components/screen'
@@ -101,6 +102,10 @@ function Root({ scheme }: { scheme: Scheme }) {
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme
   const shortcut = useReservationsShortcut()
   // The refresh token was revoked or expired: back to login.
+  // The account's cars, for the booking flow and the profile (also after each login).
+  useEffect(() => {
+    if (authed) loadCars().catch(() => {})
+  }, [authed])
   useEffect(() => onSessionExpired(() => {
     toast('session_expired', 'error')
     if (navRef.isReady()) navRef.reset({ index: 0, routes: [{ name: 'Login' }] })

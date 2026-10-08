@@ -8,6 +8,8 @@ import { Body, Footer, Screen } from '@/components/screen'
 import { LangOptions } from '@/screens/onboarding'
 import { useForm } from '@/screens/auth'
 import { api, logout } from '@/lib/api'
+import { deleteCar, loadCars, saveCar } from '@/lib/cars'
+import { notifyError } from '@/lib/errors'
 import { digits, fmtPhone, initials, iso } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { toast, useStore, type Appearance } from '@/store'
@@ -102,6 +104,10 @@ const THEMES: [Appearance, string][] = [['system', 'brightness_auto'], ['light',
 export function CarsScreen({ navigation }: ScreenProps<'Cars'>) {
   const { t } = useT()
   const cars = useStore((s) => s.cars)
+  // Pick up changes made on another device.
+  useEffect(() => {
+    loadCars().catch(notifyError)
+  }, [])
   return (
     <Screen back>
       <Body px={16} gap={12} pt={8}>
@@ -135,9 +141,22 @@ export function CarFormScreen({ navigation, route }: ScreenProps<'CarForm'>) {
   const { t } = useT()
   const id = route.params?.id
   const car = useStore((s) => s.cars.find((c) => c.id === id))
-  const saveCar = useStore((s) => s.saveCar), deleteCar = useStore((s) => s.deleteCar)
   const { f, err, set, setErr } = useForm({ brand: car?.b ?? '', model: car?.m ?? '', ps: car?.ps ?? '', pn: car?.pn ?? '' })
   const plateErr = !!(err.ps || err.pn)
+  const [busy, setBusy] = useState(false)
+  const run = async (action: () => Promise<void>, done: 'car_saved' | 'car_deleted') => {
+    if (busy) return
+    setBusy(true)
+    try {
+      await action()
+      toast(done)
+      navigation.goBack()
+    } catch (x) {
+      notifyError(x)
+    } finally {
+      setBusy(false)
+    }
+  }
   const save = () => {
     const e: typeof err = {}
     if (!f.brand.trim()) e.brand = 'e_req'
@@ -145,9 +164,7 @@ export function CarFormScreen({ navigation, route }: ScreenProps<'CarForm'>) {
     if (!f.ps || !f.pn) e.ps = 'e_plate'
     setErr(e)
     if (Object.keys(e).length) return
-    saveCar(id ?? null, { b: f.brand.trim(), m: f.model.trim(), ps: f.ps, pn: f.pn })
-    toast('car_saved')
-    navigation.goBack()
+    void run(() => saveCar(id ?? null, { b: f.brand.trim(), m: f.model.trim(), ps: f.ps, pn: f.pn }), 'car_saved')
   }
   const plateInput = (k: 'ps' | 'pn', ph: string, max: number, flex: number) => (
     <TextInput value={f[k]} onChangeText={(v) => set(k, digits(v).slice(0, max))} keyboardType="number-pad" placeholder={ph} placeholderTextColor="#6B6B6B"
@@ -175,13 +192,13 @@ export function CarFormScreen({ navigation, route }: ScreenProps<'CarForm'>) {
           <FieldError>{plateErr ? t.e_plate : null}</FieldError>
         </Box>
         {id && (
-          <Pressable onPress={() => { deleteCar(id); toast('car_deleted'); navigation.goBack() }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 8 }}>
+          <Pressable disabled={busy} onPress={() => void run(() => deleteCar(id), 'car_deleted')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 8 }}>
             <Icon name="delete" size={20} color="negativeInk" />
             <Text w={700} fontSize={15} color="negativeInk">{t.delete_car}</Text>
           </Pressable>
         )}
       </Body>
-      <Footer><Button label={t.save} onPress={save} /></Footer>
+      <Footer><Button label={t.save} onPress={save} loading={busy} /></Footer>
     </Screen>
   )
 }

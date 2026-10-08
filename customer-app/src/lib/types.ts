@@ -61,6 +61,8 @@ export interface Availability {
 export type ReservationStatus = 'upcoming' | 'done' | 'cancelled'
 export interface ReservationLine { serviceId: string | null; nameAr: string; nameFr: string; price: number }
 export interface CarDto { brand: string | null; model: string | null; plate: string | null }
+/** A car saved in the account (/v1/me/cars). */
+export interface SavedCar { id: string; brand: string; model: string; plate: string; isDefault: boolean }
 
 export interface Reservation {
   id: string

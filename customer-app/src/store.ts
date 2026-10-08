@@ -14,8 +14,8 @@ export interface Filters { dist: number; price: number }
 export const F0: Filters = { dist: 0, price: 0 }
 
 /**
- * A car saved on this phone (the API has no car book: the car is sent with each booking).
- * Tunisian plate: series `ps` · تونس · number `pn`.
+ * A car saved in the customer's account (/v1/me/cars, loaded by lib/cars.ts). Its brand, model and plate are
+ * also copied into each booking. Tunisian plate: series `ps` · تونس · number `pn`.
  */
 export interface Car { id: string; b: string; m: string; ps: string; pn: string; def: boolean }
 
@@ -63,8 +63,8 @@ interface Actions {
   startResched: (r: Reservation) => void
   setRs: (p: Partial<State['rs']>) => void
   setLast: (r: Reservation) => void
-  saveCar: (id: string | null, c: Omit<Car, 'id' | 'def'>) => void
-  deleteCar: (id: string) => void
+  /** Replaces the list with the server's; a booking draft pointing at a deleted car falls back to the default one. */
+  setCars: (cars: Car[]) => void
 }
 
 const emptyDraft: Draft = { date: null, time: null, svc: [], car: null }
@@ -97,7 +97,7 @@ export const useStore = create<State & Actions>()(
       setCustomer: (customer) => set({ customer }),
       signOut: () => {
         clearCache()
-        set({ tokens: null, customer: null, rr: null, last: null })
+        set({ tokens: null, customer: null, cars: [], rr: null, last: null })
       },
       setDenied: (denied) => set({ denied }),
       setFilters: (flt) => set({ flt }),
@@ -107,23 +107,14 @@ export const useStore = create<State & Actions>()(
       startResched: (r) => set({ mode: 'resched', gid: r.garage.id, rr: r, rs: { date: r.date, time: null } }),
       setRs: (p) => set((s) => ({ rs: { ...s.rs, ...p } })),
       setLast: (last) => set({ last, mode: 'book' }),
-      saveCar: (id, c) =>
-        set((s) => ({
-          cars: id ? s.cars.map((x) => (x.id === id ? { ...x, ...c } : x)) : [...s.cars, { id: 'c' + Date.now(), ...c, def: s.cars.length === 0 }],
-        })),
-      deleteCar: (id) =>
-        set((s) => {
-          const cars = s.cars.filter((x) => x.id !== id)
-          // Keep one default car.
-          if (cars.length && !cars.some((c) => c.def)) cars[0] = { ...cars[0], def: true }
-          return { cars, bk: s.bk.car === id ? { ...s.bk, car: defaultCar(cars) } : s.bk }
-        }),
+      setCars: (cars) =>
+        set((s) => ({ cars, bk: s.bk.car && !cars.some((c) => c.id === s.bk.car) ? { ...s.bk, car: defaultCar(cars) } : s.bk })),
     }),
     {
       name: 'raghwa-customer',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
-        lang: s.lang, appearance: s.appearance, onboarded: s.onboarded, tokens: s.tokens, customer: s.customer, cars: s.cars, notif: s.notif,
+        lang: s.lang, appearance: s.appearance, onboarded: s.onboarded, tokens: s.tokens, customer: s.customer, notif: s.notif,
       }),
     },
   ),
@@ -145,7 +136,7 @@ export const useToast = create<{ key: SKey | null; tone: 'ok' | 'error'; show: (
 export const toast = (k: SKey, tone?: 'ok' | 'error') => useToast.getState().show(k, tone)
 
 /** Plate as sent to the API ("215 TU 4521"). */
-export const carPlate = (c: Car) => `${c.ps} TU ${c.pn}`
+export const carPlate = (c: Pick<Car, 'ps' | 'pn'>) => `${c.ps} TU ${c.pn}`
 
 /** Series and number of a plate typed in the app; null for any other format. */
 export function parsePlate(plate: string | null) {
