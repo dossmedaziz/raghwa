@@ -21,5 +21,6 @@ Object.assign(env, {
   OTP_MAX_ATTEMPTS: '5',
   OTP_RESEND_COOLDOWN_SECONDS: '60',
   SMS_DRIVER: 'console',
+  PUSH_DRIVER: 'console',
   THROTTLE_LIMIT: '100000',
 });

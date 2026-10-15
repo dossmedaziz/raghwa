@@ -58,6 +58,21 @@ API cross-origin, so add the web dev server's origin (e.g. `http://localhost:808
   service durations, changing phone number.
 - Turn off Wi-Fi/data to see the "No internet" screen on the Map and Reservations tabs.
 
+## Push notifications
+
+The API sends a push in the app language when the garage marks a reservation done ("your car is ready") or
+cancels it (still also by SMS). Tapping it opens the reservation, which shows who cancelled it. `src/lib/push.ts` asks for permission after login and sends the phone's Expo
+push token to the API. Logging out removes the token.
+
+- Needs a development build (`npx expo run:android`) or a store build: Expo Go on Android has no remote push.
+  Emulators work if they have Google Play services.
+- **Android, one-time setup (FCM):** create a Firebase project with the package `tn.raghwa.customer`, download
+  `google-services.json` to this folder, add `"googleServicesFile": "./google-services.json"` under `expo.android`
+  in `app.json`, then rebuild. Upload the FCM V1 service account key to EAS: `npx eas-cli@latest credentials` →
+  Android → Google Service Account → *Push Notifications (FCM V1)*. Never commit the service account key.
+  `google-services.json` can be committed.
+- iOS needs a paid Apple developer account (EAS creates the push key during `eas build`).
+
 ## Right-to-left
 
 Arabic (Tunisian Derja) is the default and French is the second language. Direction is applied with the

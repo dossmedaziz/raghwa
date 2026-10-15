@@ -41,7 +41,7 @@ export class OwnerReservationsController {
 
   @Post(':reservationId/done')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Mark as done (the wash is finished)' })
+  @ApiOperation({ summary: 'Mark as done (the wash is finished)', description: 'The customer gets a push notification: the car is ready.' })
   @ApiOkResponse({ type: OwnerReservationDto })
   @ApiConflictResponse({ type: ErrorResponseDto, description: '`RESERVATION_NOT_UPCOMING`' })
   @ApiUnprocessableEntityResponse({ type: ErrorResponseDto, description: '`RESERVATION_IN_FUTURE`' })
@@ -54,7 +54,7 @@ export class OwnerReservationsController {
 
   @Post(':reservationId/cancel')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Cancel on behalf of the garage', description: 'The customer is notified by SMS.' })
+  @ApiOperation({ summary: 'Cancel on behalf of the garage', description: 'The customer is notified by push notification and SMS. `cancelledBy` becomes `garage`.' })
   @ApiOkResponse({ type: OwnerReservationDto })
   @ApiConflictResponse({ type: ErrorResponseDto, description: '`RESERVATION_NOT_UPCOMING`' })
   async cancel(

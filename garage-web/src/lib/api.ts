@@ -5,7 +5,7 @@ import type {
   Reservation, ServiceDto, TokenPair, BlockReason, DayHoursDto,
 } from '@/lib/types'
 
-const BASE = String(import.meta.env.VITE_API_URL ?? 'http://localhost:3002').replace(/\/$/, '')
+export const BASE = String(import.meta.env.VITE_API_URL ?? 'http://localhost:3002').replace(/\/$/, '')
 const SESSION_KEY = 'raghwa-pro-session'
 
 export class ApiError extends Error {
@@ -56,7 +56,7 @@ export function onSessionExpired(fn: () => void) {
 
 let refreshing: Promise<boolean> | null = null
 /** One refresh at a time, shared by every request that hit a 401 meanwhile. */
-function refreshTokens(): Promise<boolean> {
+export function refreshTokens(): Promise<boolean> {
   const current = session.get()
   if (!current) return Promise.resolve(false)
   refreshing ??= fetch(BASE + '/v1/owner/auth/refresh', {

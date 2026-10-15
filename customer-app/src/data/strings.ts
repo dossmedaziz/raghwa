@@ -71,6 +71,8 @@ export const S = {
   closed_day: ['الڨراج مسكّر النهار هذا', 'La station est fermée ce jour-là'], no_services: ['الڨراج هذا ما عندوش خدمات توا', 'Aucun service proposé pour le moment'],
   load_err_t: ['ما نجمناش نجيبو المعطيات', 'Chargement impossible'], load_err_s: ['ثبّت في الانترنت وعاود جرّب.', 'Vérifiez votre connexion puis réessayez.'],
   cancelled_by_garage: ['الڨراج ألغى الحجز هذا', 'La station a annulé cette réservation'],
+  cancelled_by_you: ['انت ألغيت الحجز هذا', 'Vous avez annulé cette réservation'],
+  st_cancelled_garage: ['ألغاه الڨراج', 'Annulée par la station'], st_cancelled_you: ['ألغيتو انت', 'Annulée par vous'],
   e_generic: ['صار مشكل، عاود جرّب', 'Une erreur est survenue, réessayez'], e_NETWORK: ['ما نجمناش نوصلو للسيرفور، ثبّت في الانترنت', 'Serveur injoignable, vérifiez votre connexion'],
   e_SLOT_FULL: ['الوقت هذا تعمّر، اختار وقت آخر', 'Ce créneau est complet, choisissez-en un autre'], e_SLOT_IN_PAST: ['الوقت هذا فات، اختار وقت آخر', 'Ce créneau est passé, choisissez-en un autre'],
   e_SLOT_BLOCKED: ['الوقت هذا موش متاح، اختار وقت آخر', 'Créneau indisponible, choisissez-en un autre'], e_NOT_A_SLOT: ['الوقت هذا موش متاح، اختار وقت آخر', 'Créneau indisponible, choisissez-en un autre'],

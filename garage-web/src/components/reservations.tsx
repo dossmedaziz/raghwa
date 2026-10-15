@@ -84,7 +84,7 @@ export function ReservationDrawer() {
                 <SheetTitle className="text-[17px] font-bold">{t.resDetail}</SheetTitle>
                 <SheetDescription className="font-latin text-[12.5px]">{r.ref}</SheetDescription>
               </div>
-              <StatusBadge status={r.status} className="px-[11px] py-1 text-[12.5px]" />
+              <StatusBadge status={r.status} cancelledBy={r.cancelledBy} className="px-[11px] py-1 text-[12.5px]" />
               <Button variant="secondary" size="icon" onClick={() => open(null)} aria-label={t.close}><Icon name="close" /></Button>
             </div>
             <div className="flex flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto px-[22px] py-5">

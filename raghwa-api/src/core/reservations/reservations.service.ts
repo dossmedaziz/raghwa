@@ -14,7 +14,7 @@ import { ReservationLine } from './entities/reservation-line.entity';
 import { Reservation, type Actor, type ReservationStatus } from './entities/reservation.entity';
 import { newReservationRef } from './reservation-ref';
 import {
-  RESERVATION_CANCELLED, RESERVATION_CREATED, RESERVATION_RESCHEDULED, type ReservationChangedEvent,
+  RESERVATION_CANCELLED, RESERVATION_CREATED, RESERVATION_DONE, RESERVATION_RESCHEDULED, type ReservationChangedEvent,
 } from './reservation.events';
 
 export interface BookingRequest {
@@ -183,11 +183,17 @@ export class ReservationsService {
     const r = await this.load(reservationId, { garageId });
     if (r.status !== 'upcoming') throw conflict('RESERVATION_NOT_UPCOMING', 'Only upcoming reservations can be marked done');
     if (r.date > this.clock.today()) throw unprocessable('RESERVATION_IN_FUTURE', 'A future reservation cannot be marked done yet');
-    await this.db.transaction(async (m) => {
-      await m.update(Reservation, { id: r.id, status: 'upcoming' }, { status: 'done' });
+    const changed = await this.db.transaction(async (m) => {
+      const { affected } = await m.update(Reservation, { id: r.id, status: 'upcoming' }, { status: 'done' });
+      if (!affected) return false;
       await m.insert(ReservationEvent, { reservationId: r.id, type: 'done', actor: 'garage', at: this.clock.now() });
+      return true;
     });
-    return this.load(r.id);
+    // Lost a race with a concurrent done/cancel: the customer must not be notified twice.
+    if (!changed) throw conflict('RESERVATION_NOT_UPCOMING', 'Only upcoming reservations can be marked done');
+    const full = await this.load(r.id);
+    await this.emit(RESERVATION_DONE, full, 'garage');
+    return full;
   }
 
   /** Today's and upcoming counts per garage, for the garage picker. */
@@ -266,6 +272,8 @@ export class ReservationsService {
     const event: ReservationChangedEvent = {
       reservationId: r.id,
       garageId: r.garageId,
+      garageName: r.garage.name,
+      customerId: r.customerId,
       ref: r.ref,
       customerName: r.customer.name,
       customerPhone: r.customer.phone,

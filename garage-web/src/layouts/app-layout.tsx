@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -11,6 +12,7 @@ import { fmtDate, fx, phone } from '@/lib/format'
 import { ownerApi } from '@/lib/api'
 import { localDateTime, today } from '@/lib/clock'
 import { notifyError } from '@/lib/errors'
+import { useLiveNotifications } from '@/lib/live'
 import { useQuery } from '@/lib/query'
 import type { NotificationDto } from '@/lib/types'
 import { notify, useT } from '@/lib/i18n'
@@ -92,8 +94,12 @@ function TopBar() {
   const logout = useLogout()
   const garage = useStore((s) => s.garage), published = useStore((s) => s.published), owner = useStore((s) => s.owner)
   const garageId = useStore((s) => s.activeGarageId)
-  // Polled so new bookings show up without reloading the page.
-  const notifs = useQuery(garageId && 'notifs:' + garageId, () => ownerApi.notifications.list(garageId!), { pollMs: 60_000, keepPrevious: true })
+  const notifs = useQuery(garageId && 'notifs:' + garageId, () => ownerApi.notifications.list(garageId!), { keepPrevious: true })
+  // New bookings, cancellations and reschedules arrive live: the bell and the lists refresh, and a toast pops up.
+  const notifText = useNotificationText()
+  useLiveNotifications(garageId, (n) => {
+    toast(notifText(n), { icon: <Icon name={NOTIF_ICON[n.type]} size={20} />, duration: 8000 })
+  })
   const unread = notifs.data?.unread ?? 0
   const ownerName = owner?.name ?? ''
   const markAllRead = async () => {
@@ -186,11 +192,24 @@ function TopBar() {
 
 const NOTIF_ICON = { reservation_created: 'event_available', reservation_cancelled: 'event_busy', reservation_rescheduled: 'update' } as const
 
-function NotificationRow({ n }: { n: NotificationDto }) {
+/** "Today" or a short date, in the current language. */
+function useDay() {
   const { t, L } = useT()
-  const day = (d: string) => (d === today() ? t.today : fmtDate(d, L, 'dm'))
-  const vars = { name: n.data.customerName ?? t.someone, d: day(n.data.date), t: n.data.time }
-  const text = fx({ reservation_created: t.nfCreated, reservation_cancelled: t.nfCancelled, reservation_rescheduled: t.nfRescheduled }[n.type], vars)
+  return (d: string) => (d === today() ? t.today : fmtDate(d, L, 'dm'))
+}
+
+/** The sentence for a notification, in the current language. */
+function useNotificationText() {
+  const { t } = useT()
+  const day = useDay()
+  return (n: NotificationDto) =>
+    fx({ reservation_created: t.nfCreated, reservation_cancelled: t.nfCancelled, reservation_rescheduled: t.nfRescheduled }[n.type],
+      { name: n.data.customerName ?? t.someone, d: day(n.data.date), t: n.data.time })
+}
+
+function NotificationRow({ n }: { n: NotificationDto }) {
+  const day = useDay()
+  const text = useNotificationText()(n)
   const at = localDateTime(n.createdAt)
   return (
     <div className={cn('flex gap-3 border-b border-line-soft px-4 py-3 last:border-b-0', n.unread ? 'bg-[#F5F9FE]' : 'bg-white')}>

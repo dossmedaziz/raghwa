@@ -7,6 +7,7 @@ import { GarageHours } from '../core/garages/entities/garage-hours.entity';
 import { Garage } from '../core/garages/entities/garage.entity';
 import { Notification } from '../core/notifications/notification.entity';
 import { Owner } from '../core/owners/owner.entity';
+import { PushToken } from '../core/push/push-token.entity';
 import { ReservationEvent } from '../core/reservations/entities/reservation-event.entity';
 import { ReservationLine } from '../core/reservations/entities/reservation-line.entity';
 import { Reservation } from '../core/reservations/entities/reservation.entity';
@@ -15,5 +16,5 @@ import { SlotBlock } from '../core/scheduling/entities/slot-block.entity';
 
 export const ENTITIES = [
   Owner, Customer, CustomerCar, OtpCode, RefreshToken, Garage, GarageHours, WashService, DayBlock, SlotBlock,
-  Reservation, ReservationLine, ReservationEvent, Notification,
+  Reservation, ReservationLine, ReservationEvent, Notification, PushToken,
 ];

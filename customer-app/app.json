@@ -45,6 +45,14 @@
       ],
       "@rnmapbox/maps",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#0B3B8F",
+          "defaultChannel": "default"
+        }
+      ],
+      [
         "expo-quick-actions",
         {
           "androidIcons": {

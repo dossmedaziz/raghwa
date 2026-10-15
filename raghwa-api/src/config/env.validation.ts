@@ -65,6 +65,14 @@ export class Env {
   @IsIn(['console'])
   SMS_DRIVER: 'console' = 'console';
 
+  /** "expo" sends pushes through the Expo Push Service; "console" only logs them. */
+  @IsIn(['expo', 'console'])
+  PUSH_DRIVER: 'expo' | 'console' = 'expo';
+
+  /** Only needed if "Enhanced security for push notifications" is turned on in the Expo project. */
+  @IsString()
+  EXPO_ACCESS_TOKEN = '';
+
   @Type(() => Number) @IsInt() @Min(1)
   THROTTLE_LIMIT = 120;
 }

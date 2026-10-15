@@ -39,6 +39,9 @@ docker compose -f ../raghwa-api/docker-compose.yml logs -f api
   drafts until saved; services, reservations and blocks are changed through the API immediately.
 - `lib/query.ts`: small fetch hook for page data (dashboard, schedule, reservations, notifications). Every
   change made through the API calls `invalidate()`, which refetches what is on screen.
+- `lib/live.ts`: keeps a Server-Sent Events connection to the active garage's notification stream. Each new
+  booking, cancellation or reschedule shows a toast and calls `invalidate()`. It reconnects on its own
+  (the server closes the stream when the access token expires).
 - `lib/clock.ts`: "today" and "now" in Africa/Tunis, the same zone the API uses.
 - Photos and the logo are not stored by the API yet: they stay in the browser for the current visit.
 
@@ -49,6 +52,7 @@ src/
   data/i18n-strings.ts   Derja + French text, including API error messages
   data/cities.ts         governorates for the forms
   lib/api.ts             HTTP client + endpoints
+  lib/live.ts            live notifications (SSE)
   lib/types.ts           UI shapes and API payloads
   lib/mappers.ts         API payloads ⇄ form shapes
   store.ts               Zustand store (session, garages, active garage)

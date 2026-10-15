@@ -33,6 +33,8 @@ interface State {
   /** Session; null = signed out. */
   tokens: Tokens | null
   customer: CustomerDto | null
+  /** Expo push token registered with the API for this phone (not persisted: registered again at each start). */
+  pushToken: string | null
   cars: Car[]
   flt: Filters
   notif: { h1: boolean; d1: boolean }
@@ -54,6 +56,7 @@ interface Actions {
   signIn: (tokens: Tokens, customer: CustomerDto) => void
   setTokens: (t: Tokens) => void
   setCustomer: (c: CustomerDto) => void
+  setPushToken: (t: string | null) => void
   signOut: () => void
   setDenied: (v: boolean) => void
   setFilters: (f: Filters) => void
@@ -79,6 +82,7 @@ export const useStore = create<State & Actions>()(
       denied: false,
       tokens: null,
       customer: null,
+      pushToken: null,
       cars: [],
       flt: { ...F0 },
       notif: { h1: true, d1: false },
@@ -95,9 +99,10 @@ export const useStore = create<State & Actions>()(
       signIn: (tokens, customer) => set({ tokens: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }, customer }),
       setTokens: (t) => set({ tokens: { accessToken: t.accessToken, refreshToken: t.refreshToken } }),
       setCustomer: (customer) => set({ customer }),
+      setPushToken: (pushToken) => set({ pushToken }),
       signOut: () => {
         clearCache()
-        set({ tokens: null, customer: null, cars: [], rr: null, last: null })
+        set({ tokens: null, customer: null, pushToken: null, cars: [], rr: null, last: null })
       },
       setDenied: (denied) => set({ denied }),
       setFilters: (flt) => set({ flt }),

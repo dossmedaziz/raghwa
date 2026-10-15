@@ -74,7 +74,7 @@ Use strong secrets in `.env` (`openssl rand -base64 48`) and set `SWAGGER_ENABLE
 ```
 src/
   core/        business logic, no HTTP: auth, owners, customers, garages, catalog, scheduling,
-               reservations, notifications, sms
+               reservations, notifications, sms, push
   api/
     owner/     /v1/owner/...  controllers + DTOs used by garage-web (OwnerAuthGuard)
     customer/  /v1/...        controllers + DTOs used by the mobile app (CustomerAuthGuard)
@@ -90,6 +90,11 @@ src/
   another owner's garage answers 404.
 - **No overbooking.** Booking and rescheduling lock the garage row (`SELECT … FOR UPDATE`) before checking slot
   capacity, so concurrent requests are serialised per garage (covered by an e2e test).
+- **Live updates and push.** New bookings, cancellations and reschedules become garage notifications that
+  garage-web receives instantly over Server-Sent Events (`GET …/notifications/stream`). The stream is in-process,
+  so it assumes a single API instance (several instances would need Redis or Postgres `LISTEN/NOTIFY` between them).
+  When the garage marks a wash done or cancels, the customer's phones get a push through the Expo Push Service
+  (`PUSH_DRIVER=expo`; tokens in `push_tokens`, registered by the app with `PUT /v1/me/push-token`).
 - **Errors** look like `{ statusCode, message, code? }`. Business errors have a stable `code`
   (`SLOT_FULL`, `OTP_COOLDOWN`, `GARAGE_INCOMPLETE`…) for the apps to translate.
 - **Conventions:** dates `YYYY-MM-DD` and times `HH:MM` in `APP_TIMEZONE` (Africa/Tunis); prices in TND in the

@@ -1,6 +1,7 @@
 // HTTP client for raghwa-api (customer endpoints). Adds the access token, refreshes it once on 401,
 // and turns error responses into ApiError with the API's stable `code` (translated in lib/errors.ts).
 import Constants from 'expo-constants'
+import type { Lang } from '@/data/constants'
 import { useStore } from '@/store'
 import type {
   Availability, BookRequest, CustomerDto, CustomerSession, GarageCard, GarageDetail, Paged, Reservation, SavedCar, TokenPair,
@@ -68,7 +69,7 @@ function refreshTokens(): Promise<boolean> {
   return refreshing
 }
 
-type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 export async function request<T>(method: Method, path: string, body?: unknown, opts: { auth?: boolean } = {}): Promise<T> {
   const auth = opts.auth ?? true
@@ -132,6 +133,10 @@ export const api = {
     availability: (id: string, date: string) =>
       request<Availability>('GET', `/v1/garages/${id}/availability` + qs({ date }), undefined, { auth: false }),
   },
+  push: {
+    register: (token: string, lang: Lang) => request<void>('PUT', '/v1/me/push-token', { token, lang }),
+    unregister: (token: string) => request<void>('DELETE', '/v1/me/push-token', { token }),
+  },
   reservations: {
     book: (body: BookRequest) => request<Reservation>('POST', '/v1/reservations', body),
     list: (scope: 'upcoming' | 'past', limit = 100) => request<Paged<Reservation>>('GET', '/v1/reservations' + qs({ scope, limit })),
@@ -143,7 +148,12 @@ export const api = {
 
 /** Ends this device's session on the server (best effort) and forgets it locally. */
 export function logout() {
-  const tokens = useStore.getState().tokens
-  if (tokens) api.auth.logout(tokens.refreshToken).catch(() => {})
+  const { tokens, pushToken } = useStore.getState()
+  if (tokens) {
+    // The phone stops receiving this account's pushes. Sent first: it still needs the access token
+    // (read synchronously by request(), so clearing the store below does not affect it).
+    const unregister = pushToken ? api.push.unregister(pushToken).catch(() => {}) : Promise.resolve()
+    unregister.then(() => api.auth.logout(tokens.refreshToken)).catch(() => {})
+  }
   useStore.getState().signOut()
 }

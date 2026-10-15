@@ -212,7 +212,7 @@ function ResTable({ rows }: { rows: Reservation[] }) {
             <Chips items={f.chips(r)} />
             <span className="font-bold whitespace-nowrap text-navy">{f.total(r)}</span>
             <span className="flex items-center gap-1 text-[12.5px] text-ink-2"><Icon name="payments" size={16} className="text-muted-foreground" />{t.cash}</span>
-            <span><StatusBadge status={r.status} /></span>
+            <span><StatusBadge status={r.status} cancelledBy={r.cancelledBy} /></span>
             <span onClick={(e) => e.stopPropagation()} className="flex justify-end gap-0.5"><RowActions r={r} /></span>
           </div>
         ))}
@@ -231,7 +231,7 @@ function ResCards({ rows }: { rows: Reservation[] }) {
         <div key={r.id} className="flex flex-col gap-2.5 rounded-[14px] border bg-white p-3.5">
           <div className="flex items-center justify-between gap-2">
             <span className="font-latin text-[12.5px] font-semibold whitespace-nowrap text-muted-foreground">{r.ref}</span>
-            <StatusBadge status={r.status} />
+            <StatusBadge status={r.status} cancelledBy={r.cancelledBy} />
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-[15.5px] font-bold">{f.name(r)}</span>

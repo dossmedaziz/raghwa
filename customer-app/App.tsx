@@ -20,6 +20,7 @@ import { initMapbox } from '@/lib/mapbox'
 import { useT } from '@/lib/i18n'
 import { onSessionExpired } from '@/lib/api'
 import { loadCars } from '@/lib/cars'
+import { usePushNotifications } from '@/lib/push'
 import { toast, useStore } from '@/store'
 import { ToastHost } from '@/components/ui'
 import { TAB_H, TabBar } from '@/components/screen'
@@ -65,6 +66,22 @@ function useReservationsShortcut() {
   useQuickActionCallback(useCallback((a: QuickActions.Action) => { if (a.id === RES_ACTION) open() }, [open]))
   return { onReady: () => { if (pending.current) open() } }
 }
+/**
+ * Opens a reservation when its push notification is tapped, including on a cold start
+ * (held until navigation is ready, like the shortcut above).
+ */
+function useReservationPushes() {
+  const pending = useRef<string | null>(null)
+  const open = useCallback((id: string) => {
+    if (!useStore.getState().tokens) return
+    if (!navRef.isReady()) { pending.current = id; return }
+    pending.current = null
+    navRef.navigate('ResDetail', { id })
+  }, [])
+  usePushNotifications(open)
+  return { onReady: () => { if (pending.current) open(pending.current) } }
+}
+
 const Tab = createBottomTabNavigator<TabParams>()
 
 function Tabs() {
@@ -101,6 +118,7 @@ function Root({ scheme }: { scheme: Scheme }) {
   const navState = useRef<NavigationState | undefined>(undefined)
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme
   const shortcut = useReservationsShortcut()
+  const pushes = useReservationPushes()
   // The refresh token was revoked or expired: back to login.
   // The account's cars, for the booking flow and the profile (also after each login).
   useEffect(() => {
@@ -118,7 +136,7 @@ function Root({ scheme }: { scheme: Scheme }) {
       {/* Inside the `direction` view so bottom-sheet modals follow the reading direction. */}
       <BottomSheetModalProvider>
         <NavigationContainer ref={navRef} theme={{ ...base, colors: { ...base.colors, background: colors.bg, card: colors.bg } }}
-          initialState={navState.current} onStateChange={(st) => { navState.current = st }} onReady={shortcut.onReady}>
+          initialState={navState.current} onStateChange={(st) => { navState.current = st }} onReady={() => { shortcut.onReady(); pushes.onReady() }}>
           <Stack.Navigator initialRouteName={initial}
             screenOptions={{ headerShown: false, animation: ar ? 'slide_from_left' : 'slide_from_right', contentStyle: { backgroundColor: colors.bg } }}>
             <Stack.Screen name="Splash" component={Splash} options={{ animation: 'fade' }} />

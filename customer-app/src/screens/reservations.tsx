@@ -32,7 +32,8 @@ function useResView() {
     const passed = upcoming && r.date < today()
     const badge: [Color, Color, string, string] =
       r.status === 'done' ? ['positiveTint', 'positiveInk', t.st_done, 'task_alt']
-        : r.status === 'cancelled' ? ['negativeTint', 'negativeInk', t.st_cancelled, 'cancel']
+        : r.status === 'cancelled'
+          ? ['negativeTint', 'negativeInk', r.cancelledBy === 'garage' ? t.st_cancelled_garage : r.cancelledBy === 'customer' ? t.st_cancelled_you : t.st_cancelled, 'cancel']
           : passed ? ['grey100', 'grey600', t.past, 'history']
             : ['positiveTint', 'positiveInk', t.st_up, 'check_circle']
     return {
@@ -42,7 +43,7 @@ function useResView() {
       soon: upcoming && mins > 0 && mins < 24 * 60, soonText: tr('in_time', { h: Math.floor(mins / 60), m: String(mins % 60).padStart(2, '0') }),
       // Changes are allowed until the slot starts.
       up: upcoming && mins > 0, locked: upcoming && !passed && mins <= 0, ended: r.status === 'done' || passed,
-      cancelled: r.status === 'cancelled', byGarage: r.cancelledBy === 'garage',
+      cancelled: r.status === 'cancelled', byGarage: r.cancelledBy === 'garage', byYou: r.cancelledBy === 'customer',
     }
   }
 }
@@ -267,7 +268,7 @@ export function ResDetailScreen({ navigation, route }: ScreenProps<'ResDetail'>)
         {d.ended && <Button label={t.book_again} icon="replay" onPress={bookAgain} />}
         {d.cancelled && (
           <Box gap="s">
-            <Notice icon="event_busy" tone="negative" align="center">{d.byGarage ? t.cancelled_by_garage : t.cancelled_on}</Notice>
+            <Notice icon="event_busy" tone="negative" align="center">{d.byGarage ? t.cancelled_by_garage : d.byYou ? t.cancelled_by_you : t.cancelled_on}</Notice>
             <Button label={t.book_again} onPress={bookAgain} />
           </Box>
         )}

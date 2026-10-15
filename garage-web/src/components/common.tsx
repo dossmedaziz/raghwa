@@ -138,13 +138,24 @@ export const STATUS_STYLE: Record<Status, { key: 'stUpcoming' | 'stDone' | 'stCa
   cancelled: { key: 'stCancelled', cls: 'bg-[#FDEBEC] text-danger-ink', dot: 'bg-danger-ink' },
 }
 
-export function StatusBadge({ status, className }: { status: Status; className?: string }) {
+/** Status pill. For a cancelled reservation, pass `cancelledBy` to show who cancelled it underneath. */
+export function StatusBadge({ status, cancelledBy, className }: { status: Status; cancelledBy?: 'customer' | 'garage' | null; className?: string }) {
   const { t } = useT()
   const s = STATUS_STYLE[status]
-  return (
+  const badge = (
     <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-xs font-bold whitespace-nowrap', s.cls, className)}>
       <span className={cn('size-1.5 rounded-full', s.dot)} />
       {t[s.key]}
+    </span>
+  )
+  if (status !== 'cancelled' || !cancelledBy) return badge
+  return (
+    <span className="inline-flex flex-col items-start gap-0.5">
+      {badge}
+      <span className="flex items-center gap-1 ps-1 text-[11.5px] font-semibold whitespace-nowrap text-muted-foreground">
+        <Icon name={cancelledBy === 'garage' ? 'storefront' : 'person'} size={14} />
+        {cancelledBy === 'garage' ? t.byGarage : t.byCustomer}
+      </span>
     </span>
   )
 }

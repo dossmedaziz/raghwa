@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../../src/app.module';
 import { ClockService } from '../../src/common/clock/clock.service';
 import { configureApp, setupSwagger } from '../../src/configure-app';
+import { PushSender, type PushMessage, type PushResult } from '../../src/core/push/push-sender';
 import { SmsSender } from '../../src/core/sms/sms-sender';
 
 /** Wednesday 21 October 2026, 11:15 in Tunis (UTC+1): the same frozen "now" as the garage-web prototype. */
@@ -54,13 +55,25 @@ export class FakeSms extends SmsSender {
   }
 }
 
+export class FakePush extends PushSender {
+  messages: PushMessage[] = [];
+  /** Tokens to report as uninstalled on the next sends. */
+  invalid = new Set<string>();
+
+  async send(messages: PushMessage[]): Promise<PushResult> {
+    this.messages.push(...messages);
+    return { invalidTokens: messages.map((m) => m.to).filter((t) => this.invalid.has(t)) };
+  }
+}
+
 export interface TestContext {
   app: INestApplication<App>;
   http: () => ReturnType<typeof request>;
   clock: TestClock;
   sms: FakeSms;
+  push: FakePush;
   db: DataSource;
-  /** Empties every table and resets the clock and SMS outbox. Call in beforeEach. */
+  /** Empties every table and resets the clock and the SMS and push outboxes. Call in beforeEach. */
   reset: () => Promise<void>;
   close: () => Promise<void>;
 }
@@ -69,11 +82,14 @@ export interface TestContext {
 export async function createTestApp(opts: { swagger?: boolean } = {}): Promise<TestContext> {
   const clock = new TestClock();
   const sms = new FakeSms();
+  const push = new FakePush();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(ClockService)
     .useValue(clock)
     .overrideProvider(SmsSender)
     .useValue(sms)
+    .overrideProvider(PushSender)
+    .useValue(push)
     .compile();
 
   const app = moduleRef.createNestApplication<INestApplication<App>>({ logger: ['error', 'warn'] });
@@ -90,11 +106,14 @@ export async function createTestApp(opts: { swagger?: boolean } = {}): Promise<T
     http: () => request(app.getHttpServer()),
     clock,
     sms,
+    push,
     db,
     reset: async () => {
       await db.query(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`);
       clock.set(NOW);
       sms.messages = [];
+      push.messages = [];
+      push.invalid.clear();
     },
     close: () => app.close(),
   };
